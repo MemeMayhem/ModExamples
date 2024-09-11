@@ -1,0 +1,21 @@
+local function loader(Api)
+    Api:CreateCharacter("mod-difficulty", "robot")
+
+    local mod_difficulty = {
+        health_base = 500,
+        health_growth = 200,
+        damage_base = 5,
+        damage_growth = 2,
+        rock_base = 10,
+        rock_growth = 1,
+        dodge_base = 0,
+        dodge_growth = 0.001,
+        mini_boss_power_up = 1, -- growth on mini boss every 5 waves
+        boss_power_up = 2, -- growth on boss every 10 waves
+        shop_growth = 0.5, -- growth on shop every 5 waves
+    }
+
+    Api:SetCampaignDifficulty(mod_difficulty)
+end
+
+MOD_MANAGER:AddMod(loader)

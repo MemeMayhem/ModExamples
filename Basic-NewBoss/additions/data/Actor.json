@@ -1,0 +1,61 @@
+{
+    "actors": {
+        "COMBAT Unit Custom Boss": {
+            "parent": "COMBAT Unit Mod Template",
+            "unitActor": {
+                "resource": {
+                    "name": "reskin"
+                },
+                "events": [
+                    {
+                        "actorTerm": {
+                            "onTimer": {
+                                "name": "DeathExplode"
+                            }
+                        },
+                        "actions": [
+                            {
+                                "create": {
+                                    "actor": "COMBAT Unit Custom Boss Death Fx"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 1
+            }
+        },
+        "COMBAT Unit Custom Boss Death Fx": {
+            "parent": "COMBAT Unit Mod Death Fx Template",
+            "modelActor": {
+                "events": [
+                    {
+                        "actorTerm": {
+                            "actorCreate": {}
+                        },
+                        "actions": [
+                            {
+                                "setParticleProperties": {
+                                    "particleProperties": [
+                                        {
+                                            "setTexture": {
+                                                "spriteName": "reskin"
+                                            }
+                                        },
+                                        {
+                                            "particleSubSystem": 3,
+                                            "setTexture": {
+                                                "spriteName": "reskin"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 1.8
+            }
+        }
+    }
+}

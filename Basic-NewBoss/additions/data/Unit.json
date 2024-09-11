@@ -1,0 +1,7 @@
+{
+    "units": {
+        "COMBAT Unit Custom Boss": {
+            "baseUnit": "_COMBAT Missile"
+        }
+    }
+}

@@ -1,0 +1,319 @@
+local localization = {
+    ["English"] = {
+        ["relic/super_flu/display_name"] = "Super Flu",
+        ["relic/super_flu/description"] = "Shoot [VAR1] {[x]} at the opponent [VAR2] secs after the battle starts. Whenever receives the flu, there is an {[y]} chance to launch a flu back [VAR2] seconds later",
+        ["relic/super_flu/flavor"] = "Super flu, super contagious",
+        ["relic/tough_guy/display_name"] = "Tough Guy",
+        ["relic/tough_guy/description"] = "A tough guy doesn't need more words. Increase the damage of Thug's Axe, the lower HP, the higher the damage. The lower HP of opponent, the higher the damage. The lower energy, the higher the damage",
+        ["relic/tough_guy/flavor"] = "Tough guy, few words",
+        ["relic/protection_money/display_name"] = "Protection Money",
+        ["relic/protection_money/description"] = "Collect [VAR1]{[x]} wherever you can (where you can register callback functions)",
+        ["relic/protection_money/flavor"] = "I'm the boss",
+        ["missile/qiang_ge_axe/display_name"] = "Thug's Axe",
+        ["missile/qiang_ge_axe/tip"] = "Only useful when you are tough",
+        ["missile/qiang_ge_axe/flavor_text"] = "Thug's special",
+        ["character/qiang_ge/display_name"] = "Thug the Tough",
+        ["character/qiang_ge/short_description"] = "Thug the Tough, tough the streets",
+    },
+    ["Chinese (Simplified)"] = {
+        ["relic/super_flu/display_name"] = "超级流感",
+        ["relic/super_flu/description"] = "战斗开始后[VAR2]秒，向对手发射[VAR1]{[x]}。每当一个角色收到流感攻击，有{[y]}概率在[VAR2]秒后，向对手发动流感攻击",
+        ["relic/super_flu/flavor"] = "超级流感，超级能传染",
+        ["relic/tough_guy/display_name"] = "狠人",
+        ["relic/tough_guy/description"] = "话不多不说，人是真滴狠。增加强哥斧伤害，自己血越少，伤害越高。对手血越少，伤害越高。自己能量越少，伤害越高",
+        ["relic/tough_guy/flavor"] = "人狠话不多",
+        ["relic/protection_money/display_name"] = "保护费",
+        ["relic/protection_money/description"] = "能收的地方(能注册回调函数的地方)都收[VAR1]{[x]}",
+        ["relic/protection_money/flavor"] = "这个游戏都是我罩着",
+        ["missile/qiang_ge_axe/display_name"] = "强袭大斧",
+        ["missile/qiang_ge_axe/description"] = "狠人才有用，不然没伤害",
+        ["missile/qiang_ge_axe/flavor_text"] = "强哥专用",
+        ["character/qiang_ge/display_name"] = "强哥",
+        ["character/qiang_ge/short_description"] = "社会我强哥，人狠话不多",
+    },
+}
+
+local localization_table = localization["English"]
+
+local function ReplaceTextMarks(text, marks)
+    for mark, replacement in pairs(marks) do
+        text = string.gsub(text, "%{%[" .. mark .. "%]%}", replacement)
+    end
+    return text
+end
+
+local function AddGold(Api, amount)
+    Api:AddGold(amount)
+end
+
+local function SpreadFlu(Api, caster, target, level)
+    Api:RunCombatOnlyTimer(function()
+        for i = 1, 8 * level do
+            caster.Attack:NewMissileAttack(target, "attack_frost")
+        end
+        if math.random() < 0.8 then
+            SpreadFlu(Api, target, caster, level)
+        end
+    end, 0.3)
+end
+
+local function AddRelicFlu(Api)
+    local relic = {
+        id = "super_flu",
+        display_name = localization_table["relic/super_flu/display_name"],
+        description = ReplaceTextMarks(localization_table["relic/super_flu/description"], {
+            x = Api.GameMechanicTags.ATTACK_ICON.ice,
+            y = "<color=yellow>80%%</color>",
+        }),
+        flavor_text = localization_table["relic/super_flu/flavor"],
+        icon = DCEI.Texture("flat_icon_emoji_face_vomiting_1f92e_ipick"),
+        rarity = "epic",
+        non_scaling_values = {
+            attack_frost = 8,
+            delay = 0.3,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "attack_frost" },
+            },
+            {
+                address = { "non_scaling_values", "delay" },
+            },
+        },
+    }
+    Api:RegisterRelic(relic.id, relic, function(combat_unit)
+        combat_unit:RegisterOnCombatStartCallback(relic.id, function(level, target)
+            SpreadFlu(Api, combat_unit, target, level)
+            Api:RunTimer(function()
+                Api:Log("Example timer, this timer will not be removed after combat ends")
+            end, 1)
+        end)
+    end)
+end
+
+local function AddRelicToughGuy(Api)
+    local relic = {
+        id = "tough_guy",
+        display_name = localization_table["relic/tough_guy/display_name"],
+        description = localization_table["relic/tough_guy/description"],
+        flavor_text = localization_table["relic/tough_guy/flavor"],
+        icon = DCEI.Texture("flat_icon_emoji_axe_1fa93_ipick"),
+        rarity = "legendary",
+    }
+    Api:RegisterRelic(relic.id, relic, function(combat_unit)
+        combat_unit.Attack:RegisterOnMissileImpactCallback(relic.id, function(level, attack_data, caster, target)
+            --[[
+                attack_data general format: (following are the must have fields, sometime contains more fields)
+
+                caster = tostring(caster.unit),
+                is_critical = attack_manager:IsAttackCritical(caster),
+                is_dodged = attack_manager:IsAttackDodged(target, missile_id),
+                direction = Random:Integer(0, 1), -- 0 for left, 1 for right
+                missile_id = missile_id,
+            ]]
+            if attack_data.missile_id == "qiang_ge_axe" then
+                local max_health = caster:GetMaximumHealth()
+                local cur_health = caster:GetCurrentHealth()
+                local health_diff = max_health - cur_health
+
+                local max_energy = caster:GetMaximumEnergy()
+                local cur_energy = caster:GetCurrentEnergy()
+                local energy_diff = max_energy - cur_energy
+
+                local target_max_health = target:GetMaximumHealth()
+                local target_cur_health = target:GetCurrentHealth()
+                local target_health_diff = target_max_health - target_cur_health
+
+                local damage_total = 0.1 * (health_diff + energy_diff + target_health_diff)
+
+                target:Damage(damage_total, caster, {})
+            end
+        end)
+    end)
+end
+
+local function AddRelicProtectionMoney(Api)
+    local relic = {
+        id = "protection_money",
+        display_name = localization_table["relic/protection_money/display_name"],
+        description = ReplaceTextMarks(localization_table["relic/protection_money/description"], {
+            x = Api.GameMechanicTags.TAG.coin,
+        }),
+        flavor_text = localization_table["relic/protection_money/flavor"],
+        icon = DCEI.Texture("flat_icon_emoji_crossed_swords_2694_fe0f_ipick"),
+        rarity = "permanent",
+        scaling_values = {
+            gold = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "gold" },
+            },
+        },
+    }
+    Api:RegisterRelic(relic.id, relic, function(combat_unit)
+        local name = relic.id
+
+        combat_unit.Attack:RegisterOnMagazineResetCallback(name, function(level)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from magazine reset")
+        end)
+        combat_unit.Attack:RegisterOnMissileLaunchCallback(name, function(level, attack_data, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from missile launch")
+        end)
+        combat_unit.Attack:RegisterOnMissileHitCallback(name, function(level, attack_data, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from missile hit")
+        end)
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from missile impact")
+        end)
+        combat_unit.Attack:RegisterOnMissileDamageBlockCallback(
+            name,
+            function(level, attack_data, caster, target, block)
+                AddGold(Api, 1 * level)
+                Api:Log("Gain " .. 1 * level .. " gold from missile damage block " .. block)
+            end
+        )
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from ultimate launch")
+        end)
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(name, function(level, attack_data, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from ultimate impact")
+        end)
+        combat_unit.Attack:RegisterOnUltimateHitCallback(name, function(level, attack_data, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from ultimate hit")
+        end)
+        combat_unit:RegisterOnUnitCreateCallback(name, function(level)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from unit create")
+        end)
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function(level)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from before combat start")
+        end)
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from combat start")
+        end)
+        combat_unit:RegisterOnCombatEndCallback(name, function(level)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from combat end")
+        end)
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from combat periodic at " .. time)
+        end)
+        combat_unit:RegisterOnDamageTakenCallback(name, function(level, damage_amount, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from damage taken " .. damage_amount)
+        end)
+        combat_unit:RegisterOnHealCallback(name, function(level, heal_amount, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from heal " .. heal_amount)
+        end)
+        combat_unit:RegisterOnGoldConsumeCallback(name, function(level, comsume_amount)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from gold consume " .. comsume_amount)
+        end)
+        combat_unit:RegisterOnPlayerGoldChangeCallback(name, function(level, current_gold)
+            --AddGold(Api, 1 * level)
+            --Api:Log("Gain " .. 1 * level .. " gold from player gold change, current " .. current_gold)
+        end)
+        combat_unit:RegisterOnBuyPerkCallback(name, function(level, perk_id)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from buy perk " .. perk_id)
+        end)
+        combat_unit:RegisterOnBuyRelicCallback(name, function(level, relic_id)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from buy relic " .. relic_id)
+        end)
+        combat_unit:RegisterOnStunnedCallback(name, function(level, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from stunned")
+        end)
+        combat_unit:RegisterOnEnemyStunnedCallback(name, function(level, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from enemy stunned")
+        end)
+        combat_unit:RegisterOnPoolymorphedCallback(name, function(level, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from poolymorphed")
+        end)
+        combat_unit:RegisterOnEnemyPoolymorphedCallback(name, function(level, caster, target)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from enemy poolymorphed")
+        end)
+        combat_unit:RegisterOnRobotExplosionCallback(name, function(level, caster, robot)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from robot explosion")
+        end)
+        combat_unit:RegisterOnRobotSpawnCallback(name, function(level, caster, new_robot)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from robot spawn")
+        end)
+        combat_unit:RegisterOnExitPerkSelectCallback(name, function(level, data)
+            AddGold(Api, 1 * level)
+            Api:Log("Gain " .. 1 * level .. " gold from exit perk select")
+        end)
+    end)
+end
+
+local function AddMissile(Api)
+    Api:RegisterMissile("qiang_ge_axe", {
+        id = "qiang_ge_axe",
+        display_name = localization_table["missile/qiang_ge_axe/display_name"],
+        tip = localization_table["missile/qiang_ge_axe/tip"],
+        flavor_text = localization_table["missile/qiang_ge_axe/flavor_text"],
+        icon = DCEI.Texture("flat_icon_emoji_hammer_and_pick_2692_fe0f_ipick"),
+        missile = DCEI.SimpleUnit("COMBAT Missile Qiang Ge Axe"),
+        damage = function(attack_data, caster)
+            return 0
+        end,
+        sounds = {
+            DCEI.Sound("metalGlint"),
+        },
+    })
+end
+
+local function AddCharacter(Api)
+    local character = Api:CreateCharacter("qiang_ge")
+    character.relics = {
+        "protection_money",
+        "tough_guy",
+        "super_flu",
+    }
+    character.display_name = localization_table["character/qiang_ge/display_name"]
+    character.short_description = localization_table["character/qiang_ge/short_description"]
+    character.icon = DCEI.Texture("qiang_ge")
+    character.icon_high_resolution = DCEI.Texture("qiang_ge")
+    character.icon_high_resolution_size = { width = 700, height = 700 }
+    character.unit = DCEI.Unit("COMBAT Unit Qiang Ge")
+    character.attributes = {
+        health_maximum = 3000,
+    }
+    Api:SetCharacterStartMagazine("qiang_ge", {
+        "qiang_ge_axe",
+        "qiang_ge_axe",
+        "qiang_ge_axe",
+        "qiang_ge_axe",
+    })
+end
+
+MOD_MANAGER:AddMod(function(Api)
+    -- You can log out the language to check the language id
+    local language = DCEI.Settings.GetDisplayLanguage()
+    localization_table = localization[language] or localization["English"]
+
+    Api:EnableLog(false) -- Enable log for debugging, but be careful, it will generate a lot of logs!!
+    AddRelicProtectionMoney(Api)
+    AddRelicToughGuy(Api)
+    AddRelicFlu(Api)
+    AddMissile(Api)
+    AddCharacter(Api)
+end)

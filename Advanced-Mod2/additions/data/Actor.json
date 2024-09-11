@@ -1,0 +1,70 @@
+{
+    "actors": {
+        "COMBAT Missile Qiang Ge Axe": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "flat_icon_emoji_hammer_and_pick_2692_fe0f_ipick"
+                },
+                "modelScale": 2
+            }
+        },
+        "COMBAT Unit Qiang Ge" : {
+            "parent": "COMBAT Unit Mod Template",
+            "unitActor": {
+                "resource": {
+                    "name": "qiang_ge"
+                },
+                "events": [
+                    {
+                        "actorTerm": {
+                            "onTimer": {
+                                "name": "DeathExplode"
+                            }
+                        },
+                        "actions": [
+                            {
+                                "create": {
+                                    "actor": "COMBAT Unit Qiang Ge Death Fx"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 1
+            }
+        },
+        "COMBAT Unit Qiang Ge Death Fx": {
+            "parent": "COMBAT Unit Mod Death Fx Template",
+            "modelActor": {
+                "events": [
+                    {
+                        "actorTerm": {
+                            "actorCreate": {}
+                        },
+                        "actions": [
+                            {
+                                "setParticleProperties": {
+                                    "particleProperties": [
+                                        {
+                                            "setTexture": {
+                                                "spriteName": "qiang_ge"
+                                            }
+                                        },
+                                        {
+                                            "particleSubSystem": 3,
+                                            "setTexture": {
+                                                "spriteName": "qiang_ge"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 2.3
+            }
+        }
+    }
+}

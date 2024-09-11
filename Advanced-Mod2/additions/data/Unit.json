@@ -1,0 +1,12 @@
+{
+    "units": {
+        "COMBAT Missile Qiang Ge Axe":
+        {
+            "baseUnit": "_COMBAT Missile"
+        },
+        "COMBAT Unit Qiang Ge":
+        {
+            "baseUnit": "_COMBAT Missile"
+        }
+    }
+}

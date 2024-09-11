@@ -1,0 +1,12 @@
+{
+    "units": {
+        "COMBAT Missile My Powerful Rock":
+        {
+            "baseUnit": "_COMBAT Missile"
+        },
+        "COMBAT Unit First Mod Character":
+        {
+            "baseUnit": "_COMBAT Missile"
+        }
+    }
+}

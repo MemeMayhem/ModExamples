@@ -1,0 +1,44 @@
+local function AddNewChoice(Api)
+    -- There must be a character to play the mod
+    Api:CreateCharacter("mod-choice", "naysayer")
+    Api:RegisterChoice({
+        id = "example_choice",
+        display_name = "example choice title",
+        image = DCEI.Texture("choice_image_horse"),
+        description = "example choice description",
+        options = {
+            {
+                flavor = "example option 1 flavor",
+                description = "example option 1 description",
+                aftermath_narrative = "example option 1 aftermath narrative",
+                aftermath_description = "example option 1 aftermath description",
+                modify_attributes = {
+                    attack = 2,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "attack" },
+                    },
+                },
+            },
+            {
+                flavor = "example option 2 flavor",
+                description = "example option 2 description",
+                aftermath_narrative = "example option 2 aftermath narrative",
+                aftermath_description = "example option 2 aftermath description",
+                gain_relics = {
+                    devil_face = 1,
+                },
+            },
+        },
+    })
+    Api:SetChoicePool("mod-choice", {
+        "example_choice",
+    })
+end
+
+local function Loader(Api)
+    AddNewChoice(Api)
+end
+
+MOD_MANAGER:AddMod(Loader)

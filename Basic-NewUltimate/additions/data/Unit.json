@@ -1,0 +1,7 @@
+{
+    "units": {
+        "COMBAT Ultimate Sun": {
+            "baseUnit": "_COMBAT Missile"
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "units": {
+        "COMBAT Unit Mod Reskin Character":
+        {
+            "baseUnit": "_COMBAT Missile"
+        },
+        "COMBAT Missile Mod Rock":
+        {
+            "baseUnit": "_COMBAT Missile"
+        }
+    }
+}
