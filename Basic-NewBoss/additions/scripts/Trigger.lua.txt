@@ -8,6 +8,7 @@ local function Loader(Api)
         display_name = "mod boss",
         unit = DCEI.Unit("COMBAT Unit Custom Boss"),
         icon = DCEI.Texture("reskin"),
+        icon_low_resolution = DCEI.Texture("reskin"),
         icon_high_resolution = DCEI.Texture("reskin_high_res"),
         cosmetic_data = {
             ultimate_id = "ultimate_basketball",

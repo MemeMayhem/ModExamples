@@ -5,6 +5,7 @@ local function loader(Api)
         return
     end
     character_data.icon = DCEI.Texture("character_reskin")
+    character_data.icon_low_resolution = DCEI.Texture("character_reskin_high_res")
     character_data.icon_high_resolution = DCEI.Texture("character_reskin_high_res")
     character_data.icon_high_resolution_size = { width = 700, height = 700 }
     character_data.unit = DCEI.Unit("COMBAT Unit Mod Reskin Character")

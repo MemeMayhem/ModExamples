@@ -291,6 +291,7 @@ local function AddCharacter(Api)
     character.display_name = localization_table["character/qiang_ge/display_name"]
     character.short_description = localization_table["character/qiang_ge/short_description"]
     character.icon = DCEI.Texture("qiang_ge")
+    character.icon_low_resolution = DCEI.Texture("qiang_ge")
     character.icon_high_resolution = DCEI.Texture("qiang_ge")
     character.icon_high_resolution_size = { width = 700, height = 700 }
     character.unit = DCEI.Unit("COMBAT Unit Qiang Ge")
