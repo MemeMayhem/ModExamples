@@ -140,7 +140,7 @@ local function AddRelicProtectionMoney(Api)
             x = Api.GameMechanicTags.TAG.coin,
         }),
         flavor_text = localization_table["relic/protection_money/flavor"],
-        icon = DCEI.Texture("flat_icon_emoji_crossed_swords_2694_fe0f_ipick"),
+        icon = DCEI.Texture("flat_icon_emoji_money_with_wings_1f4b8_ipick"),
         rarity = "permanent",
         scaling_values = {
             gold = 1,
