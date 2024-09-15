@@ -1,0 +1,10 @@
+{
+    "units": {
+        "COMBAT Missile Custom Star": {
+            "baseUnit": "_COMBAT Missile"
+        },
+        "COMBAT Missile Custom Healing Heart": {
+            "baseUnit": "_COMBAT Missile"
+        }
+    }
+}

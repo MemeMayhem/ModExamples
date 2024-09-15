@@ -1,0 +1,70 @@
+{
+    "actors": {
+        "COMBAT Unit Mod Reskin Character": {
+            "parent": "COMBAT Unit Mod Template",
+            "unitActor": {
+                "resource": {
+                    "name": "character_reskin"
+                },
+                "events": [
+                    {
+                        "actorTerm": {
+                            "onTimer": {
+                                "name": "DeathExplode"
+                            }
+                        },
+                        "actions": [
+                            {
+                                "create": {
+                                    "actor": "COMBAT Unit Mod Reskin Character Death Fx"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 1
+            }
+        },
+        "COMBAT Unit Mod Reskin Character Death Fx": {
+            "parent": "COMBAT Unit Mod Death Fx Template",
+            "modelActor": {
+                "events": [
+                    {
+                        "actorTerm": {
+                            "actorCreate": {}
+                        },
+                        "actions": [
+                            {
+                                "setParticleProperties": {
+                                    "particleProperties": [
+                                        {
+                                            "setTexture": {
+                                                "spriteName": "character_reskin"
+                                            }
+                                        },
+                                        {
+                                            "particleSubSystem": 3,
+                                            "setTexture": {
+                                                "spriteName": "character_reskin"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 1.8
+            }
+        },
+        "COMBAT Missile Mod Rock": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "custom_attack_cash"
+                },
+                "modelScale": 1.3
+            }
+        }
+    }
+}

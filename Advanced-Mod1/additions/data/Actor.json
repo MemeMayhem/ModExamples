@@ -1,0 +1,70 @@
+{
+    "actors": {
+        "COMBAT Missile My Powerful Rock": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "my_power_rock"
+                },
+                "modelScale": 2
+            }
+        },
+        "COMBAT Unit First Mod Character": {
+            "parent": "COMBAT Unit Mod Template",
+            "unitActor": {
+                "resource": {
+                    "name": "my_character_large"
+                },
+                "events": [
+                    {
+                        "actorTerm": {
+                            "onTimer": {
+                                "name": "DeathExplode"
+                            }
+                        },
+                        "actions": [
+                            {
+                                "create": {
+                                    "actor": "COMBAT Unit First Mod Character Death Fx"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 0.5
+            }
+        },
+        "COMBAT Unit First Mod Character Death Fx": {
+            "parent": "COMBAT Unit Mod Death Fx Template",
+            "modelActor": {
+                "events": [
+                    {
+                        "actorTerm": {
+                            "actorCreate": {}
+                        },
+                        "actions": [
+                            {
+                                "setParticleProperties": {
+                                    "particleProperties": [
+                                        {
+                                            "setTexture": {
+                                                "spriteName": "my_character_large"
+                                            }
+                                        },
+                                        {
+                                            "particleSubSystem": 3,
+                                            "setTexture": {
+                                                "spriteName": "my_character_large"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "modelScale": 2
+            }
+        }
+    }
+}

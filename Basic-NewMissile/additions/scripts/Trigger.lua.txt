@@ -1,0 +1,70 @@
+local function AddNewMissile(Api)
+    Api:CreateCharacter("mod-missile", "naysayer")
+
+    Api:RegisterMissile("attack_star", {
+        id = "attack_star",
+        display_name = "Star",
+        tip = "Deal <color=green>77</color> damage",
+        icon = DCEI.Texture("custom_star"),
+        missile = DCEI.SimpleUnit("COMBAT Missile Custom Star"),
+        impact = DCEI.SimpleUnit("COMBAT Unit Simple HitFx"),
+        flight_time = 0.75,
+        spin_speed = -360,
+    })
+
+    Api:SetMissileDamage("attack_star", function(attack_data, caster)
+        return 77
+    end)
+
+    Api:SetMissileHitSound("attack_star", {
+        DCEI.Sound("sound_star"),
+    })
+
+    Api:RegisterMissile("attack_heart", {
+        id = "attack_heart",
+        display_name = "Healing Heart",
+        tip = "Target self\nHeal <color=green>30</color> health",
+        icon = DCEI.Texture("custom_heart"),
+        missile = DCEI.SimpleUnit("COMBAT Missile Custom Healing Heart"),
+        target_self = true,
+        flight_time = 0.75,
+    })
+
+    Api:SetMissileImpact("attack_heart", function(attack_data, caster_data, target_data)
+        --[[
+                Util.SIMPLE_DIGIT_TYPE = {
+                    NORMAL_DAMAGE = 1,
+                    HEAL = 2,
+                    DODGE = 3,
+                    CRITICAL_DAMAGE = 4,
+                    HEAL_OVERUNIT = 5,
+                    HEAL_IN_UNIT_MIDDLE = 6,
+                }
+            ]]
+        local heal_amount = 30
+        local style_index = 5
+        -- here caster and target are the same
+        target_data:Heal(heal_amount, style_index)
+    end)
+
+    Api:SetMissileHitSound("attack_heart", {
+        DCEI.Sound("sound_heal_1"),
+        DCEI.Sound("sound_heal_2"),
+        DCEI.Sound("sound_heal_3"),
+    })
+
+    Api:SetCharacterStartMagazine("mod-missile", {
+        "attack_heart",
+        "attack_heart",
+        "attack_star",
+        "attack_star",
+        "attack_star",
+        "attack_star",
+    })
+end
+
+local function Loader(Api)
+    AddNewMissile(Api)
+end
+
+MOD_MANAGER:AddMod(Loader)

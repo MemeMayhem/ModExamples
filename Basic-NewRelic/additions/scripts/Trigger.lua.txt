@@ -1,0 +1,73 @@
+local function DisplayTypePercent(value)
+    -- display rounded percentage (ex: 4.42 becomes 442%)
+    local percent = value * 100
+    return math.floor(percent + 0.5) .. "%"
+end
+
+local function AddNewRelic(Api)
+    local DIGIT_TYPE = {
+        NORMAL_DAMAGE = 1,
+        HEAL = 2,
+        DODGE = 3,
+        CRITICAL_DAMAGE = 4,
+        HEAL_OVERUNIT = 5,
+        HEAL_IN_UNIT_MIDDLE = 6,
+    }
+
+    local TAG = Api.GameMechanicTags.TAG
+    Api:RegisterRelic("custom_cookie_soup", {
+        id = "custom_cookie_soup",
+        display_name = "Cookie Soup",
+        flavor_text = "Super High Calolie",
+        description = TAG.health
+            .. "<color=green>+VAR1</color>\n"
+            .. TAG.attack_speed
+            .. "<color=red>VAR2</color>.\nIncrease "
+            .. TAG.health
+            .. " by <color=green>VAR3</color> when hit.",
+        icon = DCEI.Texture("custom_relic_cookie_soup"),
+        rarity = "permanent",
+        modify_attributes = {
+            health_maximum = 1000,
+            attack_speed = -0.2,
+        },
+        scaling_values = {
+            health_maximum = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayTypePercent,
+            },
+            {
+                address = { "scaling_values", "health_maximum" },
+            },
+        },
+    }, function(combat_unit)
+        local name = "custom_cookie_soup"
+        combat_unit.Attack:RegisterOnMissileHitCallback(name, function(level, attack_data, caster, target)
+            local scaling_key = "health_maximum"
+            local value = 1 * level
+            local use_animation = false
+
+            combat_unit:Heal(value, DIGIT_TYPE.HEAL_OVERUNIT)
+            combat_unit:ModifyAttribute(scaling_key, value, use_animation)
+            combat_unit.run_instance:ModifySavedPerkDataAttributes(scaling_key, value)
+        end)
+    end)
+
+    Api:CopyCharacter("naysayer", {
+        id = "mod-relic",
+        relics = {
+            "custom_cookie_soup",
+            "custom_cookie_soup",
+        },
+    })
+end
+
+MOD_MANAGER:AddMod(function(Api)
+    AddNewRelic(Api)
+end)

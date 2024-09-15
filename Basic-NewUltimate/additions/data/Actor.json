@@ -1,0 +1,12 @@
+{
+    "actors": {
+        "COMBAT Ultimate Sun": {
+            "parent": "_COMBAT Ultimate Static",
+            "unitActor": {
+                "resource": {
+                    "name": "new_ult"
+                }
+            }
+        }
+    }
+}

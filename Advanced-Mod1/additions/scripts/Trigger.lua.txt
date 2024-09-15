@@ -1,0 +1,326 @@
+local localization = {
+    ["English"] = {
+        ["missile/my_power_rock/display_name"] = "My Powerful Rock",
+        ["missile/my_power_rock/description"] = "Deal <color=green>100</color> damage",
+        ["missile/my_power_rock/flavor_text"] = "Heavy and powerful",
+        ["perk/my_power_rock/display_name"] = "My Powerful Perk",
+        ["perk/my_power_rock/description"] = "Gain one My Powerful Rock.\n Deals [VAR1] damage.",
+        ["perk/small_rock_on_power_rock/name"] = "Rock in Rock",
+        ["perk/small_rock_on_power_rock/description"] = "Throws a regular rock when My Powerful Rock hits the target.",
+        ["relic/my_power_cookie/display_name"] = "Overpowered Cookie",
+        ["relic/my_power_cookie/description"] = "Attack speed [VAR1]. When hit by any emoji, gain [VAR2]{[x]}.",
+        ["character/my_character/display_name"] = "First Mod Character",
+        ["character/my_character/short_description"] = "This is a character created by my first mod.",
+        ["boss/my_boss/display_name"] = "My Boss",
+        ["boss/my_boss/lines/battle_start/1"] = "Hey, prepare to be crushed!",
+        ["boss/my_boss/lines/battle_start/2"] = "You're no match for me!",
+        ["boss/my_boss/lines/on_start/1"] = "Let the battle begin!",
+        ["boss/my_boss/lines/on_start/2"] = "Time to show you what I'm made of!",
+        ["boss/my_boss/lines/on_ultimate/1"] = "Witness my ultimate power!",
+        ["boss/my_boss/lines/on_ultimate/2"] = "Feel the wrath of my ultimate attack!",
+        ["boss/my_boss/lines/on_win/1"] = "Haha, victory is mine!",
+        ["boss/my_boss/lines/on_win/2"] = "You never stood a chance!",
+        ["boss/my_boss/lines/on_lose/1"] = "I'll get my revenge next time!",
+        ["boss/my_boss/lines/on_lose/2"] = "This is just a temporary setback!",
+        ["choice/my_choice/display_name"] = "Dog",
+        ["choice/my_choice/description"] = "A dog is running towards you and looks like it's going to bite you. What do you do?",
+        ["choice/my_choice/options/1/flavor"] = "Run away",
+        ["choice/my_choice/options/1/description"] = "<color=#47b05d>[+VAR1] {[x]}</color>",
+        ["choice/my_choice/options/1/aftermath_narrative"] = "You escaped from the dog!",
+        ["choice/my_choice/options/1/aftermath_description"] = "You haven't run that fast in years and it feels great. [+VAR1] {[x]}",
+        ["choice/my_choice/options/2/flavor"] = "Throw a rock at it",
+        ["choice/my_choice/options/2/description"] = "<color=#47b05d>[+VAR1] {[x]}</color>, <color=red>[VAR2] {[y]}</color>",
+        ["choice/my_choice/options/2/aftermath_narrative"] = "You picked up a rock but the dog bit you before you could throw it.",
+        ["choice/my_choice/options/2/aftermath_description"] = "[VAR2] {[y]}. It hurts but at least you have a {[x]} ready.",
+    },
+    ["Chinese (Simplified)"] = {
+        ["missile/my_power_rock/display_name"] = "我的强力石头",
+        ["missile/my_power_rock/description"] = "造成<color=green>100</color>点伤害",
+        ["missile/my_power_rock/flavor_text"] = "强而有力",
+        ["perk/my_power_rock/display_name"] = "强力能力",
+        ["perk/my_power_rock/description"] = "获得一块强力石头\n造成[VAR1]点伤害",
+        ["perk/small_rock_on_power_rock/name"] = "石 中 石",
+        ["perk/small_rock_on_power_rock/description"] = "当我的强力石头击中目标时，投掷一块普通石头",
+        ["relic/my_power_cookie/display_name"] = "超能饼干",
+        ["relic/my_power_cookie/description"] = "攻击速度[VAR1]。受到任何表情符号攻击时，获得[VAR2]{[x]}。",
+        ["character/my_character/display_name"] = "第一个Mod角色",
+        ["character/my_character/short_description"] = "这是我第一个mod创建的角色。",
+        ["boss/my_boss/display_name"] = "我的Boss",
+        ["boss/my_boss/lines/battle_start/1"] = "嘿，准备被碾压吧！",
+        ["boss/my_boss/lines/battle_start/2"] = "你不是我的对手！",
+        ["boss/my_boss/lines/on_start/1"] = "让战斗开始吧！",
+        ["boss/my_boss/lines/on_start/2"] = "是时候展示我的实力了！",
+        ["boss/my_boss/lines/on_ultimate/1"] = "见证我的终极力量！",
+        ["boss/my_boss/lines/on_ultimate/2"] = "感受我的终极攻击之怒！",
+        ["boss/my_boss/lines/on_win/1"] = "哈哈，胜利是我的！",
+        ["boss/my_boss/lines/on_win/2"] = "你从未有过胜算！",
+        ["boss/my_boss/lines/on_lose/1"] = "下次我会报仇的！",
+        ["boss/my_boss/lines/on_lose/2"] = "这只是暂时的挫折！",
+        ["choice/my_choice/display_name"] = "狗",
+        ["choice/my_choice/description"] = "一只狗向你奔来，看起来要咬你。你会怎么做？",
+        ["choice/my_choice/options/1/flavor"] = "逃跑",
+        ["choice/my_choice/options/1/description"] = "<color=#47b05d>[+VAR1]{[x]}</color>",
+        ["choice/my_choice/options/1/aftermath_narrative"] = "你逃离了狗！",
+        ["choice/my_choice/options/1/aftermath_description"] = "你多年来从未跑得这么快，感觉很棒。[+VAR1]{[x]}",
+        ["choice/my_choice/options/2/flavor"] = "扔石头",
+        ["choice/my_choice/options/2/description"] = "<color=#47b05d>[+VAR1]{[x]}</color>，<color=red>[VAR2]{[y]}</color>",
+        ["choice/my_choice/options/2/aftermath_narrative"] = "你捡起了一块石头，但狗在你扔之前咬了你。",
+        ["choice/my_choice/options/2/aftermath_description"] = "[VAR2]{[y]}。很疼，但你觉得这个{[x]}还挺趁手。",
+    },
+}
+
+local function DisplayTypePercent(value)
+    -- display rounded percentage (ex: 4.42 becomes 442%)
+    local percent = value * 100
+    return math.floor(percent + 0.5) .. "%"
+end
+
+local function ReplaceTextMarks(text, marks)
+    for mark, replacement in pairs(marks) do
+        text = string.gsub(text, "%{%[" .. mark .. "%]%}", replacement)
+    end
+    return text
+end
+
+MOD_MANAGER:AddMod(function(Api)
+    -- You can log out the language to check the language id
+    local language = DCEI.Settings.GetDisplayLanguage()
+    local localization_table = localization[language] or localization["English"]
+
+    Api:RegisterMissile("my_power_rock", {
+        id = "my_power_rock",
+        display_name = localization_table["missile/my_power_rock/display_name"],
+        tip = localization_table["missile/my_power_rock/description"],
+        flavor_text = localization_table["missile/my_power_rock/flavor_text"],
+        icon = DCEI.Texture("my_power_rock"),
+        missile = DCEI.SimpleUnit("COMBAT Missile My Powerful Rock"),
+        damage = function(attack_data, caster)
+            return 100
+        end,
+        sounds = {
+            DCEI.Sound("my_power_rock_hit"),
+        },
+    })
+    Api:RegisterPerk("my_power_perk", {
+        id = "my_power_perk",
+        display_name = localization_table["perk/my_power_rock/display_name"],
+        description = localization_table["perk/my_power_rock/description"],
+        icon = DCEI.Texture("my_power_rock"),
+        perk_type = "missile",
+        rarity = "epic",
+        attacks = {
+            my_power_rock = 1,
+        },
+        non_scaling_value = {
+            damage = 100,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_value", "damage" },
+            },
+        },
+    })
+    Api:RegisterPerk("small_rock_on_power_rock", {
+        id = "small_rock_on_power_rock",
+        display_name = localization_table["perk/small_rock_on_power_rock/name"],
+        description = localization_table["perk/small_rock_on_power_rock/description"],
+        icon = DCEI.Texture("my_power_rock"),
+        perk_type = "perk",
+        rarity = "common",
+    }, function(combat_unit)
+        local name = "small_rock_on_power_rock"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "my_power_rock" then
+                for i = 1, level do
+                    combat_unit.Attack:NewMissileAttack(target, "attack_rock")
+                end
+            end
+        end)
+    end)
+    Api:RegisterRelic("my_power_cookie", {
+        id = "my_power_cookie",
+        display_name = localization_table["relic/my_power_cookie/display_name"],
+        description = ReplaceTextMarks(
+            localization_table["relic/my_power_cookie/description"],
+            { x = Api.GameMechanicTags.TAG.attack }
+        ),
+        icon = DCEI.Texture("smh_cookie"),
+        rarity = "permanent",
+        modify_attributes = {
+            attack_speed = -0.5,
+        },
+        scaling_values = {
+            attack = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayTypePercent,
+            },
+            {
+                address = { "scaling_values", "attack" },
+            },
+        },
+    }, function(combat_unit)
+        local name = "my_power_cookie"
+        combat_unit.Attack:RegisterOnMissileHitCallback(name, function(level, attack_data, caster, target)
+            for i = 1, level do
+                combat_unit:ModifyAttribute("attack", 1, false)
+            end
+        end)
+    end)
+    Api:CopyCharacter("naysayer", {
+        id = "my_character",
+        display_name = localization_table["character/my_character/display_name"],
+        short_description = localization_table["character/my_character/short_description"],
+        icon = DCEI.Texture("my_character_small"),
+        icon_low_resolution = DCEI.Texture("my_character_small"),
+        icon_high_resolution = DCEI.Texture("my_character_large"),
+        unit = DCEI.Unit("COMBAT Unit First Mod Character"),
+        relics = {
+            "my_power_cookie",
+        },
+        attack_ids = {
+            "my_power_rock",
+            "my_power_rock",
+        },
+        perk_chains = {
+            {
+                "my_power_perk",
+                "small_rock_on_power_rock",
+            },
+            {
+                "gain_attack",
+                "attack_quest",
+                "damage_to_health",
+                "flex_on_flex",
+            },
+        },
+    })
+
+    Api:RegisterBoss({
+        id = "my_boss",
+        display_name = localization_table["boss/my_boss/display_name"],
+        unit = DCEI.Unit("COMBAT Unit First Mod Character"),
+        icon = DCEI.Texture("my_character_small"),
+        icon_high_resolution = DCEI.Texture("my_character_large"),
+        cosmetic_data = {
+            ultimate_id = "ultimate_basketball",
+        },
+        attributes = {
+            health_maximum = 10000,
+            attack = 40,
+        },
+        perks = {
+            attack_rock = 30,
+            attack_speed = 2,
+        },
+        lines = {
+            battle_start = {
+                {
+                    localization_table["boss/my_boss/lines/battle_start/1"],
+                    localization_table["boss/my_boss/lines/battle_start/2"],
+                },
+            },
+            on_start = {
+                {
+                    localization_table["boss/my_boss/lines/on_start/1"],
+                    localization_table["boss/my_boss/lines/on_start/2"],
+                },
+            },
+            on_ultimate = {
+                {
+                    localization_table["boss/my_boss/lines/on_ultimate/1"],
+                    localization_table["boss/my_boss/lines/on_ultimate/2"],
+                },
+            },
+            on_win = {
+                {
+                    localization_table["boss/my_boss/lines/on_win/1"],
+                    localization_table["boss/my_boss/lines/on_win/2"],
+                },
+            },
+            on_lose = {
+                {
+                    localization_table["boss/my_boss/lines/on_lose/1"],
+                    localization_table["boss/my_boss/lines/on_lose/2"],
+                },
+            },
+        },
+    })
+    Api:SetCampaignBossPool("my_character", {
+        "miniboss_sad_toad",
+        "miniboss_pop_kat",
+        "miniboss_kideo",
+        "miniboss_stone",
+        "miniboss_zuck",
+        "my_boss",
+    })
+    Api:RegisterChoice({
+        id = "my_choice",
+        display_name = localization_table["choice/my_choice/display_name"],
+        image = DCEI.Texture("my_choice_dog"),
+        description = localization_table["choice/my_choice/description"],
+        options = {
+            {
+                flavor = localization_table["choice/my_choice/options/1/flavor"],
+                description = ReplaceTextMarks(
+                    localization_table["choice/my_choice/options/1/description"],
+                    { x = Api.GameMechanicTags.TAG.health }
+                ),
+                aftermath_narrative = localization_table["choice/my_choice/options/1/aftermath_narrative"],
+                aftermath_description = ReplaceTextMarks(
+                    localization_table["choice/my_choice/options/1/aftermath_description"],
+                    { x = Api.GameMechanicTags.TAG.health }
+                ),
+                modify_attributes = {
+                    health_maximum = 200,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "health_maximum" },
+                    },
+                },
+            },
+            {
+                flavor = localization_table["choice/my_choice/options/2/flavor"],
+                description = ReplaceTextMarks(
+                    localization_table["choice/my_choice/options/2/description"],
+                    { x = Api.GameMechanicTags.ATTACK_ICON.rock, y = Api.GameMechanicTags.TAG.health }
+                ),
+                aftermath_narrative = localization_table["choice/my_choice/options/2/aftermath_narrative"],
+                aftermath_description = ReplaceTextMarks(
+                    localization_table["choice/my_choice/options/2/aftermath_description"],
+                    { x = Api.GameMechanicTags.ATTACK_ICON.rock, y = Api.GameMechanicTags.TAG.health }
+                ),
+                modify_attributes = {
+                    health_maximum = -100,
+                },
+                gain_relics = {
+                    single_rock = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "gain_relics", "single_rock" },
+                    },
+                    {
+                        address = { "modify_attributes", "health_maximum" },
+                    },
+                },
+            },
+        },
+    })
+    Api:SetChoicePool("my_character", {
+        "my_choice",
+    })
+
+    --- Print game data to log file, you can check ids now exists in game ---
+
+    -- Api:PrintCharacters()
+    -- Api:PrintAttributes()
+    -- Api:PrintMissiles()
+    -- Api:PrintPerks()
+    -- Api:PrintRelics()
+    -- Api:PrintChoices()
+    -- Api:PrintBosses()
+end)

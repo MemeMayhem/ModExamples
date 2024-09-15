@@ -1,0 +1,69 @@
+local function Loader(Api)
+    -- There must be a character to play the mod
+    local character = Api:CreateCharacter("mod-boss", "naysayer")
+
+    local boss_id = "custom_boss"
+    Api:RegisterBoss({
+        id = boss_id,
+        display_name = "mod boss",
+        unit = DCEI.Unit("COMBAT Unit Custom Boss"),
+        icon = DCEI.Texture("reskin"),
+        icon_low_resolution = DCEI.Texture("reskin"),
+        icon_high_resolution = DCEI.Texture("reskin_high_res"),
+        cosmetic_data = {
+            ultimate_id = "ultimate_basketball",
+        },
+        attributes = {
+            health_maximum = 10000,
+            attack = 40,
+        },
+        perks = {
+            attack_rock = 30,
+            attack_speed = 2,
+        },
+        lines = {
+            battle_start = {
+                {
+                    "battle_start_1",
+                    "battle_start_2",
+                },
+            },
+            on_start = {
+                {
+                    "on_start_1",
+                    "on_start_2",
+                },
+            },
+            on_ultimate = {
+                {
+                    "on_ultimate_1",
+                    "on_ultimate_2",
+                },
+            },
+            on_win = {
+                {
+                    "on_win_1",
+                    "on_win_2",
+                },
+            },
+            on_lose = {
+                {
+                    "on_lose_1",
+                    "on_lose_2",
+                },
+            },
+        },
+    })
+
+    -- There should be exactly 6 bosses
+    Api:SetCampaignBossPool("mod-boss", {
+        "custom_boss",
+        "custom_boss",
+        "custom_boss",
+        "custom_boss",
+        "custom_boss",
+        "custom_boss",
+    })
+end
+
+MOD_MANAGER:AddMod(Loader)

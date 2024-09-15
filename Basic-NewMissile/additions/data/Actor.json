@@ -1,0 +1,22 @@
+{
+    "actors": {
+        "COMBAT Missile Custom Star": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "custom_star"
+                },
+                "modelScale": 1.5
+            }
+        },
+        "COMBAT Missile Custom Healing Heart": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "custom_heart"
+                },
+                "modelScale": 1.25
+            }
+        }
+    }
+}

@@ -1,0 +1,63 @@
+local function AddNewPerk(Api)
+    Api:RegisterPerk("custom_perk_3_rock", {
+        id = "custom_perk_3_rock",
+        display_name = "get 3 rocks",
+        description = "Give 3 rocks",
+        icon = DCEI.Texture("custom_icon_3_rocks"),
+        perk_type = "missile",
+        rarity = "common",
+        attacks = {
+            attack_rock = 3,
+        },
+    })
+    Api:RegisterPerk("custom_vulnerable_on_rock", {
+        id = "custom_vulnerable_on_rock",
+        display_name = "Hard Rock",
+        description = "Add vulnerable for 1 sec when rock hits",
+        icon = DCEI.Texture("custom_icon_hard_rock"),
+        perk_type = "perk",
+        rarity = "rare",
+        behavior = {
+            description = "Vulnerable by rock",
+            buff_bar_icon = DCEI.Texture("custom_icon_hard_rock"),
+            modify_attributes = {
+                vulnerable = 1,
+            },
+            duration = 1,
+        },
+    }, function(combat_unit)
+        local name = "custom_vulnerable_on_rock"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, criminal, victim)
+            if attack_data.missile_id == "attack_rock" then
+                for i = 1, level do
+                    Api.PerkBehaviorSystem:ApplyPerkBehaviorToSelf(victim, name)
+                end
+            end
+        end)
+    end)
+
+    Api:CopyCharacter("naysayer", {
+        id = "mod-perk",
+        perk_chains = {
+            {
+                "custom_perk_3_rock",
+                "custom_vulnerable_on_rock",
+            },
+            {
+                "gain_attack",
+                "attack_quest",
+                "damage_to_health",
+            },
+            {
+                "attack_speed",
+                "rush_speed_buff",
+                "speed_luck",
+                "stun_on_start",
+            },
+        },
+    })
+end
+
+MOD_MANAGER:AddMod(function(Api)
+    AddNewPerk(Api)
+end)

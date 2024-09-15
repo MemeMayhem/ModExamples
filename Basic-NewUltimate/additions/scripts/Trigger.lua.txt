@@ -1,0 +1,31 @@
+local function AddNewUltimate(Api)
+    Api:RegisterUltimate("ultimate_sun", {
+        id = "ultimate_sun",
+        icon = DCEI.Texture("new_ult"),
+        missile = DCEI.SimpleUnit("COMBAT Ultimate Sun"),
+        spin_speed = 0,
+        static = true,
+        flight_time = 1,
+    })
+
+    Api:CopyCharacter("naysayer", {
+        id = "mod-ultimate",
+        attributes = {
+            ultimate_damage = 2,
+            energy_per_second = 500,
+            energy_maximum = 2000,
+        },
+        cosmetic_data = {
+            ultimate_id = "ultimate_sun",
+        },
+    })
+
+    Api:SetUltimateLaunchSound("mod-ultimate", DCEI.Sound("sfx_ult_launch"))
+    Api:SetUltimateHitSound("mod-ultimate", DCEI.Sound("sfx_ult_hit"))
+end
+
+local function Loader(Api)
+    AddNewUltimate(Api)
+end
+
+MOD_MANAGER:AddMod(Loader)
