@@ -4,7 +4,7 @@ local function AddNewMissile(Api)
     Api:RegisterMissile("attack_star", {
         id = "attack_star",
         display_name = "Star",
-        tip = "Deal <color=green>77</color> damage",
+        tip = "Deal <color=green>7</color> " .. Api.GameMechanicTags.TAG.attack .. " damage",
         icon = DCEI.Texture("custom_star"),
         missile = DCEI.SimpleUnit("COMBAT Missile Custom Star"),
         impact = DCEI.SimpleUnit("COMBAT Unit Simple HitFx"),
@@ -13,7 +13,7 @@ local function AddNewMissile(Api)
     })
 
     Api:SetMissileDamage("attack_star", function(attack_data, caster)
-        return 77
+        return 7 * caster:GetBoundedAttribute("attack")
     end)
 
     Api:SetMissileHitSound("attack_star", {
