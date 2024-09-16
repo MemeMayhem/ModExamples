@@ -1,0 +1,637 @@
+local GameMechanicTags = {}
+
+GameMechanicTags.NEWLINE = "\n"
+GameMechanicTags.ATTACK_SIZE = "<size=192%%>"
+GameMechanicTags.ATTACK_SIZE_SMALL = "<size=128%%>"
+
+-- CHOICE COLOR REPLACEMENT TAGS
+GameMechanicTags.CHOICE_COLOR_REPLACEMENT_TAGS = {
+    positive = "<positive>",
+    negative = "<negative>",
+    color_end = "<end>",
+}
+
+local SCALE_TAG = "<size=144%>"
+GameMechanicTags.EMOJI = {
+    angry_face = SCALE_TAG .. "<sprite name=angry-face_1f620>" .. "</size>",
+    broken_heart = SCALE_TAG .. "<sprite name=broken-heart_1f494>" .. "</size>",
+    camera = SCALE_TAG .. "<sprite name=camera_1f4f7>" .. "</size>",
+    cat = SCALE_TAG .. "<sprite name=cat-face_flat_icon_emoji_1f431_ipick>" .. "</size>",
+    cat_with_tears = SCALE_TAG .. "<sprite name=cat-with-tears-of-joy_1f639>" .. "</size>",
+    collision = SCALE_TAG .. "<sprite name=collision_1f4a5>" .. "</size>",
+    computer_mouse = SCALE_TAG .. "<sprite name=computer-mouse_1f5b1-fe0f>" .. "</size>",
+    crying_cat = SCALE_TAG .. "<sprite name=crying-cat_1f63f>" .. "</size>",
+    crying_face = SCALE_TAG .. "<sprite name=crying-face_1f622>" .. "</size>",
+    cup_with_straw = SCALE_TAG .. "<sprite name=cup-with-straw_1f964>" .. "</size>",
+    dog = SCALE_TAG .. "<sprite name=dog-face_1f436>" .. "</size>",
+    dizzy_face = SCALE_TAG .. "<sprite name=dizzy-face_1f635>" .. "</size>",
+    face_with_tears_of_joy = SCALE_TAG .. "<sprite name=face-with-tears-of-joy_1f602>" .. "</size>",
+    grinning_face = SCALE_TAG .. "<sprite name=grinning_face_1f605>" .. "</size>",
+    fire = SCALE_TAG .. "<sprite name=fire_1f525>" .. "</size>",
+    frog = SCALE_TAG .. "<sprite name=frog_1f438>" .. "</size>",
+    flexed_bicep = SCALE_TAG .. "<sprite name=flexed-biceps_1f4aa>" .. "</size>",
+    frowning_face_with_open_mouth = SCALE_TAG .. "<sprite name=frowning-face-with-open-mouth_1f626>" .. "</size>",
+    green_salad = SCALE_TAG .. "<sprite name=green-salad_1f957>" .. "</size>",
+    grinning_face_with_smiling_eyes = SCALE_TAG .. "<sprite name=grinning-face-with-smiling-eyes_1f604>" .. "</size>",
+    hugging_face = SCALE_TAG .. "<sprite name=hugging-face_1f917>" .. "</size>",
+    key = SCALE_TAG .. "<sprite name=key_1f511>" .. "</size>",
+    loudly_crying_face = SCALE_TAG .. "<sprite name=loudly-crying-face_1f62d>" .. "</size>",
+    microphone = SCALE_TAG .. "<sprite name=microphone_1f3a4>" .. "</size>",
+    milky_way = SCALE_TAG .. "<sprite name=milky-way_1f30c>" .. "</size>",
+    money_mouth_face = SCALE_TAG .. "<sprite name=money-mouth-face_1f911>" .. "</size>",
+    musical_notes = SCALE_TAG .. "<sprite name=musical-notes_1f3b6>" .. "</size>",
+    nail_polish = SCALE_TAG .. "<sprite name=nail-polish_1f485>" .. "</size>",
+    party_popper = SCALE_TAG .. "<sprite name=party-popper_1f389>" .. "</size>",
+    paw_prints = SCALE_TAG .. "<sprite name=paw-prints_1f43e>" .. "</size>",
+    robot = SCALE_TAG .. "<sprite name=robot_1f916>" .. "</size>",
+    rocket = SCALE_TAG .. "<sprite name=rocket_1f680>" .. "</size>",
+    smiling_face_with_horns = SCALE_TAG .. "<sprite name=smiling-face-with-horns_1f608>" .. "</size>",
+    sleeping_face = SCALE_TAG .. "<sprite name=sleeping-face_1f634>" .. "</size>",
+    sparkling_heart = SCALE_TAG .. "<sprite name=sparkling-heart_1f496>" .. "</size>",
+    sparkles = SCALE_TAG .. "<sprite name=sparkles_2728>" .. "</size>",
+    sunrise = SCALE_TAG .. "<sprite name=sunrise_1f305>" .. "</size>",
+    taco = SCALE_TAG .. "<sprite name=taco_1f32e>" .. "</size>",
+    thinking_face = SCALE_TAG .. "<sprite name=thinking-face_1f914>" .. "</size>",
+    rock = SCALE_TAG .. "<sprite name=rock_1faa8>" .. "</size>",
+    poo = "<size=192%>" .. "<sprite name=pile-of-poo_1f4a9>" .. "</size>",
+    coin = SCALE_TAG .. "<sprite name=coin_1fa99>" .. "</size>",
+    thumb_up = "<size=192%>" .. "<sprite name=thumb_up>" .. "</size>",
+    eggplant = "<size=192%>" .. "<sprite name=egg_plant>" .. "</size>",
+    sweat_drop = "<size=192%>" .. "<sprite name=sweat_drop>" .. "</size>",
+    open_hands = SCALE_TAG .. "<sprite name=open_hands_1f450></size>",
+    ok_hand = SCALE_TAG .. "<sprite name=ok_hand></size>",
+    index_up = SCALE_TAG .. "<sprite name=index_up></size>",
+    yeah = SCALE_TAG .. "<sprite name=smh_yeah></size>",
+}
+
+local FEED_SCALE_TAG = "<size=192%>"
+GameMechanicTags.FEED_EMOJI = {
+    angry_face = FEED_SCALE_TAG .. "<sprite name=angry-face_1f620>" .. "</size>",
+    broken_heart = FEED_SCALE_TAG .. "<sprite name=broken-heart_1f494>" .. "</size>",
+    camera = FEED_SCALE_TAG .. "<sprite name=camera_1f4f7>" .. "</size>",
+    cat = FEED_SCALE_TAG .. "<sprite name=cat-face_flat_icon_emoji_1f431_ipick>" .. "</size>",
+    cat_with_tears = FEED_SCALE_TAG .. "<sprite name=cat-with-tears-of-joy_1f639>" .. "</size>",
+    collision = FEED_SCALE_TAG .. "<sprite name=collision_1f4a5>" .. "</size>",
+    computer_mouse = FEED_SCALE_TAG .. "<sprite name=computer-mouse_1f5b1-fe0f>" .. "</size>",
+    crying_cat = FEED_SCALE_TAG .. "<sprite name=crying-cat_1f63f>" .. "</size>",
+    crying_face = FEED_SCALE_TAG .. "<sprite name=crying-face_1f622>" .. "</size>",
+    cup_with_straw = FEED_SCALE_TAG .. "<sprite name=cup-with-straw_1f964>" .. "</size>",
+    dog = FEED_SCALE_TAG .. "<sprite name=dog-face_1f436>" .. "</size>",
+    dizzy_face = FEED_SCALE_TAG .. "<sprite name=dizzy-face_1f635>" .. "</size>",
+    face_with_tears_of_joy = FEED_SCALE_TAG .. "<sprite name=face-with-tears-of-joy_1f602>" .. "</size>",
+    fire = FEED_SCALE_TAG .. "<sprite name=fire_1f525>" .. "</size>",
+    frog = FEED_SCALE_TAG .. "<sprite name=frog_1f438>" .. "</size>",
+    flexed_bicep = FEED_SCALE_TAG .. "<sprite name=flexed-biceps_1f4aa>" .. "</size>",
+    frowning_face_with_open_mouth = FEED_SCALE_TAG .. "<sprite name=frowning-face-with-open-mouth_1f626>" .. "</size>",
+    green_salad = FEED_SCALE_TAG .. "<sprite name=green-salad_1f957>" .. "</size>",
+    grinning_face = SCALE_TAG .. "<sprite name=grinning_face_1f605>" .. "</size>",
+    grinning_face_with_smiling_eyes = FEED_SCALE_TAG
+        .. "<sprite name=grinning-face-with-smiling-eyes_1f604>"
+        .. "</size>",
+    hugging_face = FEED_SCALE_TAG .. "<sprite name=hugging-face_1f917>" .. "</size>",
+    key = FEED_SCALE_TAG .. "<sprite name=key_1f511>" .. "</size>",
+    loudly_crying_face = FEED_SCALE_TAG .. "<sprite name=loudly-crying-face_1f62d>" .. "</size>",
+    microphone = FEED_SCALE_TAG .. "<sprite name=microphone_1f3a4>" .. "</size>",
+    milky_way = FEED_SCALE_TAG .. "<sprite name=milky-way_1f30c>" .. "</size>",
+    money_mouth_face = FEED_SCALE_TAG .. "<sprite name=money-mouth-face_1f911>" .. "</size>",
+    musical_notes = FEED_SCALE_TAG .. "<sprite name=musical-notes_1f3b6>" .. "</size>",
+    nail_polish = FEED_SCALE_TAG .. "<sprite name=nail-polish_1f485>" .. "</size>",
+    party_popper = FEED_SCALE_TAG .. "<sprite name=party-popper_1f389>" .. "</size>",
+    paw_prints = FEED_SCALE_TAG .. "<sprite name=paw-prints_1f43e>" .. "</size>",
+    robot = FEED_SCALE_TAG .. "<sprite name=robot_1f916>" .. "</size>",
+    rocket = FEED_SCALE_TAG .. "<sprite name=rocket_1f680>" .. "</size>",
+    smiling_face_with_horns = FEED_SCALE_TAG .. "<sprite name=smiling-face-with-horns_1f608>" .. "</size>",
+    sleeping_face = FEED_SCALE_TAG .. "<sprite name=sleeping-face_1f634>" .. "</size>",
+    sparkling_heart = FEED_SCALE_TAG .. "<sprite name=sparkling-heart_1f496>" .. "</size>",
+    sparkles = FEED_SCALE_TAG .. "<sprite name=sparkles_2728>" .. "</size>",
+    sunrise = FEED_SCALE_TAG .. "<sprite name=sunrise_1f305>" .. "</size>",
+    taco = FEED_SCALE_TAG .. "<sprite name=taco_1f32e>" .. "</size>",
+    thinking_face = FEED_SCALE_TAG .. "<sprite name=thinking-face_1f914>" .. "</size>",
+    poo = FEED_SCALE_TAG .. "<sprite name=pile-of-poo_1f4a9>" .. "</size>",
+    rock = FEED_SCALE_TAG .. "<sprite name=rock_1faa8>" .. "</size>",
+    coin = FEED_SCALE_TAG .. "<sprite name=coin_1fa99>" .. "</size>",
+    thumb_up = FEED_SCALE_TAG .. "<sprite name=thumb_up>" .. "</size>",
+    eggplant = FEED_SCALE_TAG .. "<sprite name=egg_plant>" .. "</size>",
+    sweat_drop = FEED_SCALE_TAG .. "<sprite name=sweat_drop>" .. "</size>",
+    hand = FEED_SCALE_TAG .. "<sprite name=hand>" .. "</size>",
+    pepper = FEED_SCALE_TAG .. "<sprite name=pepper_1f336></size>",
+    cow = FEED_SCALE_TAG .. "<sprite name=cow></size>",
+    beer = FEED_SCALE_TAG .. "<sprite name=beer></size>",
+    horse = FEED_SCALE_TAG .. "<sprite name=horse_1f434></size>",
+    dice = GameMechanicTags.ATTACK_SIZE .. "<sprite name=attack_dice></size>",
+    grandpa = FEED_SCALE_TAG .. "<sprite name=grandpa></size>",
+    victory_hand = FEED_SCALE_TAG .. "<sprite name=victory_hand></size>",
+    open_hands = FEED_SCALE_TAG .. "<sprite name=open_hands_1f450></size>",
+    ok_hand = FEED_SCALE_TAG .. "<sprite name=ok_hand></size>",
+    index_up = FEED_SCALE_TAG .. "<sprite name=index_up></size>",
+    yeah = FEED_SCALE_TAG .. "<sprite name=smh_yeah></size>",
+}
+
+GameMechanicTags.TAG = {
+    -- perk attribute tags
+    health = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=red-heart_2764-fe0f>"
+        .. "</size>"
+        .. ("combat/attributes/max_health/name"),
+    current_health = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=red-heart_2764-fe0f>"
+        .. "</size>"
+        .. ("combat/attributes/health"),
+    energy_regen = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=high-voltage_26a1>"
+        .. "</size>"
+        .. ("combat/attributes/energy_regen/name"),
+    max_energy = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_max_energy>"
+        .. "</size>"
+        .. ("combat/attributes/max_energy/name"),
+    attack = GameMechanicTags.ATTACK_SIZE .. "<sprite name=raised-fist_270a>" .. "</size>" .. (
+        "combat/attributes/attack/name"
+    ),
+    attack_speed = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=stopwatch_23f1-fe0f>"
+        .. "</size>"
+        .. ("combat/attributes/attack_speed/name"),
+    ultimate_damage = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=cyclone_1f300>"
+        .. "</size>"
+        .. ("combat/attributes/ultimate_damage/name"),
+    crit_chance = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=direct-hit_1f3af>"
+        .. "</size>"
+        .. ("combat/attributes/crit_chance/name"),
+    crit = GameMechanicTags.ATTACK_SIZE .. "<sprite name=direct-hit_1f3af>" .. "</size>" .. (
+        "combat/attributes/crit/name"
+    ),
+    crit_damage = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=anger-symbol_1f4a2>"
+        .. "</size>"
+        .. ("combat/attributes/crit_damage/name"),
+    thorns = GameMechanicTags.ATTACK_SIZE .. "<sprite name=rose_1f339>" .. "</size>" .. (
+        "combat/attributes/retaliate/name"
+    ),
+    health_regen = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=adhesive-bandage_1fa79>"
+        .. "</size>"
+        .. ("combat/attributes/health_per_second/name"),
+    dodge_chance = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=leaf-fluttering-in-wind_1f343>"
+        .. "</size>"
+        .. ("combat/attributes/dodge_chance/name"),
+    armor = GameMechanicTags.ATTACK_SIZE .. "<sprite name=shield_1f6e1-fe0f>" .. "</size>" .. (
+        "combat/attributes/block/name"
+    ),
+    thorn_block = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_thorn_block>"
+        .. "</size>"
+        .. ("combat/perk/gain_thorn_block/name"),
+    evo_point = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_double_egg>" .. "</size>" .. (
+        "combat/attributes/dragon_hit/name"
+    ),
+    luck = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=four-leaf-clover_1f340>"
+        .. "</size>"
+        .. ("combat/attributes/luck/name"),
+    income = GameMechanicTags.ATTACK_SIZE .. "<sprite name=money-bag_1f4b0>" .. "</size>" .. (
+        "combat/attributes/income/name"
+    ),
+    free_rolls = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=high-voltage_26a1>"
+        .. "</size>"
+        .. ("combat/attributes/free_rolls/name"),
+    heal_enhancement = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=hospital>"
+        .. "</size>"
+        .. ("combat/attributes/heal_enhancement/name"),
+    -- other attribute tags
+    coin = GameMechanicTags.ATTACK_SIZE .. "<sprite name=coin_1fa99>" .. "</size>" .. (
+        "tooltips/combat/ecoin/title"
+    ),
+    energy = GameMechanicTags.ATTACK_SIZE .. "<sprite name=high-voltage_26a1>" .. "</size>" .. (
+        "combat/attributes/energy/name"
+    ),
+    oil = GameMechanicTags.ATTACK_SIZE .. "<sprite name=oil-droplet_1f4a7>" .. "</size>" .. (
+        "combat/attributes/oil/name"
+    ),
+    vulnerable = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=broken-heart_1f494>"
+        .. "</size>"
+        .. ("combat/attributes/vulnerable/name"),
+    robot = GameMechanicTags.ATTACK_SIZE .. "<sprite name=robot_1f916></size>",
+    robot_base_attack = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_robot_attack></size>"
+        .. ("combat/attributes/robot_base_attack/name"),
+    ninja_training = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_ninja></size>" .. (
+        "combat/perk/recruit_ninja_quest/name"
+    ),
+    robot_explosion_damage = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_robot_explosion></size>"
+        .. ("combat/attributes/robot_explosion_damage_multiplier/name"),
+
+    illusion_damage = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_illusion_damage>"
+        .. "</size>"
+        .. ("combat/perk/illusion_damage/name"),
+    illusion_attackspeed = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_illusion_benifit>"
+        .. "</size>"
+        .. ("combat/perk/illusion_attackspeed/name"),
+
+    speech_bubble = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_speech_bubble>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/speech_bubble/name")
+        .. "</color>",
+
+    distance = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_distance>"
+        .. "</size><color=#00acee>"
+        .. ("combat/perk/distance/name")
+        .. "</color>",
+    leipu = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_leipu>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/leipu/name")
+        .. "</color>",
+
+    empty_card = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_empty_card>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/empty_card/name")
+        .. "</color>",
+    empty_card_slot = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_empty_card_slot>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/empty_card_slot/name")
+        .. "</color>",
+    blank_perk_on_rock = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_empty_rock_perk>"
+        .. "</size><color=#00acee>"
+        .. ("combat/perk/blank_perk_on_rock/name")
+        .. "</color>",
+    blank_perk_on_crush = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_empty_crush_perk>"
+        .. "</size><color=#00acee>"
+        .. ("combat/perk/blank_perk_on_crush/name")
+        .. "</color>",
+    blank_perk_on_hit = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_empty_tomato_perk>"
+        .. "</size><color=#00acee>"
+        .. ("combat/perk/blank_perk_on_hit/name")
+        .. "</color>",
+    blank_perk_quest = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_permanent_tomato_card>"
+        .. "</size><color=#00acee>"
+        .. ("combat/perk/blank_perk_quest/name")
+        .. "</color>",
+    blank_perk_on_dodge = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_dodge_empty_perk>"
+        .. "</size><color=#00acee>"
+        .. ("combat/perk/blank_perk_on_dodge/name")
+        .. "</color>",
+    print = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_print>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/print/name")
+        .. "</color>",
+    copy_piece = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_copy>"
+        .. "</size><color=#00acee>"
+        .. ("combat/perk/copy/name")
+        .. "</color>",
+    finish_card = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_finish_card>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/finish_card/name")
+        .. "</color>",
+    poison = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_poison_poo>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/poison/name")
+        .. "</color>",
+    wraith = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=angry_1f621>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/wraith/name")
+        .. "</color>",
+    calm = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=loudly-crying-face_1f62d>"
+        .. "</size><color=#00acee>"
+        .. ("combat/tag/calm/name")
+        .. "</color>",
+    -- Keyword tags
+    copy = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_copy>" .. "</size><b>" .. (
+        "combat/attributes/copy/name"
+    ) .. "</b>",
+    rush = GameMechanicTags.ATTACK_SIZE .. "<sprite name=rush>" .. "</size><b>" .. (
+        "combat/attributes/rush/name"
+    ) .. "</b>",
+    unprintable = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_unprintable>"
+        .. "</size><b>"
+        .. ("combat/attributes/unprintable/name")
+        .. "</b>",
+    emergency = GameMechanicTags.ATTACK_SIZE .. "<sprite name=siren>" .. "</size><b>" .. (
+        "combat/attributes/emergency/name"
+    ) .. "</b>",
+    discovery = GameMechanicTags.ATTACK_SIZE .. "<sprite name=medal_three>" .. "</size><b>" .. (
+        "combat/attributes/discovery/name"
+    ) .. "</b>",
+    overclock = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_open_hands>"
+        .. "</size><b>"
+        .. ("combat/attributes/overclock/name")
+        .. "</b>",
+    illusion_attack = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_illusion_damage>"
+        .. "</size><b>"
+        .. ("combat/attributes/illusion_attack/name")
+        .. "</b>",
+    illusion = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_illusion>" .. "</size><b>" .. (
+        "combat/attributes/illusion/name"
+    ) .. "</b>",
+    startup = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_startup>" .. "</size><b>" .. (
+        "combat/attributes/startup/name"
+    ) .. "</b>",
+    blood_sugar = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_blood_sugar>"
+        .. "</size>"
+        .. ("combat/relic/blood_sugar/name"),
+    metabolic = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_metabolic>" .. "</size>" .. (
+        "combat/relic/metabolic/name"
+    ),
+    hypoglycemia = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_hypoglycemia>"
+        .. "</size><b>"
+        .. ("combat/attributes/hypoglycemia/name")
+        .. "</b>",
+    eupoglycemia = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=grinning-face-with-smiling-eyes_1f604>"
+        .. "</size><b>"
+        .. ("combat/attributes/eupoglycemia/name")
+        .. "</b>",
+    hyperglycemia = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=smh_hyperglycemia>"
+        .. "</size><b>"
+        .. ("combat/attributes/hyperglycemia/name")
+        .. "</b>",
+    tomato = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_tomato>" .. "</size><b>" .. (
+        "combat/attributes/tomato/name"
+    ) .. "</b>",
+    robot_explosion = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=collision_1f4a5>"
+        .. "</size><b>"
+        .. ("combat/attributes/robot_explosion/name")
+        .. "</b>",
+    ascension_star = GameMechanicTags.ATTACK_SIZE
+        .. "<sprite name=star_2b50>"
+        .. "</size><b>"
+        .. ("tooltips/combat/ascension/title")
+        .. "</b>",
+}
+GameMechanicTags.ATTACK_ICON = {
+    rock = GameMechanicTags.ATTACK_SIZE .. "<sprite name=rock_1faa8></size>",
+    axe = GameMechanicTags.ATTACK_SIZE .. "<sprite name=axe_1fa93></size>",
+    flex = GameMechanicTags.ATTACK_SIZE .. "<sprite name=flexed-biceps_1f4aa></size>",
+    brain = GameMechanicTags.ATTACK_SIZE .. "<sprite name=brain_1f9e0></size>",
+    vampire = GameMechanicTags.ATTACK_SIZE .. "<sprite name=vampire_1f9db></size>",
+    ice = GameMechanicTags.ATTACK_SIZE .. "<sprite name=ice_1f9ca></size>",
+    poo = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pile-of-poo_1f4a9></size>",
+    oil = GameMechanicTags.ATTACK_SIZE .. "<sprite name=oil-drum_1f6e2></size>",
+    bomb = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bomb></size>",
+    blood = GameMechanicTags.ATTACK_SIZE .. "<sprite name=drop-of-blood_1fa78></size>",
+    dragon = GameMechanicTags.ATTACK_SIZE .. "<sprite name=egg></size>",
+    horse = GameMechanicTags.ATTACK_SIZE .. "<sprite name=horse_1f434></size>",
+    ninja = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_ninja></size>",
+    dice = GameMechanicTags.ATTACK_SIZE .. "<sprite name=attack_dice></size>",
+    music_note = GameMechanicTags.ATTACK_SIZE .. "<sprite name=music_note_1f3b5></size>",
+    coin_bullet = GameMechanicTags.ATTACK_SIZE .. "<sprite name=coin_1fa99></size>",
+    wheat = GameMechanicTags.ATTACK_SIZE .. "<sprite name=sheaf-of-rice_1f33e></size>",
+    shark = GameMechanicTags.ATTACK_SIZE .. "<sprite name=shark></size>",
+    screw = GameMechanicTags.ATTACK_SIZE .. "<sprite name=screw_1f529></size>",
+    golden_screwdriver = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_golden_screwdriver></size>",
+    screwdriver = GameMechanicTags.ATTACK_SIZE .. "<sprite name=screwdriver_1fa9b></size>",
+    milk = GameMechanicTags.ATTACK_SIZE .. "<sprite name=milk></size>",
+    burger = GameMechanicTags.ATTACK_SIZE .. "<sprite name=fast_food_1f354></size>",
+    tomato = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_tomato></size>",
+    red_tea = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_red_tea></size>",
+    ult = GameMechanicTags.ATTACK_SIZE .. "<sprite name=cyclone_1f300></size>" .. (
+        "combat/wave_summary/ultimate_damage/name"
+    ),
+}
+
+GameMechanicTags.ATTACK_ICON_SMALL = {
+    rock = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=rock_1faa8></size>",
+    axe = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=axe_1fa93></size>",
+    flex = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=flexed-biceps_1f4aa></size>",
+    brain = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=brain_1f9e0></size>",
+    vampire = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=vampire_1f9db></size>",
+    ice = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=ice_1f9ca></size>",
+    poo = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=pile-of-poo_1f4a9></size>",
+    oil = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=oil-drum_1f6e2></size>",
+    dragon = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=egg></size>",
+    horse = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=horse_1f434></size>",
+    ninja = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=smh_ninja></size>",
+    dice = GameMechanicTags.ATTACK_SIZE .. "<sprite name=attack_dice></size>",
+    bomb = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=bomb></size>",
+    shark = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=shark></size>",
+    milk = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=milk></size>",
+    red_tea = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=smh_red_tea></size>",
+}
+
+GameMechanicTags.RELIC_ICON = {
+    temp = GameMechanicTags.ATTACK_SIZE .. "<sprite name=grinning-face-with-smiling-eyes_1f604></size>",
+
+    smile_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=grinning-face_1f600></size>",
+
+    guitar = GameMechanicTags.ATTACK_SIZE .. "<sprite name=guitar></size>",
+    music_keyboard = GameMechanicTags.ATTACK_SIZE .. "<sprite name=music_keyboard></size>",
+    drum = GameMechanicTags.ATTACK_SIZE .. "<sprite name=drum></size>",
+    singer = GameMechanicTags.ATTACK_SIZE .. "<sprite name=microphone></size>",
+
+    bag_of_flex = GameMechanicTags.ATTACK_SIZE .. "<sprite name=flexed-biceps_1f4aa></size>",
+    bag_of_poo = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pile-of-poo_1f4a9></size>",
+    bag_of_frost = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=ice_1f9ca></size>",
+    bag_of_lifesteal = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=vampire_1f9db></size>",
+    bag_of_brain = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=brain_1f9e0></size>",
+    bag_of_crush = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=axe_1fa93></size>",
+    bag_of_oil = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=oil-drum_1f6e2></size>",
+    bag_of_music_note = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=music_notes_1f3b6></size>",
+
+    glass_cannon = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=jar_1fad9></size>",
+    cursed_charm = GameMechanicTags.ATTACK_SIZE_SMALL .. "<sprite name=jack-o-lantern_1f383></size>",
+    red_envelop = GameMechanicTags.ATTACK_SIZE .. "<sprite name=red_envelop></size>",
+    blue_fish = GameMechanicTags.ATTACK_SIZE .. "<sprite name=blue_fish></size>",
+    purple_fish = GameMechanicTags.ATTACK_SIZE .. "<sprite name=purple_fish></size>",
+    yellow_fish = GameMechanicTags.ATTACK_SIZE .. "<sprite name=yellow_fish></size>",
+    super_drug = GameMechanicTags.ATTACK_SIZE .. "<sprite name=super_drug></size>",
+    pretzel = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pretzel_1f968></size>",
+    ugly_poo = GameMechanicTags.ATTACK_SIZE .. "<sprite name=ugly_poo></size>",
+    credit_card = GameMechanicTags.ATTACK_SIZE .. "<sprite name=credit_card_1f4b3></size>",
+    poison_apple = GameMechanicTags.ATTACK_SIZE .. "<sprite name=apple_1f34f></size>",
+    high_heel = GameMechanicTags.ATTACK_SIZE .. "<sprite name=high_heel_1f460></size>",
+    sandal = GameMechanicTags.ATTACK_SIZE .. "<sprite name=sandal_1fa74></size>",
+    beans = GameMechanicTags.ATTACK_SIZE .. "<sprite name=beans_1fad8></size>",
+    cactus = GameMechanicTags.ATTACK_SIZE .. "<sprite name=cactus_1f335></size>",
+    fast_food = GameMechanicTags.ATTACK_SIZE .. "<sprite name=fast_food_1f354></size>",
+    broccoli = GameMechanicTags.ATTACK_SIZE .. "<sprite name=broccoli_1f966></size>",
+    pepper = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pepper_1f336></size>",
+    cat = GameMechanicTags.ATTACK_SIZE .. "<sprite name=cat-face_1f431></size>",
+    dog = GameMechanicTags.ATTACK_SIZE .. "<sprite name=dog-face_1f436></size>",
+    fire_cracker = GameMechanicTags.ATTACK_SIZE .. "<sprite name=anger-symbol_1f4a2></size>",
+
+    crit_chance_quest = GameMechanicTags.ATTACK_SIZE .. "<sprite name=angry_1f621></size>",
+    flex_on_crit = GameMechanicTags.ATTACK_SIZE .. "<sprite name=ogre_1f479></size>",
+    attack_speed_quest = GameMechanicTags.ATTACK_SIZE .. "<sprite name=flag_1f3c1></size>",
+
+    heal_on_dodge = GameMechanicTags.ATTACK_SIZE .. "<sprite name=butterfly_1f98b></size>",
+    health_regen_percentage = GameMechanicTags.ATTACK_SIZE .. "<sprite name=troll></size>",
+    health_per_second_quest = GameMechanicTags.ATTACK_SIZE .. "<sprite name=yellow_heart></size>",
+    crush_on_heal = GameMechanicTags.ATTACK_SIZE .. "<sprite name=fire_heart></size>",
+    dragon_heart = GameMechanicTags.ATTACK_SIZE .. "<sprite name=dragon_heart></size>",
+    gear = GameMechanicTags.ATTACK_SIZE .. "<sprite name=gear_2699></size>",
+    weary_cat = GameMechanicTags.ATTACK_SIZE .. "<sprite name=weary_cat_1f640></size>",
+    silent_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=silent_face_1f910></size>",
+    aggressive = GameMechanicTags.ATTACK_SIZE .. "<sprite name=aggressive_1f92c></size>",
+    funny = GameMechanicTags.ATTACK_SIZE .. "<sprite name=funny_1f92a></size>",
+    lollipop = GameMechanicTags.ATTACK_SIZE .. "<sprite name=lollipop_1f36d></size>",
+    sales_medal = GameMechanicTags.ATTACK_SIZE .. "<sprite name=sales_medal></size>",
+    ashamed_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=ashamed_1fae3></size>",
+    uphone = GameMechanicTags.ATTACK_SIZE .. "<sprite name=uphone_1f4f1></size>",
+    justice_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=justice></size>",
+    innocent_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=innocent></size>",
+    love_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=love_face></size>",
+    devil_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=devil_face></size>",
+    pasta = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pasta></size>",
+    nuke = GameMechanicTags.ATTACK_SIZE .. "<sprite name=nuke></size>",
+    facewall_stock = GameMechanicTags.ATTACK_SIZE .. "<sprite name=fb_stock></size>",
+    edison_stock = GameMechanicTags.ATTACK_SIZE .. "<sprite name=tesla_stock></size>",
+    dead_phone = GameMechanicTags.ATTACK_SIZE .. "<sprite name=dead_phone></size>",
+    bored_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bored_face></size>",
+    drooling_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=drooling_face></size>",
+    salute_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=salute_face></size>",
+    rice_ball = GameMechanicTags.ATTACK_SIZE .. "<sprite name=rice_ball_1f359></size>",
+    sushi = GameMechanicTags.ATTACK_SIZE .. "<sprite name=sushi_1f363></size>",
+    roll_of_paper = GameMechanicTags.ATTACK_SIZE .. "<sprite name=roll_of_paper_1f9fb></size>",
+    baguette_bread = GameMechanicTags.ATTACK_SIZE .. "<sprite name=baguette_1f956></size>",
+    horse = GameMechanicTags.ATTACK_SIZE .. "<sprite name=horse_1f434></size>",
+    dice = GameMechanicTags.ATTACK_SIZE .. "<sprite name=attack_dice></size>",
+    apple = GameMechanicTags.ATTACK_SIZE .. "<sprite name=apple_1f34e></size>",
+    open_hands = GameMechanicTags.ATTACK_SIZE .. "<sprite name=open_hands_1f450></size>",
+    gloves = GameMechanicTags.ATTACK_SIZE .. "<sprite name=gloves_1f9e4></size>",
+    coffee = GameMechanicTags.ATTACK_SIZE .. "<sprite name=coffee_2615></size>",
+    pig = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_pig></size>",
+    rosette = GameMechanicTags.ATTACK_SIZE .. "<sprite name=rosette_1f3f5></size>",
+    squid = GameMechanicTags.ATTACK_SIZE .. "<sprite name=squid_1f991></size>",
+
+    fade_flower = GameMechanicTags.ATTACK_SIZE .. "<sprite name=fade_flower></size>",
+    rich_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=rich_face></size>",
+    old_key = GameMechanicTags.ATTACK_SIZE .. "<sprite name=old_key></size>",
+    good_poo = GameMechanicTags.ATTACK_SIZE .. "<sprite name=good_poo></size>",
+    sunglass_stone = GameMechanicTags.ATTACK_SIZE .. "<sprite name=sunglass_stone></size>",
+    coded_disk = GameMechanicTags.ATTACK_SIZE .. "<sprite name=coded_disk></size>",
+    fear_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=fear_face></size>",
+    naked_run = GameMechanicTags.ATTACK_SIZE .. "<sprite name=naked_run></size>",
+    pen = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pen></size>",
+    doubleside_breif = GameMechanicTags.ATTACK_SIZE .. "<sprite name=doubleside_breif></size>",
+    bacon = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bacon_1f953></size>",
+    blue_heart = GameMechanicTags.ATTACK_SIZE .. "<sprite name=blue_heart_1f499></size>",
+    bottom_line = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bottom_line_26d4></size>",
+    cockroach = GameMechanicTags.ATTACK_SIZE .. "<sprite name=cockroach_1fab3></size>",
+    energy_drain = GameMechanicTags.ATTACK_SIZE .. "<sprite name=drain_1f4f2></size>",
+    phantom_elephant = GameMechanicTags.ATTACK_SIZE .. "<sprite name=elephant_1f418></size>",
+    the_finger = GameMechanicTags.ATTACK_SIZE .. "<sprite name=finger_1f595></size>",
+    foot_print = GameMechanicTags.ATTACK_SIZE .. "<sprite name=foot_print_1f463></size>",
+    hug = GameMechanicTags.ATTACK_SIZE .. "<sprite name=hug_1fac2></size>",
+    indifference = GameMechanicTags.ATTACK_SIZE .. "<sprite name=indifference_1fae4></size>",
+    justice_devil = GameMechanicTags.ATTACK_SIZE .. "<sprite name=justice_devil></size>",
+    lion = GameMechanicTags.ATTACK_SIZE .. "<sprite name=lion_1f981></size>",
+    lonely_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=lonely_1f614></size>",
+    playa = GameMechanicTags.ATTACK_SIZE .. "<sprite name=merman></size>",
+    monkey = GameMechanicTags.ATTACK_SIZE .. "<sprite name=monkey_1f648></size>",
+    pin = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pin_1f4cc></size>",
+    pride_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=pride_1f63c></size>",
+    purple_wine = GameMechanicTags.ATTACK_SIZE .. "<sprite name=purple_wine></size>",
+    r_18 = GameMechanicTags.ATTACK_SIZE .. "<sprite name=r_18_1f51e></size>",
+    small_rev = GameMechanicTags.ATTACK_SIZE .. "<sprite name=race_car></size>",
+    shock_face = GameMechanicTags.ATTACK_SIZE .. "<sprite name=shock_1f632></size>",
+    failure_student = GameMechanicTags.ATTACK_SIZE .. "<sprite name=student_1f64e-200d-2642-fe0f></size>",
+    super_respect = GameMechanicTags.ATTACK_SIZE .. "<sprite name=super_respect></size>",
+    thumb_down = GameMechanicTags.ATTACK_SIZE .. "<sprite name=thumb_down_1f44e></size>",
+    thumb_up = GameMechanicTags.ATTACK_SIZE .. "<sprite name=thumb_up></size>",
+    turtle = GameMechanicTags.ATTACK_SIZE .. "<sprite name=turtle_1f422></size>",
+    two_hearts = GameMechanicTags.ATTACK_SIZE .. "<sprite name=two_heart_1f49e></size>",
+    giant_jet = GameMechanicTags.ATTACK_SIZE .. "<sprite name=whale_1f433></size>",
+    delay_damage = GameMechanicTags.ATTACK_SIZE .. "<sprite name=face_in_cloud></size>",
+    single_flex = GameMechanicTags.ATTACK_SIZE .. "<sprite name=angry-face_1f620>" .. "</size>",
+    single_rock = GameMechanicTags.ATTACK_SIZE .. "<sprite name=rock_1faa8>" .. "</size>",
+    single_shark = GameMechanicTags.ATTACK_SIZE .. "<sprite name=shark>" .. "</size>",
+    breaking_heart = GameMechanicTags.ATTACK_SIZE .. "<sprite name=broken-heart_1f494>" .. "</size>",
+    tear_drop = GameMechanicTags.ATTACK_SIZE .. "<sprite name=blue_droplet>" .. "</size>",
+    cursed_bomb = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bomb></size>",
+    small_clover = GameMechanicTags.ATTACK_SIZE .. "<sprite name=four-leaf-clover_1f340></size>",
+
+    lobster = GameMechanicTags.ATTACK_SIZE .. "<sprite name=lobster></size>",
+    bread = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bread></size>",
+    knife = GameMechanicTags.ATTACK_SIZE .. "<sprite name=knife></size>",
+    bald = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bald></size>",
+    bubble_tea = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bubble_tea></size>",
+    linked_paperclips = GameMechanicTags.ATTACK_SIZE .. "<sprite name=linked_paperclips></size>",
+    garlic = GameMechanicTags.ATTACK_SIZE .. "<sprite name=garlic></size>",
+    lefthand = GameMechanicTags.ATTACK_SIZE .. "<sprite name=lefthand></size>",
+    righthand = GameMechanicTags.ATTACK_SIZE .. "<sprite name=righthand></size>",
+
+    maga_hat = GameMechanicTags.ATTACK_SIZE .. "<sprite name=comic_portrait_missile_trumphat_ipick></size>",
+    trolley_switch = GameMechanicTags.ATTACK_SIZE .. "<sprite name=trolley_switch></size>",
+
+    question_mark = GameMechanicTags.ATTACK_SIZE .. "<sprite name=question_mark_2754></size>",
+
+    debt_damage_to_enemy = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_debt_damage_to_enemy></size>",
+    wonder_of_u = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_wonder_of_u></size>",
+    greedy_pot = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_greedy_pot></size>",
+
+    mind_blown = GameMechanicTags.ATTACK_SIZE .. "<sprite name=mind_blown></size>",
+    chopsticks = GameMechanicTags.ATTACK_SIZE .. "<sprite name=chopsticks></size>",
+    siren = GameMechanicTags.ATTACK_SIZE .. "<sprite name=siren></size>",
+    face_mask = GameMechanicTags.ATTACK_SIZE .. "<sprite name=face_mask></size>",
+    robot = GameMechanicTags.ATTACK_SIZE .. "<sprite name=robot_1f916></size>",
+    band = GameMechanicTags.ATTACK_SIZE .. "<sprite name=band_ipick></size>",
+
+    walking_octopus = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_walking_octopus></size>",
+    window = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_window></size>",
+
+    debt_to_attack = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_debt_to_attack></size>",
+
+    calm_on_start = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_calm_on_start></size>",
+    wraith_on_explosion = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_wraith_on_explosion></size>",
+
+    halftime_champagne = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_halftime_champagne></size>",
+    super_bomb = GameMechanicTags.ATTACK_SIZE .. "<sprite name=bomb></size>",
+
+    blackhole = GameMechanicTags.ATTACK_SIZE .. "<sprite name=blackhole></size>",
+    piggy = GameMechanicTags.ATTACK_SIZE .. "<sprite name=piggy></size>",
+
+    blessing_of_nurgle = GameMechanicTags.ATTACK_SIZE .. "<sprite name=smh_nurgle></size>",
+}
+
+GameMechanicTags.PERK_TYPE = {
+    missile = {
+        id = "missile",
+        display_name = ("ui/generic/attack"),
+    },
+    perk = {
+        id = "perk",
+        display_name = ("ui/generic/perk"),
+    },
+}
+
+-- ANCHOR PERK EVENT TYPES
+GameMechanicTags.TRIGGERING_EVENT_TYPE = {
+    OnBattleStart = "OnBattleStart",
+    OnWin = "OnWin",
+    OnHealthThreshold = "OnHealthThreshold",
+    Rush = "Rush",
+    OnUltmateAttackLaunch = "OnUltmateAttackLaunch",
+}
+
+return GameMechanicTags
