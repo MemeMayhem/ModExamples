@@ -1,0 +1,70 @@
+local function AddNewPerk(Api)
+    Api:RegisterPerk("custom_perk_rock_quest", {
+        id = "custom_perk_rock_quest",
+        display_name = "Rock Explosion",
+        description = "Add 1 " .. Api.GameMechanicTags.EMOJI.rock .. " when hitting the enemy with " .. Api.GameMechanicTags.EMOJI.rock .. " 10 times.",
+        icon = DCEI.Texture("custom_icon_3_rocks"),
+        perk_type = "missile",
+        rarity = "common",
+    }, function(combat_unit)
+        local name = "custom_perk_rock_quest"
+        combat_unit:RegisterOnCombatStartCallback(name, function (level, target)
+            -- Modify the max health for the current battle.
+            combat_unit:ModifyAttribute("health_maximum", 1000, false)
+        end)
+        combat_unit:RegisterOnCombatEndCallback(name, function (level, target)
+            -- Modify the max health that persists.
+            combat_unit.run_instance:ModifySavedPerkDataAttributes("health_maximum", 100)
+        end)
+
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id ~= "attack_rock" then
+                return
+            end
+
+            caster.custom_perk_rock_quest = caster.custom_perk_rock_quest or caster:GetBoundedAttribute(name)
+            caster.custom_perk_rock_quest = caster.custom_perk_rock_quest + 1
+
+            DCEI.ShowFeedbackMessage("Rock quest progress " .. caster.custom_perk_rock_quest)
+            if caster.custom_perk_rock_quest >= 10 then
+                caster.custom_perk_rock_quest = 0
+
+                -- Add emojis to the persistent deck.
+                local deck_size = #caster.Attack:GetEmojiDeck()
+                for i = 1, level do
+                    caster.run_instance:ModifySavedPerkDataEmojis("attack_rock", deck_size + i)
+                end
+
+                -- Add emojis to the combat deck (not persisted).
+                caster.Attack:AddEmojiToDeck("attack_rock", level)
+                caster:PlayAwardEmojiAnimation("attack_rock", level)
+            end
+
+            caster:SetAttribute(name, caster.custom_perk_rock_quest)
+            caster.run_instance:SetSavedPerkDataAttributes(name, caster.custom_perk_rock_quest)
+        end)
+    end)
+    Api:CopyCharacter("naysayer", {
+        id = "mod-perk",
+        perk_chains = {
+            {
+                "custom_perk_rock_quest",
+            },
+            {
+                "gain_attack",
+                "attack_quest",
+                "damage_to_health",
+            },
+            {
+                "attack_speed",
+                "rush_speed_buff",
+                "speed_luck",
+                "stun_on_start",
+            },
+        },
+    })
+end
+
+MOD_MANAGER:AddMod(function(Api)
+    AddNewPerk(Api)
+end)
