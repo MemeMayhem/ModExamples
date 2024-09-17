@@ -35,13 +35,25 @@ local function AddNewPerk(Api)
             end
         end)
     end)
-
+    Api:RegisterPerk("custom_perk_healthier", {
+        id = "custom_perk_healthier",
+        display_name = "Healthier",
+        description = "+500" .. Api.GameMechanicTags.TAG.health .. " -10" .. Api.GameMechanicTags.TAG.health_regen,
+        icon = DCEI.Texture("flat_icon_emoji_1f9be_ipick"),
+        perk_type = "missile",
+        rarity = "common",
+        modify_attributes = {
+            health_maximum = 500,
+            health_per_second = -10,
+        },
+    })
     Api:CopyCharacter("naysayer", {
         id = "mod-perk",
         perk_chains = {
             {
                 "custom_perk_3_rock",
                 "custom_vulnerable_on_rock",
+                "custom_perk_healthier",
             },
             {
                 "gain_attack",
