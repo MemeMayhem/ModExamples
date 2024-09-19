@@ -1,0 +1,55 @@
+function Loader(Api)
+    Api:RegisterAttribute({
+        id = "custom_quest",
+        display_name = "Custom Quest",
+        description = "Lao zi shu dao san",
+        icon = DCEI.Texture("football"),
+        display_type = Api.DisplayType.Integer,
+        is_neutral = true, -- if true, font color will always be white
+        flavor_text = "This is flavor text for a custom quest attribute",
+        display_requirements = {
+            is_hero = true, -- only show for hero
+            --perk = "custom_quest", -- only show if has this perk
+            default_value = 0,
+            max = 3 -- for visual only, you need to keep current value <= max
+        },
+    })
+
+    Api:RegisterAttribute({
+        id = "custom_percent",
+        display_name = "Custom Percent",
+        description = "Mob's Explosion Meter",
+        icon = DCEI.Texture("meter"),
+        display_type = Api.DisplayType.Percent,
+        is_neutral = false, -- font color will be red if debuffed or green if buffed
+        flavor_text = "This is flavor text for a custom percent attribute",
+        display_requirements = {
+            default_value = 0.5, -- will not show if current value is equal to this
+        },
+    })
+
+    local character = Api:CopyCharacter("robot", {
+        id = "attribute_guy",
+    })
+
+    character.attributes["custom_quest"] = 2
+    character.attributes["custom_percent"] = 0.5
+
+    local relic = {
+        id = "change_custom_attributes",
+        display_name = "changer",
+        description = "used to change custom attributes",
+        flavor_text = "gghf",
+        icon = DCEI.Texture("changer"),
+        rarity = "legendary",
+    }
+    Api:RegisterRelic(relic.id, relic, function(combat_unit)
+        combat_unit.Attack:RegisterOnMissileImpactCallback(relic.id, function(level, attack_data, caster, target)
+            caster:ModifyAttribute("custom_percent", 0.01)
+            caster:ModifyAttribute("custom_quest", 1)
+        end)
+    end)
+    table.insert(character.relics, relic.id)
+end
+
+MOD_MANAGER:AddMod(Loader)
