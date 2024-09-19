@@ -15,7 +15,8 @@ local function loader(Api)
         shop_growth = 0.5, -- growth on shop every 5 waves
     }
 
-    Api:SetCampaignDifficulty(mod_difficulty)
+    -- Api:SetCampaignDifficulty(mod_difficulty) Deprecated, it will do nothing now, use the following one
+    Api:SetCampaignEnemySettings("mod-difficulty", mod_difficulty)
 end
 
 MOD_MANAGER:AddMod(loader)
