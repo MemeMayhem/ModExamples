@@ -3,7 +3,7 @@ function Loader(Api)
         id = "custom_quest",
         display_name = "Custom Quest",
         description = "Lao zi shu dao san",
-        icon = Api.Texture("football"),
+        icon = DCEI.Texture("football"),
         display_type = Api.DisplayType.Integer,
         is_neutral = true, -- if true, font color will always be white
         flavor_text = "This is flavor text for a custom quest attribute",
@@ -19,7 +19,7 @@ function Loader(Api)
         id = "custom_percent",
         display_name = "Custom Percent",
         description = "Mob's Explosion Meter",
-        icon = Api.Texture("meter"),
+        icon = DCEI.Texture("meter"),
         display_type = Api.DisplayType.Percent,
         is_neutral = false, -- font color will be red if debuffed or green if buffed
         flavor_text = "This is flavor text for a custom percent attribute",
@@ -40,7 +40,7 @@ function Loader(Api)
         display_name = "changer",
         description = "used to change custom attributes",
         flavor_text = "gghf",
-        icon = Api.Texture("changer"),
+        icon = DCEI.Texture("changer"),
         rarity = "legendary",
     }
     Api:RegisterRelic(relic.id, relic, function(combat_unit)

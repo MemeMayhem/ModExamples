@@ -4,7 +4,7 @@ local function AddNewChoice(Api)
     Api:RegisterChoice({
         id = "example_choice",
         display_name = "example choice title",
-        image = Api.Texture("choice_image_horse"),
+        image = DCEI.Texture("choice_image_horse"),
         description = "example choice description",
         options = {
             {

@@ -5,9 +5,9 @@ local function AddNewMissile(Api)
         id = "attack_star",
         display_name = "Star",
         tip = "Deal <color=green>7</color> " .. Api.GameMechanicTags.TAG.attack .. " damage",
-        icon = Api.Texture("custom_star"),
-        missile = Api.SimpleUnit("COMBAT Missile Custom Star"),
-        impact = Api.SimpleUnit("COMBAT Unit Simple HitFx"),
+        icon = DCEI.Texture("custom_star"),
+        missile = DCEI.SimpleUnit("COMBAT Missile Custom Star"),
+        impact = DCEI.SimpleUnit("COMBAT Unit Simple HitFx"),
         flight_time = 0.75,
         spin_speed = -360,
     })
@@ -24,8 +24,8 @@ local function AddNewMissile(Api)
         id = "attack_heart",
         display_name = "Healing Heart",
         tip = "Target self\nHeal <color=green>30</color> health",
-        icon = Api.Texture("custom_heart"),
-        missile = Api.SimpleUnit("COMBAT Missile Custom Healing Heart"),
+        icon = DCEI.Texture("custom_heart"),
+        missile = DCEI.SimpleUnit("COMBAT Missile Custom Healing Heart"),
         target_self = true,
         flight_time = 0.75,
     })

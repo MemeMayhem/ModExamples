@@ -1,8 +1,8 @@
 local function AddNewUltimate(Api)
     Api:RegisterUltimate("ultimate_sun", {
         id = "ultimate_sun",
-        icon = Api.Texture("new_ult"),
-        missile = Api.SimpleUnit("COMBAT Ultimate Sun"),
+        icon = DCEI.Texture("new_ult"),
+        missile = DCEI.SimpleUnit("COMBAT Ultimate Sun"),
         spin_speed = 0,
         static = true,
         flight_time = 1,

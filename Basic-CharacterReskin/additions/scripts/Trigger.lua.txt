@@ -4,19 +4,19 @@ local function loader(Api)
     if character_data == nil then
         return
     end
-    character_data.icon = Api.Texture("character_reskin")
-    character_data.icon_low_resolution = Api.Texture("character_reskin_high_res")
-    character_data.icon_high_resolution = Api.Texture("character_reskin_high_res")
+    character_data.icon = DCEI.Texture("character_reskin")
+    character_data.icon_low_resolution = DCEI.Texture("character_reskin_high_res")
+    character_data.icon_high_resolution = DCEI.Texture("character_reskin_high_res")
     character_data.icon_high_resolution_size = { width = 700, height = 700 }
-    character_data.unit = Api.Unit("COMBAT Unit Mod Reskin Character")
+    character_data.unit = DCEI.Unit("COMBAT Unit Mod Reskin Character")
 
     Api:RegisterMissile("mod_attack_rock", {
         id = "mod_attack_rock",
         display_name = "CASH!",
         tip = "Deal <color=green>88</color> damage",
-        icon = Api.Texture("custom_attack_cash"),
-        missile = Api.SimpleUnit("COMBAT Missile Mod Rock"),
-        impact = Api.SimpleUnit("COMBAT Unit Simple HitFx"),
+        icon = DCEI.Texture("custom_attack_cash"),
+        missile = DCEI.SimpleUnit("COMBAT Missile Mod Rock"),
+        impact = DCEI.SimpleUnit("COMBAT Unit Simple HitFx"),
         flight_time = 0.75,
         damage = function(attack_data, caster)
             return 88
