@@ -1,0 +1,429 @@
+local PerkChainData = {}
+
+PerkChainData.all_perk_chains = {
+    gain_attack_chain = {
+        "gain_attack",
+        "attack_quest",
+        "damage_to_health",
+        "flex_on_flex",
+    },
+    attack_rock_chain = {
+        "attack_rock",
+        "gain_luck",
+        "gain_rock_damage",
+        "attack_rock_x2",
+    },
+    bonus_health_chain = {
+        "bonus_health",
+        "health_maximum_quest",
+        "health_to_damage",
+        "emergency_hold",
+    },
+    health_regen_chain = {
+        "health_regen",
+        "emergency_heal",
+        "health_regen_percentage",
+        "spiky_armor",
+    },
+    attack_flex_chain = {
+        "attack_flex",
+        "flex_quest",
+        "lifesteal_on_flex",
+        "super_flex",
+    },
+    attack_lifesteal_chain = {
+        "attack_lifesteal",
+        "super_lifesteal",
+        "brain_on_lifesteal",
+        "bonus_lifesteal",
+    },
+    attack_poo_chain = {
+        "attack_poo",
+        "minus_attack_poo",
+        "flex_on_poo",
+        "bonus_poo",
+    },
+    attack_frost_chain = {
+        "attack_frost",
+        "super_frost",
+        "poo_on_frost",
+        "bonus_frost",
+    },
+    attack_crush_chain = {
+        "attack_crush",
+        "bonus_crush",
+        "frost_on_crush",
+        "combo_crush",
+    },
+    attack_brain_chain = {
+        "attack_brain",
+        "bonus_brain",
+        "crush_on_brain",
+        "super_brain",
+    },
+    brew_materials_chain = {
+        "hops",
+        "honey",
+        "star_fruit",
+        "coffee_bean",
+    },
+    keg_illusions_chain = {
+        "illusion_damage",
+        "keg_illusion_on_ultimate",
+        "illusion_attackspeed",
+        "keg_illusion_on_start",
+    },
+    gain_retaliate_chain = {
+        "gain_retaliate",
+        "crush_on_retaliate",
+        "retaliate_quest",
+        "damage_on_start",
+    },
+    gain_block_chain = {
+        "gain_block",
+        "frost_on_block",
+        "block_quest",
+        "ultimate_block",
+    },
+    attack_speed_chain = {
+        "attack_speed",
+        "rush_speed_buff",
+        "speed_luck",
+        "stun_on_start",
+    },
+    gain_income_chain = {
+        "gain_income",
+        "shop_quest",
+        "damage_brain",
+        "money",
+    },
+    crit_chain = {
+        "crit",
+        "crit_damage",
+        "crit_chance_quest",
+        "lifesteal_on_crit",
+    },
+    dodge_chain = {
+        "dodge",
+        "energy_on_dodge",
+        "dodge_on_crit_quest",
+        "brain_on_dodge",
+    },
+    apply_vulnerable_on_start_chain = {
+        "apply_vulnerable_on_start",
+        "counter_rock",
+        "emergency_retaliate",
+        "frost_on_counter_ult",
+    },
+    emergency_block_chain = {
+        "emergency_attack_speed",
+        "emergency_block",
+        "rush_block_buff",
+        "emergency_dodge",
+    },
+    gain_heal_enhancement_chain = {
+        "gain_heal_enhancement",
+        "flex_on_heal",
+        "damage_heal",
+        "heal_quest",
+    },
+    rush_attack_buff_chain = {
+        "rush_attack_buff",
+        "rush_crit_buff",
+        "rush_time_enhance_1",
+        "rush_buff_enhance",
+    },
+    heal_on_rock_chain = {
+        "heal_on_rock",
+        "rush_heal_buff",
+        "rush_dodge_buff",
+        "rush_time_enhance_2",
+    },
+    energy_regen_chain = {
+        "energy_regen",
+        "emergency_energy_regen",
+        "ultimate_power",
+        "ultimate_quest",
+    },
+    energy_on_ultimate_chain = {
+        "attack_speed_on_ult",
+        "energy_on_ultimate",
+        "heal_on_ultimate",
+        "energy_on_start",
+    },
+
+    music_note_chain = {
+        "attack_music_note",
+        "recruit_band_quest",
+        "brain_on_music_note",
+        "bonus_music_note",
+    },
+
+    hachimi_music_note_chain = {
+        "attack_music_note",
+        "music_note_lower_max_energy",
+        "brain_on_music_note",
+        "bonus_music_note",
+    },
+    attack_coin_chain = {
+        "attack_coin_bullet",
+        "coin_bullet_quest",
+        "music_on_coin",
+        "bonus_coin",
+    },
+    another_income_chain = {
+        "money_on_damage_quest",
+        "spend_for_income",
+        "income_to_health",
+        "interest",
+    },
+    attack_wheat_chain = {
+        "attack_wheat",
+        "bonus_wheat",
+        "music_on_wheat",
+        "super_wheat",
+    },
+    shark_chain = {
+        "attack_shark",
+        "hungry_shark",
+        "lifesteal_on_shark",
+        "shark_group",
+    },
+    damage_trigger_chain = {
+        "damage_on_damage",
+        "vulnerable_on_damage",
+        "shark_on_damage",
+        "heal_on_damage_legendary",
+    },
+    thorn_block_chain = {
+        "gain_thorn_block",
+        "shark_quest",
+        "heart_block",
+        "thorn_shark",
+    },
+    attack_screw_chain = {
+        "attack_screw",
+        "golden_screwdriver_on_robot_explosion", -- launch a gold screw when eplode
+        "screw_on_robot_spawn",
+        "robot_base_attack_on_robot_hit_quest",
+    },
+    more_screw_chain = {
+        "screw_on_block",
+        "screw_on_ultimate",
+        "screw_on_robot_screwdriver",
+        "screw_on_robot_explosion",
+    },
+    robot_attack_chain = {
+        "robot_slot",
+        "robot_attack_speed",
+        "attack_golden_screwdriver",
+        "better_golden_screwdriver", -- better screwdriver
+    },
+    robot_explosion_chain = {
+        "block_on_robot_explosion",
+        "heal_on_robot_explosion",
+        "robot_explosion_damage_increase",
+        "launch_on_robot_explosion", --  launch all non-screw emoji
+    },
+    robot_assemble_chain = {
+        "screw_on_start",
+        "energy_on_screwdriver",
+        "block_on_screwdriver",
+        "damage_to_screw",
+    },
+    milk_chain = {
+        "attack_milk",
+        "better_milk",
+        "flex_on_milk",
+        "milk_quest",
+    },
+    horse_chain = {
+        "ninja_thank_you", -- horse talks after steal
+        "ninja_extra_talk",
+        "recruit_ninja_quest", -- get a horse
+        "royal_ninja", -- horse extra steal
+    },
+    trashtalk_chain = {
+        "greetings", -- trash talk can deal damage
+        "well_played", -- ult trash talk
+        "wow", -- extra trash talk
+        "thank_you", -- heal trash talk
+    },
+    tomato_chain = {
+        "attack_tomato",
+        "blank_perk_on_ultimate",
+        "rock_on_tomato",
+        "growing_tomato",
+    },
+    bonus_tomato_chain = {
+        "bonus_tomato",
+        "tomato_on_crit", --
+        "permanent_slot", --
+        "blank_perk_on_rock",
+    },
+    print_chain = {
+        "print_heal",
+        "duplicate_on_copy",
+        "repeat_first_fifth", -- 1,5 mark
+        "triple_mark", -- x3 mark
+    },
+    extra_copy_chain = {
+        "blank_perk_on_crush",
+        "growing_g", --
+        "gain_g", --
+        "mind_flare",
+    },
+    -- bonus_copy_chain = {
+    --     "copy_gold",
+    --     "copy_crit",
+    --     "copy_luck",
+    --     "bonus_copy",
+    -- },
+    red_tea_chain = {
+        "attack_red_tea",
+        "better_red_tea",
+        "poo_on_red_tea",
+        "stun_on_red_tea",
+    },
+    leipu_chain = {
+        "leipu_damage",
+        "leipu_lifesteal",
+        "leipu_drain",
+        "poo_on_damage",
+    },
+    leipu_time_chain = {
+        "stun_on_dodge",
+        "leipu_damage_instance",
+        "close_miss",
+        "leipu_time_enhance",
+    },
+    poison_poo_chain = {
+        "poison_poo",
+        "leipu_poison",
+        "frost_enhance_poison",
+        "poison_ultimate",
+    },
+    stun_chain = {
+        "delay",
+        "attack_speed_on_stun",
+        "poo_on_stun",
+        "stun_on_ult",
+    },
+    dragon_chain = {
+        "evolution_on_start",
+        "evolution_quest",
+        "attack_dragon",
+        "dragon_extra_grow",
+    },
+    hypoglycemia_chain = {
+        "heal_on_hypoglycemia",
+        "basal_metabolic_rate",
+        "low_ult_cast_on_hypoglycemia",
+        "energy_on_hypoglycemia",
+    },
+    hyperglycemia_chain = {
+        "sugar_on_start",
+        "sugar_attack",
+        "block_on_hyperglycemia",
+        "coffee_sweetheart",
+    },
+    burger_chain = {
+        "attack_burger",
+        "burger_quest",
+        "flex_on_burger",
+        "bonus_burger",
+    },
+    wraith_chain = {
+        "enter_wraith",
+        "long_wraith",
+        "bonus_wraith",
+        "super_wraith",
+    },
+    calm_chain = {
+        "enter_calm",
+        "long_calm",
+        "bonus_calm",
+        "super_calm",
+    },
+    bomb_chain = {
+        "weaker_bomb",
+        "crush_on_bomb",
+        "bomb_quest",
+    },
+    divine_chain = {
+        "keyboard",
+        "mouse",
+    },
+}
+
+PerkChainData.perk_chain_order = {
+    "gain_attack_chain",
+    "attack_rock_chain",
+    "bonus_health_chain",
+    "health_regen_chain",
+    "attack_flex_chain",
+    "attack_lifesteal_chain",
+    "attack_poo_chain",
+    "attack_frost_chain",
+    "attack_crush_chain",
+    "attack_brain_chain",
+    "gain_retaliate_chain",
+    "gain_block_chain",
+    "attack_speed_chain",
+    "gain_income_chain",
+    "crit_chain",
+    "dodge_chain",
+    "apply_vulnerable_on_start_chain",
+    "emergency_block_chain",
+    "gain_heal_enhancement_chain",
+    "rush_attack_buff_chain",
+    "heal_on_rock_chain",
+    "energy_regen_chain",
+    "energy_on_ultimate_chain",
+
+    "music_note_chain",
+    "attack_coin_chain",
+    "another_income_chain",
+
+    "attack_screw_chain",
+    "more_screw_chain",
+    "robot_attack_chain",
+    "robot_explosion_chain",
+    "robot_assemble_chain",
+
+    "attack_wheat_chain",
+    "brew_materials_chain",
+    "keg_illusions_chain",
+
+    "shark_chain",
+    "damage_trigger_chain",
+    "thorn_block_chain",
+
+    "milk_chain",
+    "horse_chain",
+    "trashtalk_chain",
+
+    "tomato_chain",
+    "bonus_tomato_chain",
+    "print_chain",
+    "extra_copy_chain",
+
+    "red_tea_chain",
+    "leipu_chain",
+    "leipu_time_chain",
+    "poison_poo_chain",
+    "stun_chain",
+
+    "dragon_chain",
+    "hypoglycemia_chain",
+    "hyperglycemia_chain",
+    "burger_chain",
+    -- "shop_chain",
+    -- "attack_dice_chain",
+    -- "dice_critical_chain",
+    -- "on_enemy_stun_chain",
+    -- "rush_debuff_chain",
+    -- "bonus_on_damage_chain",
+}
+
+return PerkChainData

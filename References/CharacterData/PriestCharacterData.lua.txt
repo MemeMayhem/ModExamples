@@ -1,0 +1,73 @@
+local PerkChainData = require("NarrativeData/GameplayData/PerkChainData")
+local data = {
+    id = "priest",
+    display_name = Api.GetTranslationText("campaign/character_data/priest/name"),
+    short_description = Api.GetTranslationText("campaign/character_data/priest/short_description"),
+    unit = DCEI.Unit("COMBAT Unit Boss Priest"),
+    icon_low_resolution = DCEI.Texture("comic_portrait_boss_zangmu_152x152_ipick"),
+    icon = DCEI.Texture("comic_portrait_boss_zangmu_500x500_ipick"),
+    icon_high_resolution = DCEI.Texture("comic_portrait_boss_zangmu_1024x1024_ipick"),
+    icon_high_resolution_size = { width = 700, height = 700 },
+    attack_ids = {
+        "attack_rock",
+        "attack_flex",
+        "attack_lifesteal",
+        "attack_frost",
+        "attack_brain",
+        "attack_milk",
+        "attack_ninja",
+    },
+    attributes = {
+        health_maximum = 1700,
+    },
+    relics = {
+        "perk_reroll_token",
+        "perk_reroll_token",
+        "perk_reroll_token", },
+    perk_chains = {
+
+        PerkChainData.all_perk_chains.attack_rock_chain,
+        PerkChainData.all_perk_chains.bonus_health_chain,
+
+        PerkChainData.all_perk_chains.attack_lifesteal_chain,
+        PerkChainData.all_perk_chains.attack_frost_chain,
+        PerkChainData.all_perk_chains.attack_brain_chain,
+
+        PerkChainData.all_perk_chains.gain_block_chain,
+        PerkChainData.all_perk_chains.attack_speed_chain,
+        PerkChainData.all_perk_chains.gain_income_chain,
+
+        PerkChainData.all_perk_chains.crit_chain,
+        PerkChainData.all_perk_chains.dodge_chain,
+
+        PerkChainData.all_perk_chains.emergency_block_chain,
+        PerkChainData.all_perk_chains.gain_heal_enhancement_chain,
+
+        PerkChainData.all_perk_chains.energy_regen_chain,
+        PerkChainData.all_perk_chains.energy_on_ultimate_chain,
+
+        PerkChainData.all_perk_chains.milk_chain,
+        PerkChainData.all_perk_chains.trashtalk_chain,
+        PerkChainData.all_perk_chains.horse_chain,
+
+        PerkChainData.all_perk_chains.wraith_chain,
+        PerkChainData.all_perk_chains.divine_chain
+
+    },
+    blocked_perks = {
+        "dodge_on_crit_quest",
+        "rush_block_buff",
+        "poo_on_frost",
+        "crush_on_brain",
+        "gain_luck",
+        "flex_on_heal",
+    },
+    is_available = true,
+    unlock_require = {
+        character_require = "robot",
+        required_character_wave = 14,
+    },
+
+}
+
+return data

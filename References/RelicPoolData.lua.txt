@@ -1,0 +1,492 @@
+-- DATA
+local RelicPoolData = {}
+
+RelicPoolData.pool = {
+    "smile_face",
+    "bag_of_flex",
+    "bag_of_poo",
+    "bag_of_frost",
+    "bag_of_lifesteal",
+    "bag_of_brain",
+    "bag_of_crush",
+
+    "glass_cannon",
+    "cursed_charm",
+    "red_envelop",
+
+    "blue_fish",
+    "purple_fish",
+    "gold_fish",
+
+    "super_drug",
+    "pretzel",
+    "ugly_poo",
+    "credit_card",
+    "poison_apple",
+    "high_heel",
+    "sandal",
+    "cactus",
+    "beans",
+    "fast_food",
+    "broccoli",
+    "pepper",
+    "cat",
+    "dog",
+    "fire_cracker",
+    "flex_on_crit",
+    "attack_speed_quest",
+    "heal_on_dodge",
+    "health_regen_percentage",
+    "health_per_second_quest",
+    "crush_on_heal",
+    "dragon_heart",
+
+    "weary_cat",
+
+    "silent_face",
+    "aggresive_face",
+    "funny_face",
+    "lollipop",
+    "sales_medal",
+    "ashamed_face",
+    "uphone",
+    "justice_face",
+    "innocent_face",
+    "love_face",
+    "devil_face",
+    "pasta",
+    "nuke",
+    "facewall_stock",
+    "edison_stock",
+    "dead_phone",
+    "bored_face",
+    "drooling_face",
+
+    "salute_face",
+    "rice_ball",
+    "baguette_bread",
+    "horse",
+    "apple",
+    "sushi",
+    "lobster",
+    "bread",
+    "knife",
+    "bald",
+    "bubble_tea",
+    "linked_paperclips",
+    "garlic",
+    "lefthand",
+    "righthand",
+
+    "old_key",
+    "good_poo",
+    "single_rock",
+    "tear_drop",
+    "the_finger",
+    "pride_face",
+    "friendship",
+    "indifference",
+    "blue_heart",
+    "shock_face",
+    "cursed_bomb",
+    "small_rev",
+    "energy_drain",
+    "small_clover",
+    "foot_print",
+    "purple_wine",
+    "failure_student",
+    "phantom_elephant",
+    "bacon",
+    "single_shark",
+    "justice_devil",
+    "single_flex",
+    "delay_damage",
+    "giant_jet",
+    "cockroach",
+    "thumb_up",
+    "thumb_down",
+    "turtle",
+    "lion",
+    "bottom_line",
+    "super_respect",
+    "two_hearts",
+    "lonely_face",
+    "playa",
+    "breaking_heart",
+    "r_18",
+    "pin",
+    "piggy",
+    "pen",
+    "naked_run",
+    "fade_flower",
+    "doubleside_breif",
+    -- "sunglass_stone",
+    "coded_disk",
+    "fear_face",
+    --"rich_face",
+    "mutate",
+    "wish",
+    "enemy_controller",
+
+    "approaching_storm",
+    "blessing_of_nurgle",
+    "king_of_vampires",
+    "enough",
+    "bring_to_justice",
+
+    "coffee",
+    "pig",
+    "squid",
+    "mind_blown",
+    "chopsticks",
+    "siren",
+    "face_mask",
+
+    "debt",
+
+    "guitar",
+    "music_keyboard",
+    "drum",
+    "singer",
+
+    "bag_of_music_note",
+    "bag_of_coin_bullet",
+    -- "left_feet",
+    -- "right_feet",
+    -- "forbidden_head",
+
+    -- "raw_steak",
+    "halftime_champagne",
+    --"low_health_rush",
+
+    --"sleepy_tea",
+    "wonder_of_u",
+    "bag_of_screw",
+    "start_robot",
+    "magnet",
+    "dvd",
+    "blue_print",
+    "super_bomb",
+
+    "debt_damage_over_time",
+    "debt_to_attack",
+    "debt_damage_to_enemy",
+
+    "gloves",
+    "blackhole",
+
+    "wraith_on_explosion",
+    "calm_on_start",
+
+    "greedy_pot",
+    "dark_duel",
+    "blue_ribbon",
+
+    "bag_of_wheat",
+    "bag_of_shark",
+    "bag_of_milk",
+    "bag_of_tomato",
+    "bag_of_redtea",
+}
+
+RelicPoolData.weekly_challenge_relic_pool = {
+    "lefthand",
+    "fire_cracker",
+    "chopsticks",
+    "face_mask",
+    "coffee",
+    "linked_paperclips",
+    "baguette_bread",
+    "lobster",
+    "crush_on_heal",
+    "attack_speed_quest",
+    "beans",
+    "sandal",
+    "super_drug",
+    "pretzel",
+    "cursed_charm",
+    "bag_of_lifesteal",
+    "bag_of_brain",
+    "bag_of_crush",
+    "bag_of_flex",
+}
+
+RelicPoolData.combos = {
+    angry_troll = {
+        priority = 1,
+        formula = {
+            health_regen_percentage = 1,
+            fire_cracker = 1,
+        },
+    },
+    bottled_danger = {
+        priority = 1,
+        formula = {
+            glass_cannon = 1,
+            nuke = 1,
+        },
+    },
+    apple_phone = {
+        priority = 1,
+        formula = {
+            apple = 1,
+            uphone = 1,
+        },
+    },
+    kelpie = {
+        priority = 1,
+        formula = {
+            horse = 1,
+            blue_fish = 1,
+        },
+    },
+    vegan_oni = {
+        priority = 1,
+        formula = {
+            cactus = 1,
+            flex_on_crit = 1,
+        },
+    },
+    broccoli_devil = {
+        priority = 1,
+        formula = {
+            broccoli = 1,
+            devil_face = 1,
+        },
+    },
+    super_hot_dog = {
+        priority = 1,
+        formula = {
+            pepper = 1,
+            dog = 1,
+        },
+    },
+    lucky_cat = {
+        priority = 1,
+        formula = {
+            red_envelop = 1,
+            cat = 1,
+        },
+    },
+    walking_octopus = {
+        priority = 1,
+        formula = {
+            high_heel = 1,
+            purple_fish = 1,
+        },
+    },
+    happy_face = {
+        priority = 1,
+        formula = {
+            drooling_face = 1,
+            fast_food = 1,
+        },
+    },
+    onlyfans_fans = {
+        priority = 1,
+        formula = {
+            love_face = 1,
+            credit_card = 1,
+        },
+    },
+    open_hands = {
+        priority = 2,
+        formula = {
+            lefthand = 1,
+            righthand = 1,
+        },
+    },
+    bread_axe = {
+        priority = 1,
+        formula = {
+            baguette_bread = 1,
+            bored_face = 1,
+        },
+    },
+    band = {
+        priority = 1,
+        formula = {
+            guitar = 1,
+            music_keyboard = 1,
+            drum = 1,
+            singer = 1,
+        },
+    },
+    bonus_common = {
+        priority = 1,
+        formula = {
+            sandal = 1,
+            attack_speed_quest = 1,
+            beans = 1,
+        },
+    },
+    window = {
+        priority = 2,
+        formula = {
+            glass_cannon = 1,
+            bag_of_crush = 1,
+        },
+    },
+    windows_xp = {
+        priority = 1,
+        formula = {
+            window = 1,
+            walking_octopus = 1,
+        },
+    },
+    first_pistol = {
+        priority = 1,
+        formula = {
+            debt_damage_to_enemy = 1,
+            debt_to_attack = 1,
+            blue_heart = 1,
+        },
+    },
+    calm_wraith = {
+        priority = 1,
+        formula = {
+            calm_on_start = 1,
+            wraith_on_explosion = 1,
+        },
+    },
+    celebration_on_start = {
+        priority = 1,
+        formula = {
+            halftime_champagne = 1,
+            the_finger = 1,
+        },
+    },
+    death_finger = {
+        priority = 1,
+        formula = {
+            lion = 1,
+            energy_drain = 1,
+        },
+    },
+    fuxi = {
+        priority = 1,
+        formula = {
+            foot_print = 1,
+            super_bomb = 1,
+        },
+    },
+    dragon_slayer = {
+        priority = 1,
+        formula = {
+            knife = 1,
+            single_rock = 1,
+        },
+    },
+    paradox_warlock = {
+        priority = 1,
+        formula = {
+            blackhole = 1,
+            piggy = 1,
+        },
+    },
+    good_fruit = {
+        priority = 1,
+        formula = {
+            good_poo = 1,
+            poison_apple = 1,
+            aggresive_face = 1,
+        },
+    },
+    left_elbow = {
+        priority = 1,
+        formula = {
+            lefthand = 1,
+            bag_of_flex = 1,
+            linked_paperclips = 1,
+        },
+    },
+    right_elbow = {
+        priority = 1,
+        formula = {
+            righthand = 1,
+            bag_of_flex = 1,
+            attack_speed_quest = 1,
+        },
+    },
+    shrimp = {
+        priority = 1,
+        formula = {
+            lobster = 1,
+            shock_face = 1,
+        },
+    },
+    old_chicken = {
+        priority = 1,
+        formula = {
+            turtle = 1,
+            bored_face = 1,
+        },
+    },
+    love_train = {
+        priority = 1,
+        formula = {
+            greedy_pot = 1,
+            cursed_charm = 1,
+            wonder_of_u = 1,
+        },
+    },
+    -- manbo = {
+    --     priority = 1,
+    --     formula = {
+    --         horse = 1,
+    --         funny_face = 1,
+    --     },
+    -- },
+    daqianlu = {
+        priority = 1,
+        formula = {
+            pin = 1,
+            naked_run = 1,
+        },
+    },
+    hungry_glove = {
+        priority = 1,
+        formula = {
+            gloves = 1,
+            drooling_face = 1,
+            rice_ball = 1,
+        },
+    },
+    ever_chosen = {
+        priority = 1,
+        formula = {
+            blessing_of_nurgle = 1,
+            love_face = 1,
+            aggresive_face = 1,
+            devil_face = 1,
+        },
+    },
+    pig_book = {
+        priority = 1,
+        formula = {
+            pen = 1,
+            pig = 1,
+        },
+    },
+    -- exodia_the_forbidden_one = {
+    --     priority = 1,
+    --     formula = {
+    --         lefthand = 1,
+    --         righthand = 1,
+    --         left_feet = 1,
+    --         right_feet = 1,
+    --         forbidden_head = 1,
+    --     },
+    --     alternative_formulas = {
+    --         {
+    --             open_hands = 1,
+    --             left_feet = 1,
+    --             right_feet = 1,
+    --             forbidden_head = 1,
+    --         },
+    --     },
+    -- },
+}
+
+-- EXPORT
+return RelicPoolData

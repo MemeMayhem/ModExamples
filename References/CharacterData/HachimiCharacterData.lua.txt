@@ -1,0 +1,86 @@
+local PerkChainData = require("NarrativeData/GameplayData/PerkChainData")
+local data = {
+    id = "hachimi",
+    display_name = Api.GetTranslationText("campaign/character_data/hachimi/name"),
+    short_description = Api.GetTranslationText("campaign/character_data/hachimi/short_description"),
+    unit = DCEI.Unit("COMBAT Unit Boss Hachimi"),
+    icon_low_resolution = DCEI.Texture("comic_portrait_boss_nanami_smile_152x152_ipick"),
+    icon = DCEI.Texture("comic_portrait_boss_nanami_smile_500x500_ipick"),
+    icon_high_resolution = DCEI.Texture("comic_portrait_boss_nanami_smile_1024x1024_ipick"),
+    icon_high_resolution_size = { width = 600, height = 600 },
+    attack_ids = {
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_shark",
+        "attack_music_note",
+        "attack_music_note",
+        "attack_poo",
+    },
+    attributes = {
+        health_maximum = 2000,
+        attack = 50,
+        energy_maximum = 10000,
+        ultimate_damage = 16,
+    },
+    relics = { "costum",
+        "perk_reroll_token",
+        "perk_reroll_token",
+        "perk_reroll_token", },
+    perk_chains = {
+        PerkChainData.all_perk_chains.gain_attack_chain,
+
+        -- PerkChainData.all_perk_chains.health_regen_chain,
+        PerkChainData.all_perk_chains.attack_flex_chain,
+        PerkChainData.all_perk_chains.attack_lifesteal_chain,
+        PerkChainData.all_perk_chains.attack_poo_chain,
+        PerkChainData.all_perk_chains.attack_brain_chain,
+
+        PerkChainData.all_perk_chains.gain_retaliate_chain,
+        PerkChainData.all_perk_chains.attack_speed_chain,
+        PerkChainData.all_perk_chains.gain_income_chain,
+        PerkChainData.all_perk_chains.crit_chain,
+        PerkChainData.all_perk_chains.dodge_chain,
+        PerkChainData.all_perk_chains.apply_vulnerable_on_start_chain,
+        PerkChainData.all_perk_chains.attack_rock_chain, -- only has luck
+        -- PerkChainData.all_perk_chains.gain_heal_enhancement_chain,
+
+        PerkChainData.all_perk_chains.hachimi_music_note_chain,
+        PerkChainData.all_perk_chains.shark_chain,
+        PerkChainData.all_perk_chains.damage_trigger_chain,
+        PerkChainData.all_perk_chains.thorn_block_chain,
+
+        PerkChainData.all_perk_chains.energy_regen_chain,
+        PerkChainData.all_perk_chains.divine_chain,
+    },
+    cosmetic_data = {
+        ultimate_id = "ultimate_train",
+    },
+    blocked_perks = {
+        "attack_rock",
+        "gain_rock_damage",
+        "attack_rock_x2",
+        "crush_on_retaliate",
+        "counter_rock",
+        "frost_on_counter_ult",
+        "ultimate_power",
+        "ultimate_quest",
+    },
+    blocked_relics = {
+        "halftime_champagne",
+        "bubble_tea",
+    },
+    is_available = true,
+    unlock_require = {
+        character_require = "keg",
+        required_character_wave = 14,
+    },
+}
+
+return data

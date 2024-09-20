@@ -1,0 +1,75 @@
+local PerkChainData = require("NarrativeData/GameplayData/PerkChainData")
+local data = {
+    id = "robot",
+    display_name = Api.GetTranslationText("campaign/character_data/robot/name"),
+    short_description = Api.GetTranslationText("campaign/character_data/robot/short_description"),
+    unit = DCEI.Unit("COMBAT Unit Boss Robot"),
+    icon_low_resolution = DCEI.Texture("comic_portrait_boss_jiebao_152x152_ipick"),
+    icon = DCEI.Texture("comic_portrait_boss_jiebao_500x500_ipick"),
+    icon_high_resolution = DCEI.Texture("comic_portrait_boss_jiebao_1024x1024_ipick"),
+    icon_high_resolution_size = { width = 700, height = 700 },
+    attack_ids = {
+        "attack_screw",
+        "attack_screw",
+        "attack_screw",
+        "attack_screw",
+        "attack_screw",
+        "attack_golden_screwdriver",
+    },
+    attributes = {
+        health_maximum = 2200,
+        energy_per_second = 125,
+    },
+    cosmetic_data = {
+        ultimate_id = "ultimate_hatching_egg",
+    },
+    perk_chains = {
+        PerkChainData.all_perk_chains.gain_attack_chain,
+        PerkChainData.all_perk_chains.gain_income_chain, -- brain income, income support
+        PerkChainData.all_perk_chains.attack_speed_chain, -- speed
+        PerkChainData.all_perk_chains.bonus_health_chain, -- emergency build
+        PerkChainData.all_perk_chains.emergency_block_chain,
+        PerkChainData.all_perk_chains.gain_block_chain, -- block
+        PerkChainData.all_perk_chains.health_regen_chain,
+
+        PerkChainData.all_perk_chains.attack_crush_chain, -- axe chain
+        PerkChainData.all_perk_chains.dodge_chain, -- dodge
+
+        PerkChainData.all_perk_chains.energy_regen_chain, -- ult chain
+        PerkChainData.all_perk_chains.energy_on_ultimate_chain,
+
+        PerkChainData.all_perk_chains.attack_frost_chain, -- frost support
+        PerkChainData.all_perk_chains.attack_brain_chain, -- brain support
+
+        PerkChainData.all_perk_chains.attack_screw_chain, -- build, explode-attack, buildbuild, attack
+        PerkChainData.all_perk_chains.more_screw_chain, -- blockbuild, ultbuild, attackbuild, explodebuild
+        PerkChainData.all_perk_chains.robot_attack_chain, -- attack, attack, attack, attack
+        PerkChainData.all_perk_chains.robot_explosion_chain, -- explode-attack, explode heal, explode, explode-brain/freeze
+        PerkChainData.all_perk_chains.robot_assemble_chain, -- startbuild, attackult, attackblock, attackbuild
+
+        PerkChainData.all_perk_chains.wraith_chain,
+        PerkChainData.all_perk_chains.calm_chain,
+        PerkChainData.all_perk_chains.bomb_chain,
+        PerkChainData.all_perk_chains.divine_chain
+    },
+    blocked_perks = {
+        "flex_on_flex",
+        "lifesteal_on_crit",
+        "rush_speed_buff",
+        "poo_on_frost",
+        "dodge_on_crit_quest",
+    },
+    relics = {
+        "start_robot",
+        "perk_reroll_token",
+        "perk_reroll_token",
+        "perk_reroll_token",
+    },
+    is_available = true,
+    unlock_require = {
+        character_require = "sakiko",
+        required_character_wave = 14,
+    },
+}
+
+return data

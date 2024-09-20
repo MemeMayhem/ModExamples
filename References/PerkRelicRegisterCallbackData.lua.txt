@@ -1,0 +1,2565 @@
+local Core = require("Core")
+local GMUI = require("GMUI")
+local PerkBehaviorSystem = require("GamePerkSystem/PerkBehaviorSystem")
+local PerkSystem = require("GamePerkSystem/PerkSystemShared")
+local SimpleMissile = require("GameCombat/SimpleMissile")
+local TimerSimulation = require("Common/TimerSimulation")
+local StageGoldSystem = require("GameStageSystem/StageGoldSystem")
+local Random = require("Common/Random")
+local Util = require("Common/Util")
+local Sound = require("Common/Sound")
+local StageSystemShared = require("GameStageSystem/StageSystemShared")
+local PerkSystem = require("GamePerkSystem/PerkSystemShared")
+local MissileDataHelper = require("GameCombat/MissileDataHelper")
+local PerkMechanics = require("GamePerkSystem/PerkMechanics")
+local CommonSimulationSendPresentationCommand = require("Common/CommonSimulationSendPresentationCommand")
+local MissileManager = require("GameCombat/MissileManager")
+local SummonDataHelper = require("GameUnit/GameSummonData/SummonDataHelper")
+local Color = require("Common/Color")
+local RunCombatTransition = require("GameRunSystem/RunCombatTransition")
+local NarrativeSystem = require("MetaSystems/Campaign/Narrative/NarrativeSystem")
+local NarrativeEnums = require("MetaSystems/Campaign/DataHelpers/NarrativeEnums")
+local MESSAGE_TRIGGERS = NarrativeEnums.message_triggers
+---@param combat_unit CombatUnit
+local function RegisterNinjaRequestCallback(perk_or_relic_name, combat_unit, apply_event, override_count)
+    local name = "recruit_ninja_quest"
+    local count = override_count and override_count or PerkSystem:GetNonScalingPerkValue(name, "value")
+    local ninja_request = PerkSystem:GetNonScalingPerkValue(name, "ninja_request")
+    local run_instance = combat_unit.run_instance
+    if apply_event == "on_apply" then
+        local old_value = combat_unit:GetRawAttribute(name)
+        local new_value = old_value + count
+        if new_value >= ninja_request then
+            count = count - ninja_request
+            local attack_id = "attack_ninja"
+            combat_unit:ApplyPerk(attack_id, "on_apply", true, true)
+            if run_instance then
+                combat_unit:PlayAwardEmojiAnimation(attack_id, 1)
+                local deck_size = #combat_unit.Attack:GetEmojiDeck()
+                run_instance:ModifySavedPerkDataEmojis(attack_id, deck_size)
+            end
+        end
+
+        combat_unit:ModifyAttribute(name, count, true)
+        if run_instance then
+            run_instance:ModifySavedPerkDataAttributes(name, count)
+        end
+    end
+end
+
+local function IncreaseBlankPerkAttribute(
+    combat_unit,
+    count_attribute,
+    max_attribute,
+    perk_list,
+    is_permanent,
+    increase_count
+)
+    increase_count = increase_count or 1
+    local run_instance = combat_unit.run_instance
+    local count = combat_unit:GetRawAttribute(count_attribute)
+    if increase_count > 0 then
+        count = count + increase_count
+        combat_unit:ModifyAttribute(count_attribute, increase_count)
+        if run_instance then
+            run_instance:ModifySavedPerkDataAttributes(count_attribute, increase_count)
+        end
+    end
+    local trigger_hit_count = combat_unit:GetRawAttribute(max_attribute)
+    if count < trigger_hit_count then
+        return
+    end
+    combat_unit:ModifyAttribute(count_attribute, -trigger_hit_count)
+    if run_instance then
+        run_instance:ModifySavedPerkDataAttributes(count_attribute, -trigger_hit_count)
+    end
+    PerkMechanics:ApplyBlankPerkPerks(combat_unit, perk_list, is_permanent)
+end
+
+local function AwardGold(gold_gain, target)
+    local pos = Core.Table.ShallowCopy(target:GetPosition())
+    -- offset so coins appear from center of caster
+    pos.y = pos.y + 1
+    local coins_to_create = gold_gain
+    local offsets = Util:GetGoldExplosionCoinOffsets(coins_to_create)
+    for _, offset in ipairs(offsets) do
+        local x, y = pos.x + offset[1], pos.y + offset[2]
+        GMUI.RunPresentationFunction("CreateDummyCoinUI", {
+            start_pos = {
+                x = pos.x,
+                y = 0,
+                z = pos.y,
+            },
+            target_pos = {
+                x = x,
+                y = 0,
+                z = y,
+            },
+        })
+    end
+    -- coin sound
+    Sound.PlaySound(DCEI.Sound("smh_coin_spawn"))
+
+    -- send gold coins to top bar
+    local delay = 0.625
+    -- Use award gold to not update ui until after gold flies
+    StageGoldSystem:AwardGameGold(gold_gain)
+    TimerSimulation.RunTimer(function()
+        local new_gold = StageGoldSystem:GetGameGold()
+        local amount_to_add = StageGoldSystem:GetQueuedUiGold()
+
+        -- Will update gold by the awarded amount
+        GMUI.RunPresentationFunction("SendGoldCoinsToUi", { old_gold = new_gold - amount_to_add, new_gold = new_gold })
+    end, delay)
+end
+
+local register_callback = {
+    ---@param combat_unit CombatUnit
+    blessing_of_nurgle = function(combat_unit)
+        local name = "blessing_of_nurgle"
+        combat_unit.Attack:RegisterOnMissileLaunchCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "attack_poo" then
+                local perk_name = "attack_flex"
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, perk_name, level)
+                -- Log flex gains
+                local run_instance = caster:IsHero() and caster.run_instance or target.run_instance
+                if run_instance then
+                    local value = PerkSystem:GetNonScalingPerkBehaviorValue(perk_name, "attack")
+                    run_instance:IncrementWaveRecord("attack_from_flex", value, caster:IsHero())
+                end
+            end
+        end)
+        combat_unit.Attack:RegisterOnMissileHitCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "attack_poo" then
+                local perk_name = "attack_flex"
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(target, perk_name, level)
+                -- Log flex gains
+                local run_instance = caster:IsHero() and caster.run_instance or target.run_instance
+                if run_instance then
+                    local value = PerkSystem:GetNonScalingPerkBehaviorValue(perk_name, "attack")
+                    run_instance:IncrementWaveRecord("attack_from_flex", value, target:IsHero())
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    e_cigarette = function(combat_unit)
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback("e_cigarette", function(level, caster, target)
+            -- continue to launch smoke
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    let_me_see = function(combat_unit)
+        local perk_name = "let_me_see"
+        local buff_per_name = "buff_let_me_see"
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(perk_name, function(level, attack_data, caster, target)
+            Api.SendSendCustomEventActorAction(combat_unit.unit, { identifier = "ChangePortrait" })
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, buff_per_name, level)
+            Sound.PlaySound(DCEI.Sound("smh_let_me_see_sfx"), 3)
+            local flex_count = PerkSystem:GetNonScalingRelicValue(perk_name, "attack_flex")
+            local rock_count = PerkSystem:GetNonScalingRelicValue(perk_name, "attack_rock")
+            -- add emoji to magazine
+            for i = 0, flex_count - 1 do
+                TimerSimulation.RunCombatOnlyTimer(function()
+                    combat_unit.Attack:AddEmojiToDeck("attack_flex", 1)
+                    combat_unit:UpdateEmojiMagazineUi()
+                end, 0.125 * i)
+            end
+            for i = flex_count, flex_count + rock_count - 1 do
+                TimerSimulation.RunCombatOnlyTimer(function()
+                    combat_unit.Attack:AddEmojiToDeck("attack_rock", 1)
+                    combat_unit:UpdateEmojiMagazineUi()
+                end, 0.125 * i)
+            end
+
+            SimpleMissile:CreateSimpleSlap(true, target:IsHero())
+            TimerSimulation.RunCombatOnlyTimer(function()
+                target:Shake(0, true)
+                PerkBehaviorSystem:ApplyPerkBehavior(target, caster, perk_name, level)
+            end, 0.5625)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    king_of_vampires = function(combat_unit, apply_event)
+        local name = "king_of_vampires"
+        if apply_event == "on_apply" and combat_unit:IsHero() then
+            local attribute = "health_maximum"
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                local amount = run_instance:GetSavedPerkDataAttributes("king_of_vampire_hp")
+                combat_unit:ModifyAttribute(attribute, amount)
+                run_instance:ModifySavedPerkDataAttributes(attribute, amount)
+            end
+        end
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "attack_lifesteal" and not attack_data.is_dodged then
+                local bonus_perk_name = "bonus_lifesteal"
+                if caster:HasPerk(bonus_perk_name) then
+                    local stack_count = caster:GetPerkLevel(bonus_perk_name)
+                    level = level * (stack_count + 1)
+                end
+                -- Wait 1s for the attack_lifesteal_healing to fly back to the character
+                TimerSimulation.RunCombatOnlyTimer(function()
+                    PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, name, level)
+                end, 1)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    cheers = function(combat_unit)
+        local name = "cheers"
+        combat_unit.Attack:RegisterOnUltimateHitCallback(name, function(level, attack_data, caster, target)
+            if not attack_data.is_dodged then
+                Sound.PlaySound(DCEI.Sound("smh_cheers_sfx", 2))
+                target.Attack:NewUltimateAttack(caster)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    railgun = function(combat_unit)
+        local name = "railgun"
+        local last_launch_time = 0
+        local launch_anim_time = 1
+        local full_charge_time = PerkSystem:GetNonScalingRelicValue(name, "full_charge_time")
+        local damage = PerkSystem:GetNonScalingRelicValue(name, "damage")
+
+        combat_unit:RegisterOnCombatEndCallback(name, function()
+            GMUI.SendUiLayoutCommand("ui.glue.combat.railgun_charge", "Hide")
+        end)
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            if (time - last_launch_time) <= launch_anim_time then
+                return
+            end
+            local target = combat_unit:GetMainOpponent()
+
+            if (time - last_launch_time - launch_anim_time) >= full_charge_time then
+                last_launch_time = time
+                GMUI.SendUiLayoutCommand("ui.glue.combat.railgun_charge", "AnimateRailgunLaunch", {
+                    is_hero = combat_unit:IsHero(),
+                    launch_anim_time = launch_anim_time,
+                })
+
+                Api.SendSendCustomEventActorAction(GLOBAL.background_units.dark_cover, { identifier = "ShowColor" })
+
+                -- launch in 0.5s
+                TimerSimulation.RunCombatOnlyTimer(function()
+                    if combat_unit:IsHero() then
+                        Api.CreateEffectAtUnit(
+                            DCEI.Effect("COMBAT Special Player Launch Railgun"),
+                            target.unit,
+                            combat_unit.unit
+                        )
+                    else
+                        Api.CreateEffectAtUnit(
+                            DCEI.Effect("COMBAT Special Enemy Launch Railgun"),
+                            target.unit,
+                            combat_unit.unit
+                        )
+                    end
+                    TimerSimulation.RunCombatOnlyTimer(function()
+                        target:Damage(damage * level, combat_unit, {
+                            show_duration = 0.25 * 1.5,
+                            anim_duration = 0.75 * 1.5,
+                            color = "<color=red>",
+                            size = "<size=200%>",
+                            center_at_unit = true,
+                        })
+                        Api.SendCreateActorAction(target.unit, {
+                            actor = DCEI.Actor("COMBAT UltimateAttack FX Impact"),
+                            host_site_operations = {
+                                DCEI.Actor("SOp Attack ImpactOffset Ultimate"),
+                            },
+                        })
+                        Api.SendSendCustomEventActorAction(
+                            GLOBAL.background_units.dark_cover,
+                            { identifier = "HideColor" }
+                        )
+                        combat_unit.Attack:AddEmojiToDeck("attack_coin_bullet", 1)
+                        combat_unit:UpdateEmojiMagazineUi()
+                    end, 0.0625 * 2)
+                end, launch_anim_time)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    money_on_damage_quest = function(combat_unit)
+        local name = "money_on_damage_quest"
+        combat_unit:RegisterOnDamageTakenCallback(name, function(level, damage_amount, caster, target)
+            target.money_on_damage_quest = target.money_on_damage_quest or target:GetBoundedAttribute(name)
+            target.money_on_damage_quest = target.money_on_damage_quest + damage_amount
+
+            local total_damage = target.money_on_damage_quest
+            local threshold = PerkSystem:GetNonScalingPerkValue(name, "damage_taken")
+            local gold = PerkSystem:GetScalingPerkValue(name, "gold", level)
+
+            local gold_gain = 0
+
+            while total_damage >= threshold do
+                total_damage = total_damage - threshold
+
+                gold_gain = gold_gain + gold
+            end
+            target.money_on_damage_quest = total_damage
+
+            target:SetAttribute(name, target.money_on_damage_quest)
+            local run_instance = target:IsHero() and target.run_instance or caster.run_instance
+            if run_instance then
+                run_instance:SetSavedPerkDataAttributes(name, target.money_on_damage_quest)
+            end
+
+            if gold_gain == 0 then
+                return
+            end
+
+            AwardGold(gold_gain, target)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    shop_quest = function(combat_unit)
+        local name = "shop_quest"
+        combat_unit:RegisterOnGoldConsumeCallback(name, function(level, consume_amount)
+            local scaling_key, non_scaling_key = "attack", "gold_cost"
+            local gold_cost = PerkSystem:GetNonScalingPerkValue(name, non_scaling_key)
+            local value = PerkSystem:GetScalingPerkValue(name, scaling_key, level)
+
+            -- get run instance so additional perk attributes can be stored in save data to persist across saves
+            local run_instance = combat_unit.run_instance
+
+            local gold_spent = GLOBAL.hero:GetBoundedAttribute("gold_spent_rollover") or 0
+            gold_spent = gold_spent + consume_amount
+
+            while gold_spent >= gold_cost do
+                gold_spent = gold_spent - gold_cost
+
+                local use_animation = true
+
+                combat_unit:ModifyAttribute(scaling_key, value, use_animation)
+                run_instance:ModifySavedPerkDataAttributes(scaling_key, value)
+            end
+
+            -- Set the gold_spent_rollover attribute to track any unspent gold for next purchase
+            local rollover_key = "gold_spent_rollover"
+            combat_unit:SetAttribute(rollover_key, gold_spent)
+            run_instance:SetSavedPerkDataAttributes(rollover_key, gold_spent)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    spend_for_income = function(combat_unit)
+        local name = "spend_for_income"
+        combat_unit:RegisterOnGoldConsumeCallback(name, function(level, consume_amount)
+            local scaling_key, non_scaling_key = "income", "gold_cost"
+            local gold_cost = PerkSystem:GetNonScalingPerkValue(name, non_scaling_key)
+            local value = PerkSystem:GetScalingPerkValue(name, scaling_key, level)
+
+            -- get run instance so additional perk attributes can be stored in save data to persist across saves
+            local run_instance = combat_unit.run_instance
+
+            local gold_spent = GLOBAL.hero:GetBoundedAttribute("spend_for_income") or 0
+            gold_spent = gold_spent + consume_amount
+
+            local use_animation = true
+
+            while gold_spent >= gold_cost do
+                gold_spent = gold_spent - gold_cost
+
+                combat_unit:ModifyAttribute(scaling_key, value, use_animation)
+                run_instance:ModifySavedPerkDataAttributes(scaling_key, value)
+            end
+
+            local rollover_key = "spend_for_income"
+            combat_unit:SetAttribute(rollover_key, gold_spent)
+            run_instance:SetSavedPerkDataAttributes(rollover_key, gold_spent)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    energy_on_enemy_stun = function(combat_unit)
+        local name = "energy_on_enemy_stun"
+        local function AddEnergyOnEnemyStunOrPoolyMorph(level, caster, target)
+            local scaling_key = "energy"
+            local mana_amount = PerkSystem:GetScalingPerkValue(name, scaling_key, level)
+            local direction = 0
+            PerkMechanics:CreateManaReturnMissile(direction, caster, target, mana_amount)
+        end
+
+        combat_unit:RegisterOnEnemyStunnedCallback(name, AddEnergyOnEnemyStunOrPoolyMorph)
+        combat_unit:RegisterOnEnemyPoolymorphedCallback(name, AddEnergyOnEnemyStunOrPoolyMorph)
+    end,
+    ---@param combat_unit CombatUnit
+    rock_on_enemy_stun = function(combat_unit)
+        local name = "rock_on_enemy_stun"
+        local function LaunchPooOnEnemyStunOrPoolymorph(level, caster, target)
+            local attack_name = "attack_rock"
+            local count = PerkSystem:GetScalingPerkValue(name, attack_name, level)
+            for i = 1, count do
+                caster.Attack:NewMissileAttack(target, attack_name)
+            end
+        end
+
+        combat_unit:RegisterOnEnemyStunnedCallback(name, LaunchPooOnEnemyStunOrPoolymorph)
+        combat_unit:RegisterOnEnemyPoolymorphedCallback(name, LaunchPooOnEnemyStunOrPoolymorph)
+    end,
+    ---@param combat_unit CombatUnit
+    attack_speed_on_stun = function(combat_unit)
+        local name = "attack_speed_on_stun"
+        combat_unit:RegisterOnEnemyStunnedCallback(name, function(level, caster, target)
+            if not combat_unit:HasBehavior(name) then
+                PerkBehaviorSystem:ApplyPerkBehavior(combat_unit, combat_unit, name, level)
+            end
+        end)
+        combat_unit:RegisterOnEnemyStunnedEndCallback(name, function(level, caster, target)
+            for n = 1, level do
+                PerkBehaviorSystem:RemoveBehaviorStackInstance(combat_unit, name)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    poo_on_stun = function(combat_unit)
+        local name = "poo_on_stun"
+        local function LaunchPooOnEnemyStun(level, caster, target)
+            local attack_name = "attack_poo"
+            local count = PerkSystem:GetScalingPerkValue(name, attack_name, level)
+            for i = 1, count do
+                caster.Attack:NewMissileAttack(target, attack_name)
+            end
+        end
+
+        combat_unit:RegisterOnEnemyStunnedCallback(name, LaunchPooOnEnemyStun)
+    end,
+
+    ---@param combat_unit CombatUnit
+    flex_on_enemy_stun = function(combat_unit)
+        local name = "flex_on_enemy_stun"
+        local function LaunchPooOnEnemyStunOrPoolymorph(level, caster, target)
+            local attack_name = "attack_flex"
+            local count = PerkSystem:GetScalingPerkValue(name, attack_name, level)
+            for i = 1, count do
+                caster.Attack:NewMissileAttack(target, attack_name)
+            end
+        end
+
+        combat_unit:RegisterOnEnemyStunnedCallback(name, LaunchPooOnEnemyStunOrPoolymorph)
+        combat_unit:RegisterOnEnemyPoolymorphedCallback(name, LaunchPooOnEnemyStunOrPoolymorph)
+    end,
+    ---@param combat_unit CombatUnit
+    rush_stun_on_hit = function(combat_unit)
+        local name = "rush_stun_on_hit"
+        local function RushStunOnHit(level, attack_data, caster, target)
+            if attack_data.is_dodged then
+                return
+            end
+            if not combat_unit:HasBehavior(name) then
+                return
+            end
+
+            local chance = PerkSystem:GetNonScalingPerkBehaviorValue(name, "chance", "non_scaling_values")
+            if Random:Chance(chance) then
+                local stun_perk_name = "debuff_stun_100ms"
+                -- we use the behavior stack instead of perk level here because rush behavior can be enchanced by other perks
+                local behavior_stack = PerkBehaviorSystem:GetPerkBehaviorStackCount(combat_unit, name)
+                PerkBehaviorSystem:ApplyPerkBehavior(target, caster, stun_perk_name, behavior_stack)
+            end
+        end
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            local missile_id = attack_data.missile_id
+            local missile_data = MissileDataHelper:GetMissileData(missile_id)
+            if missile_data.target_self then
+                return
+            end
+            RushStunOnHit(level, attack_data, caster, target)
+        end)
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(name, RushStunOnHit)
+    end,
+    ---@param combat_unit CombatUnit
+    heal_on_damage = function(combat_unit)
+        local name = "heal_on_damage"
+        combat_unit:RegisterOnDamageTakenCallback(name, function(level, damage_amount, caster, target)
+            local chance = PerkSystem:GetNonScalingPerkValue(name, "chance")
+            if Random:Chance(chance) then
+                local scaling_key = "heal"
+                local value = PerkSystem:GetScalingPerkValue(name, scaling_key, level)
+                target:Heal(value)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    daqianlu = function(combat_unit)
+        local name = "daqianlu"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            combat_unit.daqianlu_trigger_damage = 0
+            combat_unit.daqianlu_triggered = false
+        end)
+        combat_unit:RegisterOnDamageTakenCallback(name, function(level, damage_amount, caster, target)
+            if combat_unit:HasBehavior(name) then
+                local chance = PerkSystem:GetNonScalingRelicValue(name, "chance")
+                if Random:Chance(chance) then
+                    local enemy = combat_unit:GetMainOpponent()
+                    enemy:Damage(damage_amount, combat_unit, { use_vulnerable = true, offset_radius = 0.5 })
+                end
+            end
+
+            if combat_unit.daqianlu_triggered then
+                return
+            end
+
+            combat_unit.daqianlu_trigger_damage = combat_unit.daqianlu_trigger_damage + damage_amount
+            local threshold = PerkSystem:GetNonScalingRelicValue(name, "damage_threshold")
+            if combat_unit.daqianlu_trigger_damage >= threshold then
+                combat_unit.daqianlu_triggered = true
+                PerkBehaviorSystem:ApplyPerkBehavior(combat_unit, combat_unit, name, level)
+
+                local health_regen = PerkSystem:GetNonScalingRelicValue(name, "health_regen")
+                combat_unit:ModifyAttribute("health_per_second", health_regen, true)
+                combat_unit.run_instance:ModifySavedPerkDataAttributes("health_per_second", health_regen)
+
+                -- TODO: make dengjie look better
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    max_hp_on_damage_quest = function(combat_unit)
+        local name = "max_hp_on_damage_quest"
+        combat_unit:RegisterOnDamageTakenCallback(name, function(level, damage_amount, caster, target)
+            target.max_hp_on_damage_quest = target.max_hp_on_damage_quest or target:GetBoundedAttribute(name)
+            target.max_hp_on_damage_quest = target.max_hp_on_damage_quest + damage_amount
+
+            local total_damage = target.max_hp_on_damage_quest
+            local threshold = PerkSystem:GetNonScalingPerkValue(name, "damage_taken")
+            local scaling_key = "health_maximum"
+            local max_hp = PerkSystem:GetScalingPerkValue(name, scaling_key, level)
+
+            -- get run instance so additional perk attributes can be stored in save data to persist across saves
+            local run_instance = combat_unit.run_instance
+
+            local use_animation = true
+
+            while total_damage >= threshold do
+                total_damage = total_damage - threshold
+
+                combat_unit:Heal(max_hp)
+                combat_unit:ModifyAttribute(scaling_key, max_hp, use_animation)
+                run_instance:ModifySavedPerkDataAttributes(scaling_key, max_hp)
+            end
+            target.max_hp_on_damage_quest = total_damage
+
+            target:SetAttribute(name, target.max_hp_on_damage_quest)
+            local run_instance = target:IsHero() and target.run_instance or caster.run_instance
+            if run_instance then
+                run_instance:SetSavedPerkDataAttributes(name, target.max_hp_on_damage_quest)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    halftime_champagne = function(combat_unit)
+        local name = "halftime_champagne"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            if not caster.halftime_champagne_triggerd then
+                caster.halftime_champagne_triggerd = true
+                -- Run relic icon animation
+                local data = {
+                    relic_id = name,
+                    animation_id = "impact",
+                    args = {
+                        final_size = 1.5,
+                    },
+                }
+                CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(caster:IsHero(), data)
+
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, name, level)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    attack_speed_on_ult = function(combat_unit)
+        local name = "attack_speed_on_ult"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, name, level)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    sleepy_tea = function(combat_unit)
+        local name = "sleepy_tea"
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(name, function(level, attack_data, caster, target)
+            local init_stun_duration = PerkSystem:GetNonScalingRelicValue(name, "stun_duration")
+            local duration_decrease = PerkSystem:GetNonScalingRelicValue(name, "duration_decrease")
+            caster.sleepy_tea_stun = caster.sleepy_tea_stun or init_stun_duration
+            if caster.sleepy_tea_stun > 0 then
+                local stack = math.floor(caster.sleepy_tea_stun / duration_decrease)
+                local stun_perk = "sleepy_tea_stun_dummy"
+                PerkBehaviorSystem:ApplyPerkBehavior(target, caster, stun_perk, stack)
+                caster.sleepy_tea_stun = caster.sleepy_tea_stun - duration_decrease
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    pig_book = function(combat_unit)
+        local name = "pig_book"
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(name, function(level, attack_data, caster, target)
+            local key = "chance"
+            local perk_chance = PerkSystem:GetNonScalingRelicValue(name, key)
+            for __ = 1, level do
+                if Random:Chance(perk_chance) then
+                    -- Run relic icon animation
+                    local data = {
+                        relic_id = name,
+                        animation_id = "impact",
+                        args = {
+                            final_size = 1.5,
+                        },
+                    }
+                    CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(caster:IsHero(), data)
+
+                    caster.Attack:NewUltimateAttack(target)
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    stun_on_ult = function(combat_unit)
+        local name = "stun_on_ult"
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(name, function(level, attack_data, caster, target)
+            local stun_perk = "debuff_stun_500ms"
+            PerkBehaviorSystem:ApplyPerkBehavior(target, caster, stun_perk, level)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    poison_ultimate = function(combat_unit)
+        local name = "poison_ultimate"
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(name, function(level, attack_data, caster, target)
+            local increase_value = PerkSystem:GetScalingPerkValue(name, "poison", level)
+            local poison_buff = "poison_poo"
+            local poison_stack = PerkBehaviorSystem:GetPoisonBehaviorStackCount(target)
+            local extra_stack = math.floor(poison_stack * increase_value)
+            PerkMechanics:ApplyPoison(caster, target, extra_stack)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    dark_duel = function(combat_unit, apply_event)
+        local name = "dark_duel"
+        local attribute = "dark_duel_cooldown"
+        local cooldown = PerkSystem:GetNonScalingRelicValue(name, "cooldown")
+        if apply_event == "on_apply" then
+            combat_unit:ModifyAttribute(attribute, cooldown)
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                run_instance:ModifySavedPerkDataAttributes(attribute, cooldown)
+            end
+            GMUI.SendUiLayoutCommand(
+                combat_unit.unit_info_layout_address,
+                "UpdateItemAttribute",
+                { key = attribute, value = cooldown }
+            )
+        end
+        combat_unit:RegisterOnCombatEndCallback(name, function()
+            if not combat_unit.run_instance then
+                return
+            end
+            local rest_cooldown = combat_unit:GetRawAttribute(attribute)
+            if rest_cooldown > 0 then
+                combat_unit:ModifyAttribute(attribute, -1)
+                local run_instance = combat_unit.run_instance
+                if run_instance then
+                    run_instance:ModifySavedPerkDataAttributes(attribute, -1)
+                end
+                GMUI.SendUiLayoutCommand(
+                    combat_unit.unit_info_layout_address,
+                    "UpdateItemAttribute",
+                    { key = attribute, value = rest_cooldown - 1 }
+                )
+            end
+        end)
+        combat_unit:RegisterOnExitPerkSelectCallback(name, function(level, data)
+            if not data or not data.perk_id or not data.is_dark_duel then
+                return
+            end
+            if not combat_unit.run_instance then
+                return
+            end
+            combat_unit:SetAttribute(attribute, cooldown)
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                run_instance:SetSavedPerkDataAttributes(attribute, cooldown)
+            end
+            GMUI.SendUiLayoutCommand(
+                combat_unit.unit_info_layout_address,
+                "UpdateItemAttribute",
+                { key = attribute, value = cooldown }
+            )
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    exodia_the_forbidden_one = function(combat_unit)
+        local name = "exodia_the_forbidden_one"
+        SpecialEndRunCondition(true)
+    end,
+    ---@param combat_unit CombatUnit
+    reward_item = function(combat_unit)
+        local name = "reward_item"
+        local function CheckIsFistBuyItem()
+            if not combat_unit:IsHero() then
+                return false
+            end
+            local run_instance = combat_unit.run_instance
+            local wave = run_instance.wave
+            if run_instance.shop_record[wave] and #Core.Table.GetAllKeys(run_instance.shop_record[wave]) == 1 then
+                return true
+            end
+        end
+        combat_unit:RegisterOnBuyPerkCallback(name, function(level, perk_id)
+            if CheckIsFistBuyItem() then
+                for _ = 1, level do
+                    combat_unit:ApplyPerk(perk_id)
+                end
+            end
+        end)
+        combat_unit:RegisterOnBuyRelicCallback(name, function(level, relic_id)
+            if CheckIsFistBuyItem() then
+                for _ = 1, level do
+                    combat_unit:ApplyRelic(relic_id)
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    attack_dice = function(combat_unit)
+        local name = "attack_dice"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id ~= name or attack_data.is_dodged then
+                return
+            end
+            local attribute = "dice_critical_hit"
+            local dice_phase = caster:GetDicePhase()
+            local phase_max_damage = PerkSystem:GetPerkData(name)["non_scaling_values"]["phase_max_damage"]
+            -- Phase starts with 0, but the array index starts with 1, so we need to +1 here.
+            local max_damage = phase_max_damage[dice_phase + 1]
+            local critical_range = PerkSystem:GetNonScalingPerkValue(name, "critical_range")
+            local luck = caster:GetBoundedAttribute("luck")
+            local improved_critical_perk = "improved_critical"
+            if caster:HasPerk(improved_critical_perk) then
+                local level = caster:GetPerkLevel(improved_critical_perk)
+                critical_range = critical_range + PerkSystem:GetScalingPerkValue(improved_critical_perk, "value", level)
+            end
+            if Random:Chance(critical_range * (1 + luck) / max_damage) then
+                -- Calculate critical damage
+                if dice_phase + 1 < #phase_max_damage then
+                    local total_critical_hit = caster:GetBoundedAttribute(attribute) + 1
+                    caster:SetAttribute(attribute, total_critical_hit)
+                    local run_instance = caster:IsHero() and caster.run_instance
+                    if run_instance then
+                        run_instance:SetSavedPerkDataAttributes(attribute, total_critical_hit)
+                    end
+                    GMUI.SendUiLayoutCommand(
+                        caster.unit_info_layout_address,
+                        "UpdateItemAttribute",
+                        { key = attribute, value = total_critical_hit }
+                    )
+                end
+                local modifier = PerkSystem:GetNonScalingPerkValue(name, "modifier")
+                local perfect_critical_perk = "perfect_critical"
+                if caster:HasPerk(perfect_critical_perk) then
+                    local level = caster:GetPerkLevel(perfect_critical_perk)
+                    modifier = modifier * (1 + level)
+                end
+                local dice_base_damage = caster:GetBoundedAttribute("dice_base_damage")
+                attack_data.is_critical = true
+                attack_data.damage = (max_damage + dice_base_damage) * modifier
+                -- Process related perk/relic
+                local lucky_critical_hit_perk = "lucky_critical_hit"
+                if caster:HasPerk(lucky_critical_hit_perk) then
+                    local level = caster:GetPerkLevel(lucky_critical_hit_perk)
+                    PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, lucky_critical_hit_perk, level)
+                end
+                local critical_confirmed_perk = "critical_confirmed"
+                if caster:HasPerk(critical_confirmed_perk) then
+                    local level = caster:GetPerkLevel(critical_confirmed_perk)
+                    PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, critical_confirmed_perk, level)
+                end
+                local dice_critical_dodge_perk = "dice_critical_dodge"
+                if caster:HasPerk(dice_critical_dodge_perk) then
+                    local level = caster:GetPerkLevel(dice_critical_dodge_perk)
+                    PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, dice_critical_dodge_perk, level)
+                end
+                local dice_critical_heal_perk = "dice_critical_heal"
+                if caster:HasPerk(dice_critical_heal_perk) then
+                    local level = caster:GetPerkLevel(dice_critical_heal_perk)
+                    local amount = attack_data.damage
+                        * PerkSystem:GetScalingPerkValue(dice_critical_heal_perk, "value", level)
+                    caster:Heal(amount, Util.SIMPLE_DIGIT_TYPE.HEAL_OVERUNIT)
+                    if caster.run_instance then
+                        caster.run_instance:IncrementWaveRecord("heal", amount, caster:IsHero())
+                    end
+                end
+            else
+                local dice_base_damage = caster:GetBoundedAttribute("dice_base_damage")
+                attack_data.damage = Random:Integer(1, max_damage - critical_range) + dice_base_damage
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    eureka_in_jail = function(combat_unit)
+        local name = "eureka_in_jail"
+        local debuff_perk_name = "debuff_stun_100ms"
+        local perk_list = PerkSystem:GetRelicData(name)["non_scaling_values"]["perk_list"]
+        combat_unit.Attack:RegisterOnMagazineResetCallback(name, function()
+            local duration = PerkSystem:GetNonScalingRelicValue(name, "duration")
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, debuff_perk_name, duration / 0.1)
+        end)
+        combat_unit:RegisterOnStunnedCallback(name, function(level, caster, target)
+            for _ = 1, level do
+                local perk_name = Random:TableValue(perk_list)
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, perk_name)
+                Sound.PlaySound(DCEI.Sound("smh_eureka_sfx"), 3)
+            end
+            Api.SendSendCustomEventActorAction(combat_unit.unit, { identifier = "ChangePortrait" })
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    enough = function(combat_unit)
+        local name = "enough"
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function()
+            Api.SendSendCustomEventActorAction(combat_unit.unit, { identifier = "SpawnSweat" })
+        end)
+
+        combat_unit.Attack:RegisterOnMissileDamageBlockCallback(
+            name,
+            function(level, attack_data, caster, target, block)
+                local key = "threshold"
+                local threshold = PerkSystem:GetNonScalingRelicValue(name, key)
+                target.enough_relic_block_count = target.enough_relic_block_count or 0
+                target.enough_relic_block_count = target.enough_relic_block_count + block
+                while target.enough_relic_block_count > threshold do
+                    target.enough_relic_block_count = target.enough_relic_block_count - threshold
+                    PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, name, level)
+                    Api.SendSendCustomEventActorAction(combat_unit.unit, { identifier = "SweatDrop" })
+                end
+            end
+        )
+    end,
+    ---@param combat_unit CombatUnit
+    bring_to_justice = function(combat_unit)
+        local name = "bring_to_justice"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.is_critical then
+                Api.SendCreateActorAction(target.unit, { actor = DCEI.Actor("COMBAT FX Bring To Justice") })
+                PerkBehaviorSystem:ApplyPerkBehavior(target, caster, name, level)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    approaching_storm = function(combat_unit)
+        local name = "approaching_storm"
+        local perk_name = "approaching_storm_dodge"
+        local init_thorn = PerkSystem:GetNonScalingRelicValue(name, "init_thorn")
+        local reduce_thorn = PerkSystem:GetNonScalingRelicValue(name, "reduce_thron")
+
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function()
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, perk_name, init_thorn)
+        end)
+        combat_unit.Attack:RegisterOnMissileHitCallback(name, function(level, attack_data, caster, target)
+            if attack_data.is_dodged then
+                return
+            end
+            for _ = 1, reduce_thorn do
+                PerkBehaviorSystem:RemoveBehaviorStackInstance(target, perk_name)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    slack_off = function(combat_unit)
+        local name = "slack_off"
+        local disarm_perk = "debuff_disarm_3s"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            Api.SendSendCustomEventActorAction(combat_unit.unit, { identifier = "ChangePortrait" })
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, name, level)
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, disarm_perk, level)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    left_elbow = function(combat_unit)
+        local name = "left_elbow"
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function()
+            PerkMechanics:CheckForElbow(combat_unit)
+        end)
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            local trigger_interval = PerkSystem:GetNonScalingRelicValue(name, "trigger_interval")
+            combat_unit.left_elbow_trigger_time = combat_unit.left_elbow_trigger_time or 0
+            if time - combat_unit.left_elbow_trigger_time >= trigger_interval then
+                combat_unit.left_elbow_trigger_time = time
+                local damage = PerkSystem:GetScalingRelicValue(name, "damage", level)
+                local debuff_list = PerkSystem:GetRelicData(name)["non_scaling_values"]["debuff_list"]
+                PerkMechanics:LeftElbowCrash(combat_unit, function(caster, target)
+                    for _, debuff in ipairs(debuff_list) do
+                        PerkBehaviorSystem:ApplyPerkBehavior(target, caster, debuff)
+                    end
+                    target:Damage(damage, caster, {
+                        show_duration = 0.25 * 1.5,
+                        anim_duration = 0.75 * 1.5,
+                        color = "<color=red>",
+                        size = "<size=200%>",
+                        center_at_unit = true,
+                    })
+                end)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    right_elbow = function(combat_unit)
+        local name = "right_elbow"
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function()
+            PerkMechanics:CheckForElbow(combat_unit)
+        end)
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            local trigger_delay = PerkSystem:GetNonScalingRelicValue(name, "trigger_delay")
+            local trigger_interval = PerkSystem:GetNonScalingRelicValue(name, "trigger_interval")
+            combat_unit.right_elbow_trigger_time = combat_unit.right_elbow_trigger_time or trigger_delay
+            if time - combat_unit.right_elbow_trigger_time >= trigger_interval then
+                combat_unit.right_elbow_trigger_time = time
+                local damage = PerkSystem:GetScalingRelicValue(name, "damage", level)
+                local debuff_list = PerkSystem:GetRelicData(name)["non_scaling_values"]["debuff_list"]
+                PerkMechanics:RightElbowCrash(combat_unit, function(caster, target)
+                    for _, debuff in ipairs(debuff_list) do
+                        PerkBehaviorSystem:ApplyPerkBehavior(target, caster, debuff)
+                    end
+                    target:Damage(damage, caster, {
+                        show_duration = 0.25 * 1.5,
+                        anim_duration = 0.75 * 1.5,
+                        color = "<color=red>",
+                        size = "<size=200%>",
+                        center_at_unit = true,
+                    })
+                end)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    screw_on_start = function(combat_unit)
+        local name = "screw_on_start"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            local attack_name = "attack_screw"
+            local count = PerkSystem:GetScalingPerkValue(name, attack_name, level)
+            for i = 1, count do
+                combat_unit.Attack:NewMissileAttack(target, attack_name)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    screw_on_robot_spawn = function(combat_unit)
+        local name = "screw_on_robot_spawn"
+        combat_unit:RegisterOnRobotSpawnCallback(name, function(level, caster)
+            local attack_name = "attack_brain"
+            local count = PerkSystem:GetScalingPerkValue(name, attack_name, level)
+            local chance = PerkSystem:GetNonScalingPerkValue(name, "chance")
+            for i = 0, count - 1 do
+                TimerSimulation.RunCombatOnlyTimer(function()
+                    if Random:Chance(chance) then
+                        caster.Attack:AddEmojiToDeck(attack_name, 1)
+                        caster:PlayAwardEmojiAnimation(attack_name, 1)
+
+                        caster.Attack:AddEmojiToDeck("attack_bomb", 1)
+                        caster:PlayAwardEmojiAnimation("attack_bomb", 1)
+                    end
+                end, 0.125 * i)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    energy_on_robot_spawn = function(combat_unit)
+        local name = "energy_on_robot_spawn"
+        combat_unit:RegisterOnRobotSpawnCallback(name, function(level, caster)
+            local scaling_key = "energy"
+            local value = PerkSystem:GetScalingPerkValue(name, scaling_key, level)
+            combat_unit:ModifyCurrentEnergy(value)
+
+            -- display floating combat text for energy gain
+            local args = {
+                color = Color:Tag("blue_soft"),
+                offset_radius = 0.375,
+                size = "<size=100%>",
+                center_at_unit = true,
+            }
+            local text = "+" .. tostring(value)
+            Util.DisplayFloatingCombatText(combat_unit, text, args)
+
+            -- create energy FX over time
+            local fx = DCEI.Actor("COMBAT Generic EnergyGain FX Impact")
+            local count, duration = 4, 0.625
+            PerkMechanics:CreateUnitFxOverTime(combat_unit, fx, count, duration)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    screw_on_block = function(combat_unit)
+        local name = "screw_on_block"
+        combat_unit.Attack:RegisterOnMissileDamageBlockCallback(
+            name,
+            function(level, attack_data, caster, target, block)
+                local key = "threshold"
+                local threshold = PerkSystem:GetNonScalingPerkValue(name, key)
+                local attack_id = "attack_screw"
+                local missile_number = PerkSystem:GetScalingPerkValue(name, attack_id, level)
+                target.screw_on_block_count = target.screw_on_block_count or 0
+                target.screw_on_block_count = target.screw_on_block_count + block
+                while target.screw_on_block_count > threshold do
+                    target.screw_on_block_count = target.screw_on_block_count - threshold
+                    for _ = 1, missile_number do
+                        target.Attack:NewMissileAttack(caster, attack_id)
+                    end
+                end
+            end
+        )
+    end,
+    ---@param combat_unit CombatUnit
+    screw_on_ultimate = function(combat_unit)
+        local name = "screw_on_ultimate"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            local attack_id = "attack_screw"
+            local missile_number = PerkSystem:GetScalingPerkValue(name, attack_id, level)
+            for _ = 1, missile_number do
+                caster.Attack:NewMissileAttack(caster, attack_id)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    screw_on_robot_explosion = function(combat_unit)
+        local name = "screw_on_robot_explosion"
+        combat_unit:RegisterOnRobotExplosionCallback(name, function(level, caster, target)
+            local attack_name = "attack_screw"
+            local count = PerkSystem:GetScalingPerkValue(name, attack_name, level)
+            local target = combat_unit:GetMainOpponent()
+
+            for i = 1, count do
+                combat_unit.Attack:NewScrewAttackFromRobotExplosion(caster, target)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    heal_on_robot_explosion = function(combat_unit)
+        local name = "heal_on_robot_explosion"
+        combat_unit:RegisterOnRobotExplosionCallback(name, function(level, caster, target)
+            local summons = caster.summons
+            if #summons > 0 then
+                local attack_name = "attack_ambulance"
+                for __ = 1, level do
+                    TimerSimulation.RunCombatOnlyTimer(function()
+                        for _, summon in ipairs(summons) do
+                            local flight_time = 0.75
+                            local launch_position = Core.Table.ShallowCopy(summon:GetPosition())
+                            launch_position.y = launch_position.y + 0.75
+                            local target_position = Core.Table.ShallowCopy(caster:GetPosition())
+                            target_position.y = target_position.y + 0.75
+                            local random_point_in_circle = Random:RandomVectorInsideCircle(1)
+                            target_position.x = target_position.x + random_point_in_circle.x
+                            target_position.y = target_position.y + random_point_in_circle.y
+                            local dir_x = Core.Random.GetNumber(-1.5, 1.5)
+                            local dir_y = 1
+
+                            local attack_data = {
+                                simple_missile_projectile_id = "attack_ambulance",
+                                missile_id = "attack_ambulance",
+                                direct_move = false,
+                            }
+                            SimpleMissile:CreateSimpleMissile(
+                                launch_position,
+                                target_position,
+                                attack_data,
+                                dir_x,
+                                dir_y,
+                                flight_time,
+                                false
+                            )
+                        end
+                        local delay = Util.ATTACK_FLIGHT_TIME
+                        TimerSimulation.RunCombatOnlyTimer(function()
+                            for _, summon in ipairs(summons) do
+                                local value = PerkSystem:GetNonScalingPerkValue(name, "heal")
+                                caster:Heal(value, Util.SIMPLE_DIGIT_TYPE.HEAL_OVERUNIT)
+
+                                local run_instance = caster:IsHero() and caster.run_instance or target.run_instance
+                                if run_instance then
+                                    run_instance:IncrementWaveRecord("heal_on_robot_explosion", value, caster:IsHero())
+                                end
+                            end
+                        end, delay)
+                    end, 0.25)
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    block_on_robot_explosion = function(combat_unit)
+        local name = "block_on_robot_explosion"
+        combat_unit:RegisterOnRobotExplosionCallback(name, function(level, caster, target)
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, name, level)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    energy_on_robot_explosion = function(combat_unit)
+        local name = "energy_on_robot_explosion"
+        combat_unit:RegisterOnRobotExplosionCallback(name, function(level, caster, target)
+            local scaling_key = "energy"
+            local mana_amount = PerkSystem:GetScalingPerkValue(name, scaling_key, level)
+            local direction = 0
+            PerkMechanics:CreateManaReturnMissile(direction, caster, target, mana_amount)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    three_trucks = function(combat_unit)
+        local name = "three_trucks"
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function()
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, name)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    cappuccino = function(combat_unit)
+        local name = "cappuccino"
+        function ApplyCoffeeRelic()
+            Sound.PlaySound(DCEI.Sound("smh_cappuccino_sfx"), 2)
+            local apply_event = "on_apply"
+            combat_unit:ApplyRelic("coffee", apply_event, true)
+            local icon = PerkSystem:GetRelicIcon("coffee")
+            local args = {
+                relic_id = "coffee",
+                icon = icon,
+                size = 2,
+            }
+            CommonSimulationSendPresentationCommand.SendPlayFlyRelicToRelicBarCommand(combat_unit:IsHero(), args)
+        end
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function()
+            ApplyCoffeeRelic()
+        end)
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            local trigger_interval = PerkSystem:GetNonScalingRelicValue(name, "trigger_interval")
+            combat_unit.cappuccino_trigger_time = combat_unit.cappuccino_trigger_time or 0
+            if time - combat_unit.cappuccino_trigger_time >= trigger_interval then
+                combat_unit.cappuccino_trigger_time = time
+                ApplyCoffeeRelic()
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    blacksmith = function(combat_unit)
+        local name = "blacksmith"
+        combat_unit.Attack:RegisterOnUltimateImpactCallback(name, function(level, attack_data, caster, target)
+            local is_stun = PerkBehaviorSystem:IsStunned(target)
+            local chance_0 = is_stun and PerkSystem:GetNonScalingRelicValue(name, "launch_0_chance_stun")
+                or PerkSystem:GetNonScalingRelicValue(name, "launch_0_chance")
+            local chance_2 = is_stun and PerkSystem:GetNonScalingRelicValue(name, "launch_2_chance_stun")
+                or PerkSystem:GetNonScalingRelicValue(name, "launch_2_chance")
+            local chance_3 = is_stun and PerkSystem:GetNonScalingRelicValue(name, "launch_3_chance_stun")
+                or PerkSystem:GetNonScalingRelicValue(name, "launch_3_chance")
+            local chance = Random:Float(0, 1)
+            if chance < chance_0 then
+                attack_data.damage = 0
+                Sound.PlaySound(DCEI.Sound("metal_armor_hit_v1_smh"), 5)
+                -- get ultimate type
+                local attack_type_data = MissileManager.GetUnitAttackTypeData(caster.unit)
+                local attack_id = attack_type_data.ultimate
+                local pe_degree = MissileDataHelper:GetAttackStartRotation(attack_id)
+                local end_degree = start_degree + MissileDataHelper:GetAttackSpinSpeed(attack_id) * 3
+                local static = MissileDataHelper:GetAttackStatic(attack_id)
+                -- create missile effect
+                local launch_position = target:GetPosition()
+                --local facing = { x = (caster:IsHero() or static) and -1 or 1, y = 0 }
+                local facing = { y = (caster:IsHero() or static) and -1 or 1, x = 0 }
+                local ultimate_missile = Api.CreateSimpleUnitSync(attack_id, {
+                    player_id = caster:IsHero() and 1 or -1,
+                    position = { x = launch_position.x, z = launch_position.y + 1 },
+                    facing = facing,
+                })
+
+                local acceleration = caster:IsHero() and -2 or 2
+                local init_speed = caster:IsHero() and -10 or 10
+                local random_init_speed_x = Random:Float(-10, 10)
+
+                Api.ApplySimpleMoverUniformAcceleration(
+                    ultimate_missile,
+                    random_init_speed_x,
+                    init_speed,
+                    0,
+                    acceleration,
+                    0,
+                    1
+                )
+                local final_scale = Util.DEFAULT_ULTIMATE_SCALE
+                if caster:HasPerk("ultimate_power") then
+                    -- 1.25x size
+                    final_scale = final_scale * 1.25
+                end
+                if attack_data.is_critical then
+                    -- 1.5x size, change color
+                    final_scale = final_scale * 1.5
+                end
+
+                Api.ApplyTransformAnimationToSimpleUnit(ultimate_missile, {
+                    start_seconds = 0,
+                    end_seconds = 0.5,
+                    start_scale = { x = final_scale, y = final_scale, z = final_scale },
+                    end_scale = { x = final_scale, y = final_scale, z = final_scale },
+                })
+
+                Api.ApplyTransformAnimationToSimpleUnit(ultimate_missile, {
+                    start_seconds = 0,
+                    end_seconds = 1.5,
+                    start_scale = { x = 1, y = 1, z = 1 },
+                    end_scale = { x = 1, y = 1, z = 1 },
+                    start_degree = start_degree,
+                    end_degree = end_degree,
+                })
+
+                Api.AddRemoveTimerToSimpleUnit(ultimate_missile, 1.5)
+            elseif chance < chance_0 + chance_2 then
+                attack_data.damage = attack_data.damage * 2
+            else
+                attack_data.damage = attack_data.damage * 3
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    attack_golden_screwdriver = function(combat_unit)
+        combat_unit.Attack:RegisterOnMissileLaunchCallback(
+            "attack_golden_screwdriver",
+            function(level, attack_data, caster, target)
+                if attack_data.missile_id == "attack_golden_screwdriver" then
+                    local summons = caster.summons
+                    if #summons > 0 then
+                        local attack_name = "attack_screwdriver"
+                        for _, summon in ipairs(summons) do
+                            summon.Attack:NewMissileAttack(target, attack_name)
+                        end
+                    end
+                end
+            end
+        )
+    end,
+    ---@param combat_unit CombatUnit
+    better_golden_screwdriver = function(combat_unit)
+        combat_unit.Attack:RegisterOnMissileLaunchCallback(
+            "better_golden_screwdriver",
+            function(level, attack_data, caster, target)
+                if attack_data.missile_id == "attack_golden_screwdriver" then
+                    local summons = caster.summons
+                    if #summons > 0 then
+                        local attack_name = "attack_screwdriver"
+                        for _, summon in ipairs(summons) do
+                            for i = 1, level do
+                                summon.Attack:NewMissileAttack(target, attack_name)
+                            end
+                        end
+                    end
+                end
+            end
+        )
+    end,
+    ---@param combat_unit CombatUnit
+    golden_screwdriver_on_robot_explosion = function(combat_unit)
+        combat_unit:RegisterOnRobotExplosionCallback(
+            "golden_screwdriver_on_robot_explosion",
+            function(level, caster, target)
+                local perk_name = "golden_screwdriver_on_robot_explosion"
+                local attack_name = "attack_golden_screwdriver"
+                local count = PerkSystem:GetScalingPerkValue(perk_name, attack_name, level)
+                local target = combat_unit:GetMainOpponent()
+
+                for i = 1, count do
+                    combat_unit.Attack:NewMissileAttack(target, attack_name)
+                end
+            end
+        )
+    end,
+    ---@param combat_unit CombatUnit
+    launch_on_robot_explosion = function(combat_unit)
+        combat_unit:RegisterOnRobotExplosionCallback("launch_on_robot_explosion", function(level, caster, target)
+            local exclude_screw = "attack_screw"
+            local exclude_golden_screwdriver = "attack_golden_screwdriver"
+            local count = level
+            local target = combat_unit:GetMainOpponent()
+            local emoji_deck = combat_unit.Attack:GetEmojiDeck()
+
+            for _, v in ipairs(emoji_deck) do
+                if v.emoji_id ~= exclude_screw and v.emoji_id ~= exclude_golden_screwdriver then
+                    for i = 1, count do
+                        combat_unit.Attack:NewMissileAttack(target, v.emoji_id)
+                    end
+                end
+            end
+        end)
+    end,
+    thank_you = function(combat_unit)
+        combat_unit:RegisterOnHealCallback("thank_you", function(level, amount, caster)
+            caster.thank_you_healing = caster:GetBoundedAttribute("thank_you") or 0
+            caster.thank_you_healing = caster.thank_you_healing or 0
+            caster.thank_you_healing = caster.thank_you_healing + amount
+
+            local run_instance = caster.run_instance
+
+            local perk_name = "thank_you"
+            local perk_heal_threshold = PerkSystem:GetNonScalingPerkValue(perk_name, "heal_amount")
+
+            while caster.thank_you_healing > perk_heal_threshold do
+                caster.thank_you_healing = caster.thank_you_healing - perk_heal_threshold
+                local extra_trashtalk = 0
+                local wow_level = caster:GetPerkLevel("wow")
+                local extra_trashtalk_chance = PerkSystem:GetNonScalingPerkValue("wow", "chance")
+                for i = 1, wow_level do
+                    if Random:Chance(extra_trashtalk_chance) then
+                        extra_trashtalk = extra_trashtalk + 1
+                    end
+                end
+                local trash_talk_dmg = caster:GetBoundedAttribute("trash_talk_attack") or 0
+                local deal_damage = trash_talk_dmg > 0
+                for i = 1, extra_trashtalk + level do
+                    TimerSimulation.RunCombatOnlyTimer(function()
+                        local text = Util.GetRandomPriestTrashTalk()
+                        text = text:emojize()
+                        text = text:replacename(_G.player_name)
+                        local data = { message = text, damage = deal_damage }
+                        GMUI.SendUiLayoutCommand("ui.glue.combat", "PriestTrashTalk", data)
+                        if deal_damage then
+                            PerkMechanics.DealTrashTalkDamage(caster, deal_damage)
+                        end
+                    end, (i - 1) * 0.125)
+                end
+            end
+
+            caster:SetAttribute("thank_you", caster.thank_you_healing)
+
+            if run_instance then
+                run_instance:SetSavedPerkDataAttributes("thank_you", caster.thank_you_healing)
+            end
+
+            GMUI.SendUiLayoutCommand(
+                caster.unit_info_layout_address,
+                "UpdateItemAttribute",
+                { key = "thank_you", value = caster.thank_you_healing }
+            )
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    well_played = function(combat_unit)
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback("well_played", function(level, caster, target)
+            local extra_trashtalk = 0
+            local wow_level = caster:GetPerkLevel("wow")
+            local extra_trashtalk_chance = PerkSystem:GetNonScalingPerkValue("wow", "chance")
+            for i = 1, wow_level do
+                if Random:Chance(extra_trashtalk_chance) then
+                    extra_trashtalk = extra_trashtalk + 1
+                end
+            end
+            local trash_talk_dmg = caster:GetBoundedAttribute("trash_talk_attack") or 0
+            local deal_damage = trash_talk_dmg > 0
+            for i = 1, extra_trashtalk + level do
+                TimerSimulation.RunCombatOnlyTimer(function()
+                    local text = Util.GetRandomPriestTrashTalk()
+                    text = text:emojize()
+                    text = text:replacename(_G.player_name)
+                    local data = { message = text, damage = deal_damage }
+                    GMUI.SendUiLayoutCommand("ui.glue.combat", "PriestTrashTalk", data)
+                    if deal_damage then
+                        PerkMechanics.DealTrashTalkDamage(caster, deal_damage)
+                    end
+                end, (i - 1) * 0.125)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    crush_on_heal = function(combat_unit)
+        combat_unit:RegisterOnHealCallback("crush_on_heal", function(level, amount, caster)
+            caster.crush_on_heal_healing = caster.crush_on_heal_healing or 0
+            caster.crush_on_heal_healing = caster.crush_on_heal_healing + amount
+            local crush_relic_name = "crush_on_heal"
+            local non_scaling_key = "heal_amount"
+            local crush_attack_id = "attack_crush"
+
+            local perk_heal_threshold = PerkSystem:GetNonScalingRelicValue(crush_relic_name, non_scaling_key)
+
+            while caster.crush_on_heal_healing > perk_heal_threshold do
+                caster.crush_on_heal_healing = caster.crush_on_heal_healing - perk_heal_threshold
+
+                local crush_missile_count = PerkSystem:GetScalingRelicValue(crush_relic_name, crush_attack_id, level)
+                for _ = 1, crush_missile_count do
+                    caster.Attack:NewMissileAttack(caster:GetMainOpponent(), crush_attack_id)
+                end
+
+                -- Log crush on heal amount
+                if caster.run_instance and crush_missile_count > 0 then
+                    caster.run_instance:IncrementWaveRecord(
+                        "crush_on_heal_amount",
+                        crush_missile_count,
+                        caster:IsHero()
+                    )
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    flex_on_heal = function(combat_unit)
+        combat_unit:RegisterOnHealCallback("flex_on_heal", function(level, amount, caster)
+            caster.flex_on_heal_healing = caster.flex_on_heal_healing or 0
+            caster.flex_on_heal_healing = caster.flex_on_heal_healing + amount
+            local perk_name = "flex_on_heal"
+            local non_scaling_key = "heal_amount"
+            local flex_attack_id = "attack_flex"
+
+            local perk_heal_threshold = PerkSystem:GetNonScalingPerkValue(perk_name, non_scaling_key)
+
+            while caster.flex_on_heal_healing > perk_heal_threshold do
+                caster.flex_on_heal_healing = caster.flex_on_heal_healing - perk_heal_threshold
+
+                local missile_count = PerkSystem:GetScalingPerkValue(perk_name, flex_attack_id, level)
+                for _ = 1, missile_count do
+                    caster.Attack:NewMissileAttack(caster:GetMainOpponent(), flex_attack_id)
+                end
+
+                -- Log flex_on_crit on heal amount
+                if caster.run_instance and missile_count > 0 then
+                    caster.run_instance:IncrementWaveRecord("flex_on_heal_amount", missile_count, caster:IsHero())
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    dragon_on_heal = function(combat_unit)
+        combat_unit:RegisterOnHealCallback("dragon_on_heal", function(level, amount, caster)
+            caster.dragon_on_heal_healing = caster.dragon_on_heal_healing or 0
+            caster.dragon_on_heal_healing = caster.dragon_on_heal_healing + amount
+            local perk_name = "dragon_on_heal"
+            local non_scaling_key = "heal_amount"
+            local dragon_attack_id = "attack_dragon"
+
+            local perk_heal_threshold = PerkSystem:GetNonScalingPerkValue(perk_name, non_scaling_key)
+
+            while caster.dragon_on_heal_healing > perk_heal_threshold do
+                caster.dragon_on_heal_healing = caster.dragon_on_heal_healing - perk_heal_threshold
+
+                local missile_count = PerkSystem:GetScalingPerkValue(perk_name, dragon_attack_id, level)
+                for _ = 1, missile_count do
+                    caster.Attack:NewMissileAttack(caster:GetMainOpponent(), dragon_attack_id)
+                end
+
+                -- Log dragon_on_crit on heal amount
+                -- if caster.run_instance and missile_count > 0 then
+                --     caster.run_instance:IncrementWaveRecord("dragon_on_heal_amount", missile_count, caster:IsHero())
+                -- end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_on_start = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_on_start"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function()
+            PerkMechanics:ApplyBlankPerkPerks(combat_unit, perk_list)
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_on_ultimate_hit = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_on_ultimate_hit"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        combat_unit.Attack:RegisterOnUltimateHitCallback(name, function(level, attack_data, caster, target)
+            PerkMechanics:ApplyBlankPerkPerks(combat_unit, perk_list)
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_on_ultimate = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_on_ultimate"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, attack_data, caster, target)
+            PerkMechanics:ApplyBlankPerkPerks(combat_unit, perk_list)
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_on_rock = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_on_rock"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        local count_attribute = "blank_perk_on_rock_count"
+        local max_attribute = "blank_perk_on_rock_count_max"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "attack_rock" then
+                IncreaseBlankPerkAttribute(combat_unit, count_attribute, max_attribute, perk_list)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_on_crush = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_on_crush"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        local count_attribute = "blank_perk_on_crush_count"
+        local max_attribute = "blank_perk_on_crush_count_max"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "attack_crush" then
+                IncreaseBlankPerkAttribute(combat_unit, count_attribute, max_attribute, perk_list)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_on_hit = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_on_hit"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        local count_attribute = "blank_perk_on_hit_count"
+        local max_attribute = "blank_perk_on_hit_count_max"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "attack_tomato" then
+                IncreaseBlankPerkAttribute(combat_unit, count_attribute, max_attribute, perk_list)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_quest = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_quest"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        local count_attribute = "blank_perk_quest"
+        local max_attribute = "blank_perk_quest_max"
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == "attack_tomato" then
+                IncreaseBlankPerkAttribute(combat_unit, count_attribute, max_attribute, perk_list, true)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    blank_perk_on_dodge = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "blank_perk_on_dodge"
+        local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(name)
+
+        if apply_event == "on_apply" then
+            combat_unit:TryAddBlankPerkData(name)
+        end
+        local count_attribute = "blank_perk_on_dodge_count"
+        local max_attribute = "blank_perk_on_dodge_count_max"
+        combat_unit.Attack:RegisterOnMissileHitCallback(name, function(level, attack_data, caster, target)
+            if not attack_data.is_dodged then
+                return
+            end
+            IncreaseBlankPerkAttribute(combat_unit, count_attribute, max_attribute, perk_list)
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    perk_printer = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "perk_printer"
+        local blank_perk_list = PerkSystem:GetRelicData(name).non_scaling_values.blank_perks
+        if apply_event == "on_apply" then
+            -- local perk_name = blank_perk_list[1]
+            -- combat_unit:ApplyPerk(perk_name)
+        end
+    end,
+    ---@param combat_unit CombatUnitHero
+    gain_g = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        if apply_event == "on_apply" then
+            local relic_id = "cockroach"
+            combat_unit:ApplyRelic(relic_id, apply_event, false)
+            combat_unit.run_instance:ModifyRunRecord("acquire_relic", 1)
+        end
+    end,
+    ---@param combat_unit CombatUnitHero
+    print_heal = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "print_heal"
+        if apply_event == "on_apply" then
+            local value = PerkSystem:GetNonScalingPerkValue(name, "heal")
+            combat_unit:Heal(value, Util.SIMPLE_DIGIT_TYPE.HEAL_OVERUNIT)
+        end
+    end,
+    ---@param combat_unit CombatUnitHero
+    copy_gold = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "copy_gold"
+        if apply_event == "on_apply" then
+            local value = PerkSystem:GetNonScalingPerkValue(name, "gold")
+            AwardGold(value, combat_unit)
+        end
+    end,
+    ---@param combat_unit CombatUnitHero
+    copy_crit = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "copy_crit"
+        if apply_event == "on_apply" then
+            local attribute = "crit_chance"
+            local value = PerkSystem:GetNonScalingPerkValue(name, attribute)
+            combat_unit:ModifyAttribute(attribute, value, true)
+        end
+    end,
+    ---@param combat_unit CombatUnitHero
+    copy_luck = function(combat_unit, apply_event)
+        if not combat_unit:IsHero() then
+            return
+        end
+        local name = "copy_luck"
+        if apply_event == "on_apply" then
+            local attribute = "luck"
+            local value = PerkSystem:GetNonScalingPerkValue(name, attribute)
+            combat_unit:ModifyAttribute(attribute, value, true)
+        end
+    end,
+    ---@param combat_unit CombatUnit
+    damage_on_damage = function(combat_unit)
+        local name = "damage_on_damage"
+        combat_unit:RegisterOnDamageDealCallback(name, function(level, damage_amount, criminal, victim)
+            local chance = PerkSystem:GetNonScalingPerkValue(name, "chance")
+            for i = 1, level do
+                if Random:Chance(chance) then
+                    victim:Damage(1, criminal, { use_vulnerable = true, offset_radius = 0.5 })
+                    local run_instance = criminal.run_instance or victim.run_instance
+                    if run_instance then
+                        run_instance:IncrementWaveRecord("damage_on_damage", 1, criminal:IsHero())
+                    end
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    vulnerable_on_damage = function(combat_unit)
+        local name = "vulnerable_on_damage"
+        combat_unit:RegisterOnDamageDealCallback(name, function(level, damage_amount, criminal, victim)
+            local chance = PerkSystem:GetNonScalingPerkValue(name, "chance")
+            for i = 1, level do
+                if Random:Chance(chance) then
+                    PerkBehaviorSystem:ApplyPerkBehaviorToSelf(victim, name)
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    shark_on_damage = function(combat_unit)
+        local name = "shark_on_damage"
+        combat_unit:RegisterOnDamageDealCallback(name, function(level, damage_amount, criminal, victim)
+            local chance = PerkSystem:GetNonScalingPerkValue(name, "chance")
+            for i = 1, level do
+                if Random:Chance(chance) then
+                    criminal.Attack:NewMissileAttack(victim, "attack_shark")
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    heal_on_damage_legendary = function(combat_unit)
+        local name = "heal_on_damage_legendary"
+        combat_unit:RegisterOnDamageDealCallback(name, function(level, damage_amount, criminal, victim)
+            local chance = PerkSystem:GetNonScalingPerkValue(name, "chance")
+            for i = 1, level do
+                if Random:Chance(chance) then
+                    local heal = PerkSystem:GetNonScalingPerkValue(name, "heal")
+                    criminal:Heal(heal)
+                end
+            end
+        end)
+    end,
+    shark_quest = function(combat_unit)
+        combat_unit:RegisterOnHealCallback("shark_quest", function(level, amount, caster)
+            caster.shark_quest_healing = caster:GetBoundedAttribute("shark_quest")
+            caster.shark_quest_healing = caster.shark_quest_healing + amount
+            local perk_name = "shark_quest"
+            local non_scaling_key = "heal_count"
+            local scaling_key = "bonus"
+            local attack_id = "attack_shark"
+
+            local perk_heal_threshold = PerkSystem:GetNonScalingPerkValue(perk_name, non_scaling_key)
+            local run_instance = caster.run_instance
+            while caster.shark_quest_healing > perk_heal_threshold do
+                caster.shark_quest_healing = caster.shark_quest_healing - perk_heal_threshold
+
+                local missile_count = PerkSystem:GetScalingPerkValue(perk_name, scaling_key, level)
+                local shark_group_perk_name = "shark_group"
+                if caster:HasPerk(shark_group_perk_name) then
+                    missile_count = missile_count + caster:GetPerkLevel(shark_group_perk_name)
+                end
+                local deck_size = #caster.Attack:GetEmojiDeck()
+
+                caster.Attack:AddEmojiToDeck(attack_id, missile_count)
+                caster:PlayAwardEmojiAnimation(attack_id, missile_count)
+
+                for pos = deck_size + 1, deck_size + missile_count do
+                    run_instance:ModifySavedPerkDataEmojis(attack_id, pos)
+                end
+            end
+
+            caster:SetAttribute("shark_quest", caster.shark_quest_healing)
+
+            if run_instance then
+                run_instance:SetSavedPerkDataAttributes("shark_quest", caster.shark_quest_healing)
+            end
+
+            GMUI.SendUiLayoutCommand(
+                caster.unit_info_layout_address,
+                "UpdateItemAttribute",
+                { key = "shark_quest", value = caster.shark_quest_healing }
+            )
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    thorn_shark = function(combat_unit)
+        local name = "thorn_shark"
+        local attack_id = "attack_shark"
+        combat_unit.Attack:RegisterOnMissileHitCallback(name, function(level, attack_data, caster, target)
+            if attack_data.missile_id == attack_id then
+                local chance = PerkSystem:GetNonScalingPerkValue(name, "chance")
+                for i = 1, level do
+                    if Random:Chance(chance) then
+                        PerkMechanics:CheckToRetaliate(caster, target, attack_id)
+                    end
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    energy_drain = function(combat_unit)
+        local relic_name = "energy_drain"
+        combat_unit.Attack:RegisterOnUltimateHitCallback(relic_name, function(level, attack_data, caster, target)
+            -- Run relic icon animation
+            local data = {
+                relic_id = relic_name,
+                animation_id = "impact",
+                args = {
+                    final_size = 1.5,
+                },
+            }
+            CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(target:IsHero(), data)
+
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(target, relic_name, level)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    delay_damage = function(combat_unit)
+        local relic_name = "delay_damage"
+        combat_unit:RegisterOnCombatPeriodicCallback(relic_name, function(level, time)
+            local trigger_interval = PerkSystem:GetNonScalingRelicValue(relic_name, "interval")
+            if not combat_unit.delay_damage_applied and time > trigger_interval then
+                local damage = PerkSystem:GetScalingRelicValue(relic_name, "damage", level)
+                -- Run relic icon animation
+                local data = {
+                    relic_id = relic_name,
+                    animation_id = "impact",
+                    args = {
+                        final_size = 1.5,
+                    },
+                }
+                CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(combat_unit:IsHero(), data)
+
+                local target = combat_unit:GetMainOpponent()
+                combat_unit.delay_damage_applied = true
+                target:Damage(damage, combat_unit, {
+                    show_duration = 0.25 * 1.5,
+                    anim_duration = 0.75 * 1.5,
+                    color = "<color=red>",
+                    size = "<size=120%>",
+                    center_at_unit = true,
+                })
+
+                if combat_unit.run_instance then
+                    combat_unit.run_instance:IncrementWaveRecord("delay_damage", damage, combat_unit:IsHero())
+                end
+                -- create healing FX over time
+                local target_unit = target.unit
+                if target_unit then
+                    local fx = DCEI.Actor("COMBAT Delay Damage Fx")
+                    Api.SendCreateActorAction(target_unit, { actor = fx })
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    playa = function(combat_unit)
+        local relic_name = "playa"
+        combat_unit:RegisterOnCombatPeriodicCallback(relic_name, function(level, time)
+            local trigger_interval = PerkSystem:GetNonScalingRelicValue(relic_name, "interval")
+            if not combat_unit.playa_applied and time > trigger_interval then
+                combat_unit.playa_applied = true
+                -- Run relic icon animation
+                local data = {
+                    relic_id = relic_name,
+                    animation_id = "impact",
+                    args = {
+                        final_size = 1.5,
+                    },
+                }
+                CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(combat_unit:IsHero(), data)
+
+                local target = combat_unit:GetMainOpponent()
+                PerkBehaviorSystem:ApplyPerkBehavior(target, combat_unit, relic_name, level)
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    r_18 = function(combat_unit)
+        local name = "r_18"
+        combat_unit:RegisterOnCombatEndCallback(name, function(level)
+            if not combat_unit:IsAlive() then
+                return
+            end
+            local wave = combat_unit.run_instance.wave
+            local start_wave = PerkSystem:GetNonScalingRelicValue(name, "start_wave")
+            if wave >= start_wave then
+                local scaling_key_attack, scaling_key_hp = "attack", "health_maximum"
+                local value_attack = PerkSystem:GetScalingRelicValue(name, scaling_key_attack, level)
+                local value_hp = PerkSystem:GetScalingRelicValue(name, scaling_key_hp, level)
+
+                local use_animation = true
+                local skip_buffer = true
+                combat_unit:ModifyAttribute(scaling_key_attack, value_attack, use_animation, skip_buffer)
+                combat_unit:ModifyAttribute(scaling_key_hp, value_hp, use_animation, skip_buffer)
+
+                -- add combat delay so players can see attribute animations
+                RunCombatTransition:SetPostCombatAnimationBuffer()
+
+                -- Run relic icon animation
+                local data = {
+                    relic_id = name,
+                    animation_id = "impact",
+                    args = {
+                        final_size = 2,
+                    },
+                }
+                CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(combat_unit:IsHero(), data)
+
+                -- this perk should only ever be applied to the hero, which should have a run instance
+                local run_instance = combat_unit.run_instance
+                if run_instance then
+                    run_instance:ModifySavedPerkDataAttributes(scaling_key_attack, value_attack)
+                    run_instance:ModifySavedPerkDataAttributes(scaling_key_hp, value_hp)
+                    local trigger = MESSAGE_TRIGGERS.on_achievement_progression
+                    local data = {
+                        id = "r_18",
+                        count = 1,
+                    }
+                    NarrativeSystem:QueueChatTrigger(trigger, data)
+                end
+            end
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    failure_student = function(combat_unit)
+        local name = "failure_student"
+        combat_unit:RegisterOnCombatEndCallback(name, function(level)
+            combat_unit.failure_evolution_progress = combat_unit:GetBoundedAttribute("failure_evolution_progress")
+            combat_unit.failure_evolution_progress = combat_unit.failure_evolution_progress + 1
+            local evolve_threshold = PerkSystem:GetNonScalingRelicValue(name, "wave")
+
+            GMUI.SendUiLayoutCommand(
+                combat_unit.unit_info_layout_address,
+                "UpdateItemAttribute",
+                { key = "failure_evolution_progress", value = combat_unit.failure_evolution_progress }
+            )
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                run_instance:SetSavedPerkDataAttributes(
+                    "failure_evolution_progress",
+                    combat_unit.failure_evolution_progress
+                )
+            end
+
+            if combat_unit.failure_evolution_progress >= evolve_threshold then
+                combat_unit.failure_evolution_progress = 0
+                combat_unit:RemoveRelic(name)
+                local new_relic_name = "squid"
+                combat_unit:ApplyRelic(new_relic_name, "on_apply")
+
+                -- Run relic icon animation
+                local data = {
+                    relic_id = new_relic_name,
+                    animation_id = "impact",
+                    args = {
+                        final_size = 2,
+                    },
+                }
+                CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(combat_unit:IsHero(), data)
+
+                -- add combat delay so players can see attribute animations
+                RunCombatTransition:SetPostCombatAnimationBuffer()
+
+                if run_instance then
+                    run_instance:SetSavedPerkDataAttributes("failure_evolution_progress", nil)
+                end
+            end
+
+            combat_unit:SetAttribute("failure_evolution_progress", combat_unit.failure_evolution_progress)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    indifference = function(combat_unit)
+        local name = "indifference"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            local amount = PerkSystem:GetScalingRelicValue(name, "vulnerable", level)
+            local vulnerable_perk = "debuff_vulnerable"
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(target, vulnerable_perk, amount)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    shock_face = function(combat_unit)
+        local name = "shock_face"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            SimpleMissile:CreateSimpleSlapToSelf(not combat_unit:IsHero())
+            TimerSimulation.RunCombatOnlyTimer(function()
+                combat_unit:Shake(0, true)
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, name, level)
+            end, 0.5625)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    small_rev = function(combat_unit)
+        local name = "small_rev"
+        local last_launch_time = 0
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            if (time - last_launch_time) <= 1 then
+                return
+            end
+            last_launch_time = time
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, name, level)
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    giant_jet = function(combat_unit)
+        local name = "giant_jet"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            local key = "start_energy"
+            local energy = PerkSystem:GetScalingRelicValue(name, key, level)
+            combat_unit:ModifyCurrentEnergy(energy)
+
+            -- display floating combat text for energy gain
+            local args = {
+                color = Color:Tag("blue_soft"),
+                offset_radius = 0.375,
+                size = "<size=100%>",
+                center_at_unit = true,
+            }
+            local amount = "+" .. tostring(energy)
+
+            Util.DisplayFloatingCombatText(combat_unit, amount, args)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    ninja_thank_you = function(combat_unit, apply_event)
+        local name = "ninja_thank_you"
+        local count = PerkSystem:GetNonScalingPerkValue(name, "value")
+        RegisterNinjaRequestCallback(name, combat_unit, apply_event, count)
+    end,
+
+    ---@param combat_unit CombatUnit
+    recruit_ninja_quest = function(combat_unit, apply_event)
+        local name = "recruit_ninja_quest"
+        RegisterNinjaRequestCallback(name, combat_unit, apply_event)
+    end,
+
+    ---@param combat_unit CombatUnit
+    thumb_up = function(combat_unit, apply_event)
+        local name = "thumb_up"
+        local count = PerkSystem:GetNonScalingRelicValue(name, "value")
+        RegisterNinjaRequestCallback(name, combat_unit, apply_event, count)
+    end,
+    ---@param combat_unit CombatUnit
+    attack_ninja = function(combat_unit)
+        local name = "attack_ninja"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            combat_unit.Attack:InitializeStealableEmojis()
+            target.Attack:InitializeStealableEmojis()
+        end)
+        combat_unit:RegisterOnCombatEndCallback(name, function()
+            local hero = combat_unit:IsHero() and combat_unit or combat_unit:GetMainOpponent()
+            local enemy = combat_unit:IsHero() and combat_unit:GetMainOpponent() or combat_unit
+            hero.Attack:ResetStealableEmojis()
+            enemy.Attack:ResetStealableEmojis()
+            hero.Attack:ResetEmojiAvailabilityInDeck()
+            hero:UpdateEmojiMagazineUi()
+            GMUI.SendUiLayoutCommand("ui.glue.combat", "DestroyAllHorseAnimation")
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    enemy_controller = function(combat_unit)
+        local name = "enemy_controller"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            combat_unit.Attack:InitializeStealableEmojis()
+            target.Attack:InitializeStealableEmojis()
+        end)
+        combat_unit:RegisterOnCombatEndCallback(name, function()
+            local hero = combat_unit:IsHero() and combat_unit or combat_unit:GetMainOpponent()
+            local enemy = combat_unit:IsHero() and combat_unit:GetMainOpponent() or combat_unit
+            hero.Attack:ResetStealableEmojis()
+            enemy.Attack:ResetStealableEmojis()
+            hero.Attack:ResetEmojiAvailabilityInDeck()
+            hero:UpdateEmojiMagazineUi()
+            GMUI.SendUiLayoutCommand("ui.glue.combat", "DestroyAllHorseAnimation")
+        end)
+    end,
+    ---@param combat_unit CombatUnit
+    ultimate_greed = function(combat_unit)
+        local name = "ultimate_greed"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            local key = "income"
+            local income = PerkSystem:GetNonScalingRelicValue(name, key)
+            caster:ModifyAttribute(key, income, false)
+        end)
+    end,
+    ---@param combat_unit CombatUnitHero
+    third_card_copy = function(combat_unit)
+        -- tell presentation layer
+        combat_unit:TryUpdateCopiedPerkPieces()
+    end,
+    ---@param combat_unit CombatUnitHero
+    bonus_tomato_card = function(combat_unit, apply_event)
+        local name = "bonus_tomato_card"
+        local modify_ratio = PerkSystem:GetNonScalingPerkValue(name, "modify_ratio")
+
+        local run_instance = combat_unit.run_instance
+        local function ModifyBlankPerkMaxAttribute(count_attribute, max_attribute, is_permanent)
+            local default_count = PerkSystem:GetNonScalingPerkValue(count_attribute, "hit_count")
+            local modification = default_count * modify_ratio
+            combat_unit:ModifyAttribute(max_attribute, modification, true)
+            if run_instance then
+                run_instance:ModifySavedPerkDataAttributes(max_attribute, modification)
+            end
+            local perk_list = combat_unit:GetCompleteBlankPerkCopiedPerkIds(count_attribute)
+            IncreaseBlankPerkAttribute(combat_unit, count_attribute, max_attribute, perk_list, is_permanent, 0)
+        end
+        if apply_event == "on_apply" then
+            ModifyBlankPerkMaxAttribute("blank_perk_on_hit", "blank_perk_on_hit_count_max")
+            ModifyBlankPerkMaxAttribute("blank_perk_quest", "blank_perk_quest_max", true)
+        end
+    end,
+
+    ---@param combat_unit CombatUnitHero
+    growing_tomato = function(combat_unit)
+        -- tell presentation layer
+        local name = "growing_tomato"
+
+        combat_unit:RegisterOnFinishBlankPerkCallback(name, function(level, caster, target)
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                local deck_size = #caster.Attack:GetEmojiDeck()
+                local attack_id = "attack_tomato"
+                local count = PerkSystem:GetNonScalingPerkValue(name, "count") * level
+                combat_unit.Attack:AddEmojiToDeck(attack_id, count)
+                caster:PlayAwardEmojiAnimation(attack_id, count)
+
+                for pos = deck_size + 1, deck_size + count do
+                    run_instance:ModifySavedPerkDataEmojis(attack_id, pos)
+                end
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    blackhole = function(combat_unit)
+        local name = "blackhole"
+        local launched = false
+        local full_charge_time = PerkSystem:GetNonScalingRelicValue(name, "time")
+
+        combat_unit:RegisterOnCombatDelayedCallback(name, function(level, time)
+            if launched or time <= full_charge_time then
+                return
+            end
+            launched = true
+            -- test void
+            local unit_type = DCEI.Unit("COMBAT Unit Blackhole Caster Dummy")
+            local dx = 0
+            local position = { x = 16, y = 15.5 }
+            local caster_dummy = Api.CreateUnit(0, 0, unit_type, position.x, position.y, dx)
+            local back_hole_dummy = DCEI.SimpleUnit("COMBAT Unit Blackhole Caster Simple Dummy")
+            local back_hole_dummy_destroy = DCEI.SimpleUnit("COMBAT Unit Blackhole Caster Simple Destroy Dummy")
+            Sound.PlaySound(DCEI.Sound("smh_blackhole"))
+            TimerSimulation.RunTimer(function()
+                local simple_dummy = Api.CreateSimpleUnitSync(back_hole_dummy, {
+                    position = { x = position.x, z = position.y },
+                })
+
+                local simple_dummy_destroy = Api.CreateSimpleUnitSync(back_hole_dummy_destroy, {
+                    position = { x = position.x, z = position.y },
+                })
+
+                TimerSimulation.ClearMissileTimers(0.875)
+
+                TimerSimulation.RunTimer(function()
+                    Api.RemoveUnit(caster_dummy)
+                end, 1)
+            end, 0.25)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    paradox_warlock = function(combat_unit)
+        local name = "paradox_warlock"
+
+        local full_charge_time = PerkSystem:GetNonScalingRelicValue(name, "trigger_time")
+        local last_launch_time = 0
+
+        combat_unit:RegisterOnCombatDelayedCallback(name, function(level, time)
+            if (time - last_launch_time) <= full_charge_time then
+                return
+            end
+            last_launch_time = time
+
+            -- test void
+            local unit_type = DCEI.Unit("COMBAT Unit Blackhole Caster Dummy")
+            local dx = 0
+            local position = { x = 16, y = 15.5 }
+            local caster_dummy = Api.CreateUnit(0, 0, unit_type, position.x, position.y, dx)
+            local back_hole_dummy = DCEI.SimpleUnit("COMBAT Unit Blackhole Caster Simple Dummy")
+            local back_hole_dummy_destroy = DCEI.SimpleUnit("COMBAT Unit Blackhole Caster Simple Destroy Dummy")
+            Sound.PlaySound(DCEI.Sound("smh_blackhole"))
+            TimerSimulation.RunTimer(function()
+                local simple_dummy = Api.CreateSimpleUnitSync(back_hole_dummy, {
+                    position = { x = position.x, z = position.y },
+                })
+
+                local simple_dummy_destroy = Api.CreateSimpleUnitSync(back_hole_dummy_destroy, {
+                    position = { x = position.x, z = position.y },
+                })
+
+                TimerSimulation.ClearMissileTimers(0.875)
+
+                TimerSimulation.RunTimer(function()
+                    Api.RemoveUnit(caster_dummy)
+                end, 1)
+            end, 0.25)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnitHero
+    growing_g = function(combat_unit)
+        -- tell presentation layer
+        local name = "growing_g"
+
+        combat_unit:RegisterOnPrintCallback(name, function(level, caster, target)
+            local relic_id = "cockroach"
+            for _ = 1, level do
+                combat_unit:ApplyRelic(relic_id)
+            end
+
+            local icon = PerkSystem:GetRelicIcon(relic_id)
+            local args = {
+                relic_id = relic_id,
+                icon = icon,
+                size = 2,
+            }
+            CommonSimulationSendPresentationCommand.SendPlayFlyRelicToRelicBarCommand(combat_unit:IsHero(), args)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnitHero
+    energy_regen_on_copy = function(combat_unit)
+        -- tell presentation layer
+        local name = "energy_regen_on_copy"
+
+        combat_unit:RegisterOnPrintCallback(name, function(level, caster, target)
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                local attribute = "energy_per_second"
+                local amount = PerkSystem:GetNonScalingPerkValue(name, attribute) * level
+                combat_unit:ModifyAttribute(attribute, amount, true)
+                run_instance:ModifySavedPerkDataAttributes(attribute, amount)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnitHero
+    perk_slot_rare = function(combat_unit)
+        -- tell presentation layer
+        local name = "perk_slot_rare"
+
+        combat_unit:RegisterOnPrintCallback(name, function(level, caster, target)
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                local attribute = "energy_per_second"
+                local amount = PerkSystem:GetNonScalingPerkValue(name, attribute) * level
+                combat_unit:ModifyAttribute(attribute, amount, true)
+                run_instance:ModifySavedPerkDataAttributes(attribute, amount)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnitHero
+    luck_on_print = function(combat_unit)
+        -- tell presentation layer
+        local name = "luck_on_print"
+
+        combat_unit:RegisterOnPrintCallback(name, function(level, caster, target)
+            local run_instance = combat_unit.run_instance
+            if run_instance then
+                local attribute = "luck"
+                local amount = PerkSystem:GetNonScalingPerkValue(name, attribute) * level
+                combat_unit:ModifyAttribute(attribute, amount, true)
+                run_instance:ModifySavedPerkDataAttributes(attribute, amount)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    coffee_sweetheart = function(combat_unit)
+        local name = "coffee_sweetheart"
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function(level)
+            PerkMechanics.CreateCake(combat_unit, level)
+        end)
+        combat_unit.Attack:RegisterOnMissileLaunchCallback(name, function(level, attack_data, caster, target)
+            PerkMechanics.ProcessCakeAttack(combat_unit)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    first_pistol = function(combat_unit)
+        local name = "first_pistol"
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function(level)
+            PerkMechanics.CreatePistol(combat_unit, level)
+        end)
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            local chance = PerkSystem:GetNonScalingRelicValue(name, "chance")
+            if Random:Chance(chance) then
+                PerkMechanics.ProcessPistolAttack(combat_unit)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    evolution_quest = function(combat_unit)
+        local name = "evolution_quest"
+        local last_time = 0
+        local hold_time = 0
+        local threshold = PerkSystem:GetNonScalingPerkValue(name, "time")
+
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            local blood_sugar = combat_unit:GetBoundedAttribute("blood_sugar")
+            local tick = time - last_time
+            last_time = time
+            if blood_sugar > Util.BLOOD_SUGAR_UPPER_BOUND or blood_sugar < Util.BLOOD_SUGAR_LOWER_BOUND then
+                return
+            end
+            hold_time = hold_time + tick
+
+            if math.floor(hold_time) ~= math.floor(hold_time - tick) then
+                local delta_evo_time = 1
+
+                local evo_time = combat_unit:GetBoundedAttribute("evolution_quest") + delta_evo_time
+                if evo_time > threshold then
+                    evo_time = evo_time - threshold
+                    delta_evo_time = delta_evo_time - threshold
+
+                    local attack_id = "attack_dragon"
+                    local extra_point = PerkSystem:GetScalingPerkValue(name, attack_id, level)
+
+                    local deck_size = #combat_unit.Attack:GetEmojiDeck()
+
+                    combat_unit.Attack:AddEmojiToDeck(attack_id, extra_point)
+                    combat_unit:PlayAwardEmojiAnimation(attack_id, extra_point)
+
+                    for pos = deck_size + 1, deck_size + extra_point do
+                        combat_unit.run_instance:ModifySavedPerkDataEmojis(attack_id, pos)
+                    end
+                end
+
+                combat_unit:ModifyAttribute("evolution_quest", delta_evo_time)
+                combat_unit.run_instance:ModifySavedPerkDataAttributes("evolution_quest", delta_evo_time)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    heal_on_hypoglycemia = function(combat_unit)
+        local name = "heal_on_hypoglycemia"
+        local has_behavior = false
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            local blood_sugar = combat_unit:GetBoundedAttribute("blood_sugar")
+            if blood_sugar >= Util.BLOOD_SUGAR_LOWER_BOUND and has_behavior then
+                for n = 1, level do
+                    PerkBehaviorSystem:RemoveBehaviorStackInstance(combat_unit, name)
+                end
+                has_behavior = false
+            elseif blood_sugar < Util.BLOOD_SUGAR_LOWER_BOUND and not has_behavior then
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, name, level)
+                has_behavior = true
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    low_ult_cast_on_hypoglycemia = function(combat_unit)
+        local name = "low_ult_cast_on_hypoglycemia"
+        local has_behavior = false
+        local coefficient = PerkSystem:GetNonScalingPerkValue(name, "shorter_swing")
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            local blood_sugar = combat_unit:GetBoundedAttribute("blood_sugar")
+            if blood_sugar >= Util.BLOOD_SUGAR_LOWER_BOUND and has_behavior then
+                combat_unit.ult_cast_coefficient = 0
+                has_behavior = false
+            elseif blood_sugar < Util.BLOOD_SUGAR_LOWER_BOUND and not has_behavior then
+                combat_unit.ult_cast_coefficient = level * coefficient
+                has_behavior = true
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    energy_on_hypoglycemia = function(combat_unit)
+        local name = "energy_on_hypoglycemia"
+        local has_behavior = false
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            local blood_sugar = combat_unit:GetBoundedAttribute("blood_sugar")
+            if blood_sugar >= Util.BLOOD_SUGAR_LOWER_BOUND and has_behavior then
+                for n = 1, level do
+                    PerkBehaviorSystem:RemoveBehaviorStackInstance(combat_unit, name)
+                end
+                has_behavior = false
+            elseif blood_sugar < Util.BLOOD_SUGAR_LOWER_BOUND and not has_behavior then
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(combat_unit, name, level)
+                has_behavior = true
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    wonder_of_u = function(combat_unit)
+        local name = "wonder_of_u"
+        local steal_luck = PerkSystem:GetNonScalingRelicValue(name, "luck")
+
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function(level)
+            combat_unit:ModifyAttribute("luck", steal_luck * level, true)
+            local enemy = combat_unit:GetMainOpponent()
+            enemy:ModifyAttribute("luck", -steal_luck * level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    love_train = function(combat_unit)
+        local name = "love_train"
+        local steal_luck = PerkSystem:GetNonScalingRelicValue(name, "luck")
+
+        combat_unit:RegisterOnBeforeCombatStartCallback(name, function(level)
+            combat_unit:ModifyAttribute("luck", steal_luck * level, true)
+            local enemy = combat_unit:GetMainOpponent()
+            enemy:ModifyAttribute("luck", -steal_luck * level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    sugar_attack = function(combat_unit)
+        local name = "sugar_attack"
+        local coefficient = PerkSystem:GetNonScalingPerkValue(name, "blood_damage")
+        combat_unit.Attack:RegisterOnMissileImpactCallback(name, function(level, attack_data, caster, target)
+            PerkMechanics.ProcessSugarAttack(caster, target, coefficient * level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    mutate = function(combat_unit)
+        combat_unit:SwitchToZombie()
+    end,
+
+    ---@param combat_unit CombatUnit
+    enter_wraith = function(combat_unit)
+        local name = "enter_wraith"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            PerkMechanics.EnterWraith(combat_unit, level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    enter_calm = function(combat_unit)
+        local name = "enter_calm"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            PerkMechanics.EnterCalm(combat_unit, level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    remove_attack_bomb = function(combat_unit, apply_event)
+        local name = "remove_attack_bomb"
+        if not combat_unit:IsHero() then
+            return
+        end
+        combat_unit.Attack:RemoveEmojiFromDeck("attack_bomb")
+        combat_unit:UpdateEmojiMagazineUi()
+        combat_unit.run_instance:RemoveSavedPerkDataEmojis("attack_bomb")
+    end,
+
+    ---@param combat_unit CombatUnit
+    wraith_on_explosion = function(combat_unit)
+        local name = "wraith_on_explosion"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            PerkMechanics.EnterWraith(combat_unit, level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    calm_on_start = function(combat_unit)
+        local name = "calm_on_start"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            PerkMechanics.EnterCalm(combat_unit, level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    calm_wraith = function(combat_unit)
+        local name = "calm_wraith"
+        combat_unit:RegisterOnCombatStartCallback(name, function(level, target)
+            PerkMechanics.EnterWraith(combat_unit, level)
+            PerkMechanics.EnterCalm(combat_unit, level)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    fuxi = function(combat_unit)
+        local name = "fuxi"
+        combat_unit:RegisterOnOpponentMissileLaunchCallback(name, function(level, attack_data, caster, target)
+            local chance = PerkSystem:GetNonScalingRelicValue(name, "chance")
+            if Random:Chance(chance * level) then
+                local stop_time = 0.0625 * (Random:Integer(6, 8))
+                attack_data.blocked_by_fuxi = true
+                TimerSimulation.RunCombatOnlyTimer(function()
+                    local missile_position = Api.GetUnitPosition2D(attack_data.simple_missle)
+                    Api.RemoveSimpleUnit(attack_data.simple_missle)
+                    local missile_simple_unit = Api.CreateSimpleUnitSync("ultimate_taiji", {
+                        player_id = 1,
+                        team_id = 1,
+                        position = { x = missile_position.x, z = missile_position.y },
+                    })
+                    Api.ApplyTransformAnimationToSimpleUnit(missile_simple_unit, {
+                        start_seconds = 0,
+                        end_seconds = 0.5,
+                        start_scale = { x = 5, y = 5, z = 5 },
+                        end_scale = { x = 0.1, y = 0.1, z = 0.1 },
+                        ease = "OutSine",
+                    })
+                    Api.AddRemoveTimerToSimpleUnit(missile_simple_unit, 0.5)
+                end, stop_time)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    death_finger = function(combat_unit)
+        local relic_name = "death_finger"
+        combat_unit.Attack:RegisterOnUltimateHitCallback(relic_name, function(level, attack_data, caster, target)
+            -- Run relic icon animation
+            local data = {
+                relic_id = relic_name,
+                animation_id = "impact",
+                args = {
+                    final_size = 1.5,
+                },
+            }
+            CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(target:IsHero(), data)
+
+            PerkBehaviorSystem:ApplyPerkBehaviorToSelf(target, relic_name, level)
+
+            Api.SendCreateActorAction(caster.unit, { actor = DCEI.Actor("COMBAT Special Railgun Player FX Launch") })
+            Sound.PlaySound(DCEI.Sound("lightning_bolt_v1_smh"), 4)
+            TimerSimulation.RunCombatOnlyTimer(function()
+                local damage = PerkSystem:GetScalingRelicValue(relic_name, "damage", level)
+                Sound.PlaySound(DCEI.Sound("explosion_smh"), 4)
+                caster:Damage(damage, target, {
+                    show_duration = 0.25 * 1.5,
+                    anim_duration = 0.75 * 1.5,
+                    color = "<color=red>",
+                    size = "<size=120%>",
+                    center_at_unit = true,
+                })
+            end, 0.125)
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    celebration_on_start = function(combat_unit)
+        local name = "celebration_on_start"
+        combat_unit.Attack:RegisterOnUltimateLaunchCallback(name, function(level, caster, target)
+            if not caster.celebration_on_start_triggerd then
+                caster.celebration_on_start_triggerd = true
+                -- Run relic icon animation
+                local data = {
+                    relic_id = name,
+                    animation_id = "impact",
+                    args = {
+                        final_size = 1.5,
+                    },
+                }
+                CommonSimulationSendPresentationCommand.SendAnimateRelicCommand(caster:IsHero(), data)
+
+                PerkBehaviorSystem:ApplyPerkBehaviorToSelf(caster, name, level)
+            end
+        end)
+    end,
+
+    ---@param combat_unit CombatUnit
+    mind_flare = function(combat_unit)
+        local name = "mind_flare"
+        local last_launch_time = -5.5
+        local trigger_time = PerkSystem:GetNonScalingPerkValue(name, "time")
+        combat_unit:RegisterOnCombatPeriodicCallback(name, function(level, time)
+            if (time - last_launch_time) <= trigger_time then
+                return
+            end
+            last_launch_time = time
+
+            local target = combat_unit:GetMainOpponent()
+            Api.SendCreateActorAction(
+                target.unit,
+                { actor = DCEI.Actor("COMBAT Special Mind Flare Player FX Launch") }
+            )
+            Sound.PlaySound(DCEI.Sound("lightning_bolt_v1_smh"), 4)
+            TimerSimulation.RunCombatOnlyTimer(function()
+                local damage = combat_unit:GetRelicLevel("cockroach") * level
+
+                Sound.PlaySound(DCEI.Sound("explosion_smh"), 4)
+                target:Damage(damage, combat_unit, {
+                    show_duration = 0.25 * 1.5,
+                    anim_duration = 0.75 * 1.5,
+                    color = "<color=red>",
+                    size = "<size=120%>",
+                    center_at_unit = true,
+                })
+            end, 0.125)
+        end)
+    end,
+}
+
+return register_callback

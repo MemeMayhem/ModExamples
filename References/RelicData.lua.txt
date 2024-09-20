@@ -1,0 +1,4973 @@
+local DisplayType = require("Common/DisplayType")
+local GameMechanicTags = require("GamePerkSystem/GameMechanicTags")
+local PerkChainData = require("NarrativeData/GameplayData/PerkChainData")
+local Util = require("Common/Util")
+
+local TAG = GameMechanicTags.TAG
+local ATTACK_ICON = GameMechanicTags.ATTACK_ICON
+local NEWLINE = GameMechanicTags.NEWLINE
+local RELIC_ICON = GameMechanicTags.RELIC_ICON
+
+local RelicData = {}
+
+RelicData.RELIC_LIST = {
+    -- Anchor Permanent Relic
+    --#region
+    {
+        id = "cookie",
+        display_name = Api.GetTranslationText("combat/relic/cookie/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health }),
+        icon = DCEI.Texture("smh_cookie"),
+        rarity = "permanent",
+        modify_attributes = {
+            health_maximum = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "fortune_cookie",
+        display_name = Api.GetTranslationText("combat/relic/fortune_cookie/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.luck }),
+        icon = DCEI.Texture("smh_fortune_cookie"),
+        rarity = "permanent",
+        modify_attributes = {
+            luck = 0.03,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "chocolate",
+        display_name = Api.GetTranslationText("combat/relic/chocolate/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack }),
+        icon = DCEI.Texture("smh_chocolate"),
+        rarity = "permanent",
+        modify_attributes = {
+            attack = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "maga_hat",
+        display_name = Api.GetTranslationText("combat/relic/maga_hat/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.armor }),
+        icon = DCEI.Texture("comic_portrait_missile_trumphat_ipick"),
+        rarity = "permanent",
+        modify_attributes = {
+            block = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+        },
+    },
+    {
+        id = "perk_reroll_token",
+        display_name = Api.GetTranslationText("combat/relic/reroll_token/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/reroll_token/description",
+            { x = "<color=green>1</color>" }
+        ),
+        icon = DCEI.Texture("perk_reroll_token"),
+        rarity = "permanent",
+    },
+    {
+        id = "perk_reroll_on_start",
+        display_name = Api.GetTranslationText("combat/relic/reroll_token_on_start/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/reroll_token_on_start/description",
+            { x = TAG.ascension_star, y = "<color=yellow>0</color>" }
+        ),
+        icon = DCEI.Texture("perk_reroll_on_start"),
+        rarity = "permanent",
+        minimum_ascension = 0,
+    },
+    {
+        id = "shop_reroll_token",
+        display_name = Api.GetTranslationText("combat/relic/shop_reroll_token/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/shop_reroll_token/description",
+            { x = "<color=green>1</color>" }
+        ),
+        icon = DCEI.Texture("shop_reroll_token"),
+        rarity = "permanent",
+    },
+    {
+        id = "cookie_2",
+        display_name = Api.GetTranslationText("combat/relic/cookie_2/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/ascension_require",
+            { x = TAG.ascension_star, y = "<color=yellow>11</color>" }
+        ) .. "\n" .. Api.GetTranslationText(
+            "combat/relic/gain_three_generic/description",
+            { x = TAG.attack, y = TAG.health, z = TAG.luck }
+        ),
+        icon = DCEI.Texture("smh_cookie_2"),
+        rarity = "permanent",
+        modify_attributes = {
+            attack = 1,
+            health_maximum = 50,
+            luck = 0.05,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        minimum_ascension = 11,
+    },
+    -- {
+    --     id = "cookie_3",
+    --     display_name = "Ultimate Cookie",
+    --     description = "Same as cookie, but only aplly when ascension is 21 or higher",
+    --     icon = DCEI.Texture("smh_cookie_3"),
+    --     rarity = "permanent",
+    --     minimum_ascension = 21,
+    -- },
+    {
+        id = "cookie_small",
+        display_name = Api.GetTranslationText("combat/relic/cookie_small/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health }),
+        icon = DCEI.Texture("smh_cookie_small"),
+        rarity = "permanent",
+        modify_attributes = {
+            health_maximum = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "trolley_switch",
+        display_name = Api.GetTranslationText("combat/relic/trolley_switch/name"),
+        description = Api.GetTranslationText("combat/relic/trolley_switch/description"),
+        icon = DCEI.Texture("smh_trolley_switch"),
+        rarity = "permanent",
+    },
+    --#endregion
+    -- ANCHOR In game Relic
+    {
+        id = "smile_face",
+        display_name = Api.GetTranslationText("combat/relic/smile_face/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_four_generic/description",
+            { x = TAG.attack, y = TAG.attack_speed, z = TAG.crit_chance, a = TAG.dodge_chance }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1f603_ipick"),
+        text_icon = RELIC_ICON.smile_face,
+        rarity = "legendary",
+        modify_attributes = {
+            attack = 4,
+            attack_speed = 0.04,
+            crit_chance = 0.04,
+            dodge_chance = 0.04,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "blue_ribbon",
+        display_name = Api.GetTranslationText("combat/relic/blue_ribbon/name"),
+        description = Api.GetTranslationText("combat/perk/quest_generic/description", { x = TAG.luck }),
+        icon = DCEI.Texture("smh_blue_ribbon"),
+        rarity = "legendary",
+        triggering_event = GameMechanicTags.TRIGGERING_EVENT_TYPE.OnWin,
+        scaling_values = {
+            luck = 0.1,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "enemy_controller",
+        display_name = Api.GetTranslationText("combat/relic/enemy_controller/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.ninja }),
+        icon = DCEI.Texture("smh_enemy_controller"),
+        rarity = "epic",
+        attacks = {
+            attack_ninja = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_ninja" },
+            },
+        },
+    },
+    {
+        id = "bag_of_flex",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_flex/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.flex }),
+        icon = DCEI.Texture("flat_icon_emoji_flexed_biceps_1f4aa_ipick"),
+        text_icon = RELIC_ICON.bag_of_flex,
+        rarity = "epic",
+        attacks = {
+            attack_flex = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_flex" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_flex_chain,
+        },
+    },
+    {
+        id = "bag_of_poo",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_poo/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.poo }),
+        icon = DCEI.Texture("flat_icon_emoji_pile_of_poo_1f4a9_ipick"),
+        text_icon = RELIC_ICON.bag_of_poo,
+        rarity = "epic",
+        attacks = {
+            attack_poo = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_poo" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_poo_chain,
+        },
+    },
+    {
+        id = "bag_of_frost",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_frost/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.ice }),
+        icon = DCEI.Texture("flat_icon_emoji_ice_1f9ca_ipick"),
+        text_icon = RELIC_ICON.bag_of_frost,
+        rarity = "epic",
+        attacks = {
+            attack_frost = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_frost" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_frost_chain,
+        },
+    },
+    {
+        id = "bag_of_lifesteal",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_lifesteal/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.vampire }),
+        icon = DCEI.Texture("flat_icon_emoji_vampire_1f9db_ipick"),
+        text_icon = RELIC_ICON.bag_of_lifesteal,
+        rarity = "epic",
+        attacks = {
+            attack_lifesteal = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_lifesteal" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_lifesteal_chain,
+        },
+    },
+    {
+        id = "bag_of_brain",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_brain/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.brain }),
+        icon = DCEI.Texture("flat_icon_emoji_brain_1f9e0_ipick"),
+        text_icon = RELIC_ICON.bag_of_brain,
+        rarity = "epic",
+        attacks = {
+            attack_brain = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_brain" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_brain_chain,
+        },
+    },
+    {
+        id = "bag_of_crush",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_crush/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.axe }),
+        icon = DCEI.Texture("flat_icon_emoji_axe_1fa93_ipick"),
+        text_icon = RELIC_ICON.bag_of_crush,
+        rarity = "epic",
+        attacks = {
+            attack_crush = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_crush" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_crush_chain,
+        },
+    },
+    {
+        id = "bag_of_oil",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_oil/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.oil }),
+        icon = DCEI.Texture("flat_icon_emoji_oil_drum_1f6e2_ipick"),
+        text_icon = RELIC_ICON.bag_of_oil,
+        rarity = "legendary",
+        attacks = {
+            attack_oil = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_oil" },
+            },
+        },
+    },
+    {
+        id = "bag_of_music_note",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_music_note/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.music_note }),
+        icon = DCEI.Texture("flat_icon_emoji_music_notes_1f3b6_ipick"),
+        rarity = "epic",
+        attacks = {
+            attack_music_note = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_music_note" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.music_note_chain,
+        },
+    },
+    {
+        id = "bag_of_coin_bullet",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_coin_bullet/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.coin_bullet }),
+        icon = DCEI.Texture("flat_icon_emoji_money_bag_1f4b0_ipick"),
+        rarity = "epic",
+        attacks = {
+            attack_coin_bullet = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_coin_bullet" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_coin_chain,
+        },
+    },
+    {
+        id = "wraith_on_explosion",
+        display_name = Api.GetTranslationText("combat/relic/wraith_on_explosion/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/enter_wraith/description",
+            { x = TAG.startup, y = TAG.wraith }
+        ),
+        icon = DCEI.Texture("smh_wraith_on_explosion"),
+        text_icon = RELIC_ICON.wraith_on_explosion,
+        rarity = "rare",
+        non_scaling_values = {
+            duration = 3,
+        },
+        scaling_values = {
+            stack = 1,
+        },
+        is_player_only = true,
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "stack" },
+            },
+            {
+                address = { "non_scaling_values", "duration" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.wraith_chain,
+        },
+    },
+    {
+        id = "calm_on_start",
+        display_name = Api.GetTranslationText("combat/relic/calm_on_start/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/enter_wraith/description",
+            { x = TAG.startup, y = TAG.calm }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_cold_face_1f976_ipick"),
+        text_icon = RELIC_ICON.calm_on_start,
+        rarity = "epic",
+        non_scaling_values = {
+            duration = 3,
+        },
+        scaling_values = {
+            stack = 1,
+        },
+        is_player_only = true,
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "stack" },
+            },
+            {
+                address = { "non_scaling_values", "duration" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.calm_chain,
+        },
+    },
+    {
+        id = "glass_cannon",
+        display_name = Api.GetTranslationText("combat/relic/glass_cannon/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_negative_generic/description",
+            { x = TAG.attack, y = TAG.vulnerable }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1fad9_ipick"),
+        text_icon = RELIC_ICON.glass_cannon,
+        rarity = "rare",
+        modify_attributes = {
+            vulnerable = 5,
+            attack = 12,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "cursed_charm",
+        display_name = Api.GetTranslationText("combat/relic/cursed_charm/name"),
+        description = Api.GetTranslationText("combat/relic/cursed_charm/description", { x = TAG.luck }),
+        icon = DCEI.Texture("flat_icon_emoji_1f383_ipick"),
+        text_icon = RELIC_ICON.cursed_charm,
+        rarity = "epic",
+        max_level = 1,
+        modify_attributes = {
+            luck = 0.66,
+        },
+        non_scaling_values = {
+            perk_choice = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "non_scaling_values", "perk_choice" },
+            },
+        },
+    },
+    {
+        id = "greedy_pot",
+        display_name = Api.GetTranslationText("combat/relic/greedy_pot/name"),
+        description = Api.GetTranslationText("combat/relic/greedy_pot/description", { x = TAG.luck }),
+        icon = DCEI.Texture("smh_greedy_pot"),
+        text_icon = RELIC_ICON.greedy_pot,
+        rarity = "epic",
+        max_level = 1,
+        non_scaling_values = {
+            perk_choice = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "perk_choice" },
+            },
+        },
+    },
+    {
+        id = "wonder_of_u",
+        display_name = Api.GetTranslationText("combat/relic/wonder_of_u/name"),
+        description = Api.GetTranslationText("combat/relic/wonder_of_u/description", { x = TAG.luck }),
+        icon = DCEI.Texture("smh_wonder_of_u"),
+        text_icon = RELIC_ICON.wonder_of_u,
+        rarity = "rare",
+        max_level = 1,
+        non_scaling_values = {
+            luck = 0.2,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "love_train",
+        display_name = Api.GetTranslationText("combat/relic/love_train/name"),
+        description = Api.GetTranslationText("combat/relic/love_train/description", { x = TAG.luck }),
+        icon = DCEI.Texture("smh_love_train"),
+        text_icon = RELIC_ICON.cursed_charm,
+        rarity = "combo",
+        modify_attributes = {
+            luck = 0.7,
+        },
+        non_scaling_values = {
+            luck = 0.3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "non_scaling_values", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "red_envelop",
+        display_name = Api.GetTranslationText("combat/relic/red_envelop/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.income }),
+        icon = DCEI.Texture("flat_icon_emoji_1f9e7_ipick"),
+        text_icon = RELIC_ICON.red_envelop,
+        rarity = "epic",
+        modify_attributes = {
+            income = 25,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "income" },
+            },
+        },
+    },
+    {
+        id = "blue_fish",
+        display_name = Api.GetTranslationText("combat/relic/blue_fish/name"),
+        description = Api.GetTranslationText("combat/relic/blue_fish/description"),
+        icon = DCEI.Texture("flat_icon_emoji_1f41f_ipick"),
+        text_icon = RELIC_ICON.blue_fish,
+        rarity = "rare",
+        scaling_values = {
+            gold = 20,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "gold" },
+            },
+        },
+    },
+    {
+        id = "purple_fish",
+        display_name = Api.GetTranslationText("combat/relic/purple_fish/name"),
+        description = Api.GetTranslationText("combat/relic/purple_fish/description"),
+        icon = DCEI.Texture("flat_icon_emoji_1f419_ipick"),
+        text_icon = RELIC_ICON.purple_fish,
+        rarity = "rare",
+        scaling_values = {
+            gold = 50,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "gold" },
+            },
+        },
+    },
+    {
+        id = "gold_fish",
+        display_name = Api.GetTranslationText("combat/relic/gold_fish/name"),
+        description = Api.GetTranslationText("combat/relic/gold_fish/description"),
+        icon = DCEI.Texture("flat_icon_emoji_1f420_ipick"),
+        text_icon = RELIC_ICON.yellow_fish,
+        rarity = "rare",
+        scaling_values = {
+            gold = 120,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "gold" },
+            },
+        },
+    },
+    {
+        id = "super_drug",
+        display_name = Api.GetTranslationText("combat/relic/super_drug/name"),
+        description = Api.GetTranslationText("combat/perk/rush_time_enhance/description", { x = TAG.rush }),
+        icon = DCEI.Texture("flat_icon_emoji_pill_1f48a_ipick"),
+        text_icon = RELIC_ICON.super_drug,
+        rarity = "rare",
+        scaling_values = {
+            bonus_time = 1.5,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "bonus_time" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.rush_attack_buff_chain,
+        },
+    },
+    {
+        id = "dark_duel",
+        display_name = Api.GetTranslationText("combat/relic/dark_duel/name"),
+        description = Api.GetTranslationText("combat/relic/dark_duel/description"),
+        icon = DCEI.Texture("smh_dark_duel"),
+        rarity = "epic",
+        max_level = 1,
+        non_scaling_values = {
+            cooldown = 4,
+        },
+    },
+    {
+        id = "perk_printer",
+        display_name = Api.GetTranslationText("combat/relic/perk_printer/name"),
+        description = Api.GetTranslationText("combat/relic/perk_printer/description", { x = TAG.empty_card }),
+        icon = DCEI.Texture("perk_printer"),
+        rarity = "legendary",
+        non_scaling_values = {
+            blank_perks = {
+                "blank_perk_on_crush",
+                "blank_perk_on_ultimate",
+                "blank_perk_on_rock",
+                "blank_perk_on_hit",
+            },
+        },
+    },
+    -- ANCHOR Dragon
+    {
+        id = "dragondex",
+        -- display_name = Api.GetTranslationText("combat/relic/hachimi_drink/name"),
+        display_name = "Dragondex",
+        -- description = Api.GetTranslationText("combat/perk/hachimi_drink/description", { x = TAG.horse }),
+        description = "You know how to train your dragon now.",
+        icon = DCEI.Texture("smh_ashamed_face"),
+        -- text_icon = RELIC_ICON.carrot,
+        rarity = "common",
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.dragon_chain,
+        },
+    },
+    {
+        id = "blessing_of_nurgle",
+        display_name = Api.GetTranslationText("combat/relic/blessing_of_nurgle/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/blessing_of_nurgle/description",
+            { x = ATTACK_ICON.poo, y = TAG.attack }
+        ),
+        icon = DCEI.Texture("smh_nurgle"),
+        text_icon = RELIC_ICON.blessing_of_nurgle,
+        rarity = "choice",
+        behavior = {
+            description = Api.GetTranslationText("combat/behavior/generic_increase/description", { x = TAG.attack }),
+            buff_bar_icon = DCEI.Texture("smh_nurgle"),
+            non_scaling_attributes = {
+                attack = 1,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_poo_chain,
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "non_scaling_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "three_trucks",
+        display_name = Api.GetTranslationText("combat/relic/three_trucks/name"),
+        description = Api.GetTranslationText("combat/relic/three_trucks/description", { x = TAG.ultimate_damage }),
+        icon = DCEI.Texture("smh_truck"),
+        rarity = "rare",
+        non_scaling_values = {
+            count = 3,
+        },
+        behavior = {
+            buff_bar_icon = DCEI.Texture("smh_truck"),
+            non_scaling_attributes = {
+                ultimate_damage = -0.6,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "non_scaling_attributes", "ultimate_damage" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "non_scaling_values", "count" },
+            },
+        },
+    },
+    {
+        id = "e_cigarette",
+        display_name = Api.GetTranslationText("combat/relic/e_cigarette/name"),
+        description = Api.GetTranslationText("combat/relic/e_cigarette/description", { x = TAG.dodge_chance }),
+        icon = DCEI.Texture("smh_cigratte"),
+        rarity = "rare",
+        behavior = {
+            description = Api.GetTranslationText(
+                "combat/behavior/generic_increase/description",
+                { x = TAG.dodge_chance }
+            ),
+            is_positive = true,
+            duration = 3,
+            buff_bar_icon = DCEI.Texture("smh_cigratte"),
+            non_scaling_attributes = {
+                dodge_chance = 0.2,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "non_scaling_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "behavior", "duration" },
+            },
+        },
+    },
+    {
+        id = "let_me_see",
+        display_name = Api.GetTranslationText("combat/relic/let_me_see/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/let_me_see/description",
+            { x = TAG.energy_regen, y = ATTACK_ICON.flex, z = ATTACK_ICON.rock }
+        ),
+        icon = DCEI.Texture("let_me_see"),
+        rarity = "legendary",
+        non_scaling_values = {
+            energy_per_second = -960,
+            attack_flex = 10,
+            attack_rock = 10,
+        },
+        behavior = {
+            description = Api.GetTranslationText("combat/behavior/stun_on_start/description"),
+            buff_bar_icon = DCEI.Texture("smh_slap"),
+            actor_event_on_apply = "EventStunOn",
+            actor_event_on_remove = "EventStunOff",
+            interval = 2,
+            interval_effect = {
+                stun = true,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "energy_per_second" },
+            },
+            {
+                address = { "non_scaling_values", "attack_flex" },
+            },
+            {
+                address = { "non_scaling_values", "attack_rock" },
+            },
+            {
+                address = { "behavior", "interval" },
+            },
+        },
+    },
+    {
+        id = "king_of_vampires",
+        display_name = Api.GetTranslationText("combat/relic/king_of_vampires/name"),
+        description = Api.GetTranslationText("combat/relic/king_of_vampires/description", { x = TAG.attack }),
+        icon = DCEI.Texture("king_of_vampires"),
+        rarity = "choice",
+        behavior = {
+            description = Api.GetTranslationText("combat/behavior/generic_increase/description", { x = TAG.attack }),
+            buff_bar_icon = DCEI.Texture("king_of_vampires"),
+            non_scaling_attributes = {
+                attack = 1,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "non_scaling_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "cheers",
+        display_name = Api.GetTranslationText("combat/relic/cheers/name"),
+        description = Api.GetTranslationText("combat/relic/cheers/description", { x = ATTACK_ICON.ult }),
+        icon = DCEI.Texture("smh_cheers"),
+        rarity = "legendary",
+    },
+    {
+        id = "railgun",
+        display_name = Api.GetTranslationText("combat/relic/railgun/name"),
+        description = Api.GetTranslationText("combat/relic/railgun/description", { x = ATTACK_ICON.coin_bullet }),
+        icon = DCEI.Texture("railgun"),
+        rarity = "legendary",
+        non_scaling_values = {
+            full_charge_time = 2,
+            damage = 666,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "full_charge_time" },
+            },
+            {
+                address = { "non_scaling_values", "damage" },
+            },
+        },
+    },
+    {
+        id = "eureka_in_jail",
+        display_name = Api.GetTranslationText("combat/relic/eureka_in_jail/name"),
+        description = Api.GetTranslationText("combat/relic/eureka_in_jail/description"),
+        icon = DCEI.Texture("eureka_in_jail"),
+        rarity = "common",
+        non_scaling_values = {
+            duration = 1,
+            perk_list = {
+                "eureka_attack",
+                "eureka_crit",
+                "eureka_crit_damage",
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "duration" },
+            },
+        },
+    },
+    {
+        id = "enough",
+        display_name = Api.GetTranslationText("combat/relic/enough/name"),
+        description = Api.GetTranslationText("combat/relic/enough/description", { x = TAG.armor, y = TAG.attack }),
+        icon = DCEI.Texture("smh_enough"),
+        rarity = "choice",
+        non_scaling_values = {
+            threshold = 400,
+        },
+        behavior = {
+            buff_bar_icon = DCEI.Texture("smh_enough"),
+            non_scaling_attributes = {
+                attack = 10,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "threshold" },
+            },
+            {
+                address = { "behavior", "non_scaling_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "slack_off",
+        display_name = Api.GetTranslationText("combat/relic/slack_off/name"),
+        description = Api.GetTranslationText("combat/relic/slack_off/description", { x = TAG.health_regen }),
+        icon = DCEI.Texture("smh_slack_off"),
+        rarity = "common",
+        behavior = {
+            buff_bar_icon = DCEI.Texture("smh_slack_off"),
+            duration = 3,
+            non_scaling_attributes = {
+                health_per_second = 100,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "non_scaling_attributes", "health_per_second" },
+            },
+            {
+                address = { "behavior", "duration" },
+            },
+        },
+    },
+    {
+        id = "bring_to_justice",
+        display_name = Api.GetTranslationText("combat/relic/bring_to_justice/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/bring_to_justice/description",
+            { x = TAG.crit, y = TAG.vulnerable, z = TAG.dodge_chance }
+        ),
+        icon = DCEI.Texture("smh_bring_to_justice"),
+        rarity = "choice",
+        non_scaling_values = {
+            threshold = 100,
+            -- used for localization: decreased by [x]
+            dodge_chance = 0.01,
+        },
+        behavior = {
+            buff_bar_icon = DCEI.Texture("smh_bring_to_justice"),
+            non_scaling_attributes = {
+                dodge_chance = -0.01,
+                vulnerable = 1,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "non_scaling_attributes", "vulnerable" },
+            },
+            {
+                address = { "non_scaling_values", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "approaching_storm",
+        display_name = Api.GetTranslationText("combat/relic/approaching_storm/name"),
+        description = Api.GetTranslationText("combat/relic/approaching_storm/description", { x = TAG.thorns }),
+        icon = DCEI.Texture("smh_approaching_storm"),
+        rarity = "choice",
+        non_scaling_values = {
+            init_thorn = 99,
+            reduce_thron = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "init_thorn" },
+            },
+            {
+                address = { "non_scaling_values", "reduce_thron" },
+            },
+        },
+    },
+    {
+        id = "pretzel",
+        display_name = Api.GetTranslationText("combat/relic/pretzel/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/energy_on_ultimate/description",
+            { x = TAG.overclock, y = TAG.energy }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1f968_ipick"),
+        text_icon = RELIC_ICON.pretzel,
+        rarity = "epic",
+        scaling_values = {
+            energy_gain = 200,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "energy_gain" },
+            },
+        },
+    },
+    {
+        id = "ugly_poo",
+        display_name = Api.GetTranslationText("combat/relic/ugly_poo/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/ugly_poo/description",
+            { x = ATTACK_ICON.poo, y = TAG.dodge_chance }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1f9a8_ipick"),
+        text_icon = RELIC_ICON.ugly_poo,
+        rarity = "rare",
+        non_scaling_values = {
+            -- used for localization: decreased by [x]
+            dodge_chance = 0.01,
+        },
+        behavior = {
+            description = Api.GetTranslationText(
+                "combat/behavior/generic_decrease/description",
+                { x = TAG.dodge_chance }
+            ),
+            buff_bar_icon = DCEI.Texture("flat_icon_emoji_1f9a8_ipick"),
+            non_scaling_attributes = {
+                dodge_chance = -0.01,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "dodge_chance" },
+                is_scalable_behavior_description = true,
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_poo_chain,
+        },
+    },
+    {
+        id = "credit_card",
+        display_name = Api.GetTranslationText("combat/relic/credit_card/name"),
+        description = Api.GetTranslationText("combat/relic/credit_card/description", { x = TAG.income }),
+        icon = DCEI.Texture("flat_icon_emoji_1f4b3_ipick"),
+        text_icon = RELIC_ICON.credit_card,
+        rarity = "epic",
+        modify_attributes = {
+            discount = 0.4,
+            income = -25,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "discount" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "income" },
+            },
+        },
+    },
+    {
+        id = "poison_apple",
+        display_name = Api.GetTranslationText("combat/relic/poison_apple/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.armor, y = TAG.health }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1f34f_ipick"),
+        text_icon = RELIC_ICON.poison_apple,
+        rarity = "rare",
+        modify_attributes = {
+            block = 10,
+            health_maximum = -500,
+        },
+        scaling_values = {
+            -- used for description
+            health_maximum = 500,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "scaling_values", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "high_heel",
+        display_name = Api.GetTranslationText("combat/relic/high_heel/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.attack_speed, y = TAG.attack }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1f460_ipick"),
+        text_icon = RELIC_ICON.high_heel,
+        rarity = "rare",
+        modify_attributes = {
+            attack_speed = 0.15,
+            attack = -5,
+        },
+        scaling_values = {
+            -- used for description
+            attack = 5,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "scaling_values", "attack" },
+            },
+        },
+    },
+    {
+        id = "sandal",
+        display_name = Api.GetTranslationText("combat/relic/sandal/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.attack_speed, y = TAG.luck }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1fa74_ipick"),
+        text_icon = RELIC_ICON.sandal,
+        rarity = "rare",
+        modify_attributes = {
+            attack_speed = 0.11,
+            luck = -0.05,
+        },
+        scaling_values = {
+            -- used for description
+            luck = 0.05,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "scaling_values", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "cactus",
+        display_name = Api.GetTranslationText("combat/relic/cactus/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.thorns }),
+        icon = DCEI.Texture("flat_icon_emoji_1f335_ipick"),
+        text_icon = RELIC_ICON.cactus,
+        rarity = "epic",
+        modify_attributes = {
+            retaliate = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "retaliate" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.gain_retaliate_chain,
+        },
+    },
+    {
+        id = "beans",
+        display_name = Api.GetTranslationText("combat/relic/beans/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = ATTACK_ICON.rock, y = TAG.attack }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1fad8_ipick"),
+        text_icon = RELIC_ICON.beans,
+        rarity = "rare",
+        attacks = {
+            attack_rock = 2,
+        },
+        modify_attributes = {
+            attack = -5,
+        },
+        scaling_values = {
+            -- used for description
+            attack = 5,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_rock" },
+            },
+            {
+                address = { "scaling_values", "attack" },
+            },
+        },
+    },
+    {
+        id = "fast_food",
+        display_name = Api.GetTranslationText("combat/relic/fast_food/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_negative_generic/description",
+            { x = TAG.health, y = TAG.vulnerable }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1f354_ipick"),
+        text_icon = RELIC_ICON.fast_food,
+        rarity = "rare",
+        modify_attributes = {
+            health_maximum = 700,
+            vulnerable = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "broccoli",
+        display_name = Api.GetTranslationText("combat/relic/broccoli/name"),
+        description = Api.GetTranslationText("combat/relic/lose_generic/description", { x = TAG.vulnerable }),
+        icon = DCEI.Texture("flat_icon_emoji_1f966_ipick"),
+        text_icon = RELIC_ICON.broccoli,
+        rarity = "rare",
+        modify_attributes = {
+            vulnerable = -6,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "pepper",
+        display_name = Api.GetTranslationText("combat/relic/pepper/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack_speed }),
+        icon = DCEI.Texture("flat_icon_emoji_1f336_ipick"),
+        text_icon = RELIC_ICON.pepper,
+        rarity = "epic",
+        modify_attributes = {
+            attack_speed = 0.25,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "cat",
+        display_name = Api.GetTranslationText("combat/relic/cat/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.dodge_chance }),
+        icon = DCEI.Texture("flat_icon_emoji_1f431_ipick"),
+        text_icon = RELIC_ICON.cat,
+        rarity = "rare",
+        modify_attributes = {
+            dodge_chance = 0.06,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "dog",
+        display_name = Api.GetTranslationText("combat/relic/dog/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.crit_chance }),
+        icon = DCEI.Texture("flat_icon_emoji_1f436_ipick"),
+        text_icon = RELIC_ICON.dog,
+        rarity = "rare",
+        modify_attributes = {
+            crit_chance = 0.06,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "fire_cracker",
+        display_name = Api.GetTranslationText("combat/relic/fire_cracker/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.crit_damage }),
+        icon = DCEI.Texture("flat_icon_emoji_anger_symbol_1f4a2_ipick"),
+        text_icon = RELIC_ICON.fire_cracker,
+        rarity = "rare",
+        modify_attributes = {
+            crit_damage = 0.5,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "crit_chance_quest",
+        display_name = Api.GetTranslationText("combat/relic/crit_chance_quest/name"),
+        description = Api.GetTranslationText("combat/perk/quest_generic/description", { x = TAG.crit_chance }),
+        icon = DCEI.Texture("flat_icon_emoji_pouting_face_1f621_ipick"),
+        text_icon = RELIC_ICON.crit_chance_quest,
+        rarity = "epic",
+        triggering_event = GameMechanicTags.TRIGGERING_EVENT_TYPE.OnWin,
+        scaling_values = {
+            crit_chance = 0.01,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "flex_on_crit",
+        display_name = Api.GetTranslationText("combat/relic/flex_on_crit/name"),
+        description = Api.GetTranslationText("combat/perk/flex_on_crit/description", { x = ATTACK_ICON.flex }),
+        icon = DCEI.Texture("flat_icon_emoji_ogre_1f479_ipick"),
+        text_icon = RELIC_ICON.flex_on_crit,
+        rarity = "epic",
+        non_scaling_values = {
+            chance = 0.2,
+        },
+        scaling_values = {
+            attack_flex = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "scaling_values", "attack_flex" },
+            },
+        },
+        dependent_perk_chains = {
+            -- require character has all these perk chains to add this relic to pool
+            PerkChainData.all_perk_chains.attack_flex_chain,
+            PerkChainData.all_perk_chains.crit_chain,
+        },
+    },
+    {
+        id = "attack_speed_quest",
+        display_name = Api.GetTranslationText("combat/relic/attack_speed_quest/name"),
+        description = Api.GetTranslationText("combat/perk/quest_generic/description", { x = TAG.attack_speed }),
+        icon = DCEI.Texture("flat_icon_emoji_chequered_flag_1f3c1_ipick"),
+        text_icon = RELIC_ICON.attack_speed_quest,
+        rarity = "rare",
+        triggering_event = GameMechanicTags.TRIGGERING_EVENT_TYPE.OnWin,
+        scaling_values = {
+            attack_speed = 0.02,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "heal_on_dodge",
+        display_name = Api.GetTranslationText("combat/relic/heal_on_dodge/name"),
+        description = Api.GetTranslationText("combat/relic/heal_on_dodge/description"),
+        icon = DCEI.Texture("flat_icon_emoji_butterfly_1f98b_ipick"),
+        text_icon = RELIC_ICON.heal_on_dodge,
+        rarity = "rare",
+        scaling_values = {
+            heal = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "heal" },
+            },
+        },
+    },
+    {
+        id = "health_regen_percentage",
+        display_name = Api.GetTranslationText("combat/relic/health_regen_percentage/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/health_regen_percentage/description",
+            { x = TAG.health, y = TAG.health_regen }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_troll_1f9cc_ipick"),
+        text_icon = RELIC_ICON.health_regen_percentage,
+        rarity = "rare",
+        modify_attributes = {
+            health_percentage_per_second = 0.01,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_percentage_per_second" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "health_per_second_quest",
+        display_name = Api.GetTranslationText("combat/relic/health_per_second_quest/name"),
+        description = Api.GetTranslationText("combat/perk/quest_generic/description", { x = TAG.health_regen }),
+        icon = DCEI.Texture("flat_icon_emoji_yellow_heart_1f49b_ipick"),
+        text_icon = RELIC_ICON.health_per_second_quest,
+        rarity = "rare",
+        triggering_event = GameMechanicTags.TRIGGERING_EVENT_TYPE.OnWin,
+        scaling_values = {
+            health_per_second = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "health_per_second" },
+            },
+        },
+    },
+    {
+        id = "crush_on_heal",
+        display_name = Api.GetTranslationText("combat/perk/crush_on_heal/name"),
+        description = Api.GetTranslationText("combat/perk/on_heal_generic/description", { x = ATTACK_ICON.axe }),
+        icon = DCEI.Texture("flat_icon_emoji_heart_on_fire_2764_fe0f_200d_1f525_ipick"),
+        text_icon = RELIC_ICON.crush_on_heal,
+        rarity = "epic",
+        non_scaling_values = {
+            heal_amount = 100,
+        },
+        scaling_values = {
+            attack_crush = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "attack_crush" },
+            },
+            {
+                address = { "non_scaling_values", "heal_amount" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_crush_chain,
+        },
+    },
+    {
+        id = "dragon_heart",
+        display_name = Api.GetTranslationText("combat/relic/dragon_heart/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/dragon_heart/description",
+            { x = TAG.attack, y = TAG.health, z = TAG.health, a = TAG.health_regen }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_1fac0_ipick"),
+        text_icon = RELIC_ICON.dragon_heart,
+        rarity = "legendary",
+        modify_attributes = {
+            attack = 5,
+            health_maximum = 250,
+            health_percentage_per_second = 0.01,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "health_percentage_per_second" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "left_elbow",
+        display_name = Api.GetTranslationText("combat/relic/left_elbow/name"),
+        description = Api.GetTranslationText("combat/relic/left_elbow/description", { x = TAG.vulnerable }),
+        icon = DCEI.Texture("flat_icon_emoji_flexed_biceps_1f4aa_ipick"),
+        rarity = "combo",
+        non_scaling_values = {
+            trigger_interval = 1.5,
+            vulnerable = 2,
+            stun_duration = 0.1,
+            debuff_list = {
+                "debuff_vulnerable",
+                "debuff_stun_100ms",
+            },
+        },
+        scaling_values = {
+            damage = 400,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "trigger_interval" },
+            },
+            {
+                address = { "scaling_values", "damage" },
+            },
+            {
+                address = { "non_scaling_values", "vulnerable" },
+            },
+            {
+                address = { "non_scaling_values", "stun_duration" },
+            },
+        },
+    },
+    {
+        id = "right_elbow",
+        display_name = Api.GetTranslationText("combat/relic/right_elbow/name"),
+        description = Api.GetTranslationText("combat/relic/right_elbow/description", { x = TAG.vulnerable }),
+        icon = DCEI.Texture("smh_right_arm"),
+        text_icon = RELIC_ICON.dragon_heart,
+        rarity = "combo",
+        non_scaling_values = {
+            trigger_delay = 0.75,
+            trigger_interval = 1.5,
+            vulnerable = 2,
+            stun_duration = 0.1,
+            debuff_list = {
+                "debuff_vulnerable",
+                "debuff_stun_100ms",
+            },
+        },
+        scaling_values = {
+            damage = 400,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "trigger_interval" },
+            },
+            {
+                address = { "scaling_values", "damage" },
+            },
+            {
+                address = { "non_scaling_values", "vulnerable" },
+            },
+            {
+                address = { "non_scaling_values", "stun_duration" },
+            },
+        },
+    },
+    {
+        id = "blacksmith",
+        display_name = Api.GetTranslationText("combat/relic/blacksmith/name"),
+        description = Api.GetTranslationText("combat/relic/blacksmith/description"),
+        icon = DCEI.Texture("smh_hammer"),
+        rarity = "legendary",
+        non_scaling_values = {
+            damage_0 = 0,
+            damage_2 = 2,
+            damage_3 = 3,
+            launch_0_chance = 0.2,
+            launch_2_chance = 0.5,
+            launch_3_chance = 0.3,
+            launch_0_chance_stun = 0,
+            launch_2_chance_stun = 0.6,
+            launch_3_chance_stun = 0.4,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "damage_0" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "non_scaling_values", "damage_2" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "non_scaling_values", "damage_3" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "ji_bao",
+        display_name = Api.GetTranslationText("combat/relic/right_elbow/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack_speed }),
+        icon = DCEI.Texture("smh_funnyface"),
+        text_icon = RELIC_ICON.funny,
+        rarity = "legendary",
+        modify_attributes = {
+            attack_speed = -0.9,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "weary_cat",
+        display_name = Api.GetTranslationText("combat/relic/weary_cat/name"),
+        description = Api.GetTranslationText("combat/relic/weary_cat/description", { x = TAG.overclock }),
+        icon = DCEI.Texture("flat_icon_emoji_1f640_ipick"),
+        text_icon = RELIC_ICON.weary_cat,
+        rarity = "legendary",
+        non_scaling_values = {
+            chance = 0.5,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    -- choice relics
+    {
+        id = "silent_face",
+        display_name = Api.GetTranslationText("combat/relic/silent_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health }),
+        icon = DCEI.Texture("smh_silentface"),
+        text_icon = RELIC_ICON.silent_face,
+        rarity = "choice",
+        modify_attributes = {
+            health_maximum = 200,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "aggresive_face",
+        display_name = Api.GetTranslationText("combat/relic/aggresive_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack }),
+        icon = DCEI.Texture("smh_aggressiveface"),
+        text_icon = RELIC_ICON.aggressive,
+        rarity = "choice",
+        modify_attributes = {
+            attack = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "funny_face",
+        display_name = Api.GetTranslationText("combat/relic/funny_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack_speed }),
+        icon = DCEI.Texture("smh_funnyface"),
+        text_icon = RELIC_ICON.funny,
+        rarity = "choice",
+        modify_attributes = {
+            attack_speed = 0.06,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "lollipop",
+        display_name = Api.GetTranslationText("combat/relic/lollipop/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack }),
+        icon = DCEI.Texture("smh_lolipop"),
+        text_icon = RELIC_ICON.lollipop,
+        rarity = "choice",
+        modify_attributes = {
+            attack = 9,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "sales_medal",
+        display_name = Api.GetTranslationText("combat/relic/sales_medal/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.income }),
+        icon = DCEI.Texture("smh_medal"),
+        text_icon = RELIC_ICON.sales_medal,
+        rarity = "choice",
+        modify_attributes = {
+            income = 8,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "income" },
+            },
+        },
+    },
+    {
+        id = "ashamed_face",
+        display_name = Api.GetTranslationText("combat/relic/ashamed_face/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.health_regen, y = TAG.health }
+        ),
+        icon = DCEI.Texture("smh_ashamed_face"),
+        text_icon = RELIC_ICON.ashamed_face,
+        rarity = "choice",
+        modify_attributes = {
+            health_per_second = 33,
+            health_maximum = -222,
+        },
+        scaling_values = {
+            -- used for description
+            health_maximum = 222,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+            {
+                address = { "scaling_values", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "uphone",
+        display_name = Api.GetTranslationText("combat/relic/uphone/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.crit_chance, y = TAG.health }
+        ),
+        icon = DCEI.Texture("smh_phone"),
+        text_icon = RELIC_ICON.uphone,
+        rarity = "choice",
+        modify_attributes = {
+            crit_chance = 0.06,
+            health_maximum = 600,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "justice_face",
+        display_name = Api.GetTranslationText("combat/relic/justice_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.crit_chance }),
+        icon = DCEI.Texture("smh_justiceface"),
+        text_icon = RELIC_ICON.justice_face,
+        rarity = "choice",
+        modify_attributes = {
+            crit_chance = 0.03,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "innocent_face",
+        display_name = Api.GetTranslationText("combat/relic/innocent_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.dodge_chance }),
+        icon = DCEI.Texture("smh_innocentface"),
+        text_icon = RELIC_ICON.innocent_face,
+        rarity = "choice",
+        modify_attributes = {
+            dodge_chance = 0.03,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "love_face",
+        display_name = Api.GetTranslationText("combat/relic/love_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.luck }),
+        icon = DCEI.Texture("smh_loveface"),
+        text_icon = RELIC_ICON.love_face,
+        rarity = "choice",
+        modify_attributes = {
+            luck = 0.2,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "devil_face",
+        display_name = Api.GetTranslationText("combat/relic/devil_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.crit_damage }),
+        icon = DCEI.Texture("smh_devil_face"),
+        text_icon = RELIC_ICON.devil_face,
+        rarity = "choice",
+        modify_attributes = {
+            crit_damage = 0.33,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "pasta",
+        display_name = Api.GetTranslationText("combat/relic/pasta/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health_regen }),
+        icon = DCEI.Texture("smh_pasta"),
+        text_icon = RELIC_ICON.pasta,
+        rarity = "choice",
+        modify_attributes = {
+            health_per_second = 25,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+        },
+    },
+    {
+        id = "nuke",
+        display_name = Api.GetTranslationText("combat/relic/nuke/name"),
+        description = Api.GetTranslationText("combat/relic/nuke/description", { x = TAG.attack, y = TAG.vulnerable }),
+        icon = DCEI.Texture("smh_nuclear"),
+        text_icon = RELIC_ICON.nuke,
+        rarity = "choice",
+        triggering_event = GameMechanicTags.TRIGGERING_EVENT_TYPE.OnWin,
+        modify_attributes = {
+            attack = 30,
+        },
+        scaling_values = {
+            vulnerable = 1,
+        },
+        non_scaling_values = {
+            count_down = 15, -- Amount of waves before transforming into a zombie
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "scaling_values", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "mutate",
+        display_name = Api.GetTranslationText("combat/relic/mutate/name"),
+        description = Api.GetTranslationText("combat/relic/mutate/description", { x = ATTACK_ICON.brain }),
+
+        icon = DCEI.Texture("comic_portrait_enemy_02_ipick"),
+        text_icon = RELIC_ICON.nuke,
+        rarity = "choice",
+        triggering_event = GameMechanicTags.TRIGGERING_EVENT_TYPE.OnWin,
+        non_scaling_values = {
+            attack_on_win = "attack_brain",
+        },
+        description_replacement_values = {},
+    },
+    {
+        id = "facewall_stock",
+        display_name = Api.GetTranslationText("combat/relic/facewall_stock/name"),
+        description = Api.GetTranslationText("combat/relic/lose_generic/description", { x = TAG.income }),
+        icon = DCEI.Texture("smh_fb_stock"),
+        text_icon = RELIC_ICON.facewall_stock,
+        rarity = "choice",
+        modify_attributes = {
+            income = -20,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "income" },
+            },
+        },
+    },
+    {
+        id = "edison_stock",
+        display_name = Api.GetTranslationText("combat/relic/edison_stock/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.income }),
+        icon = DCEI.Texture("smh_tesla_stock"),
+        text_icon = RELIC_ICON.edison_stock,
+        rarity = "choice",
+        modify_attributes = {
+            income = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "income" },
+            },
+        },
+    },
+    {
+        id = "dead_phone",
+        display_name = Api.GetTranslationText("combat/relic/dead_phone/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = ATTACK_ICON.rock, y = TAG.attack }
+        ),
+        icon = DCEI.Texture("smh_dead_phone"),
+        text_icon = RELIC_ICON.dead_phone,
+        rarity = "choice",
+        attacks = {
+            attack_rock = 1,
+        },
+        modify_attributes = {
+            attack = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_rock" },
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "bored_face",
+        display_name = Api.GetTranslationText("combat/relic/bored_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.energy_regen }),
+        icon = DCEI.Texture("smh_bored_face"),
+        text_icon = RELIC_ICON.bored_face,
+        rarity = "choice",
+        modify_attributes = {
+            energy_per_second = 33,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+        },
+    },
+    {
+        id = "drooling_face",
+        display_name = Api.GetTranslationText("combat/relic/drooling_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.ice }),
+        icon = DCEI.Texture("smh_drooling_face"),
+        text_icon = RELIC_ICON.drooling_face,
+        rarity = "choice",
+        attacks = {
+            attack_frost = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_frost" },
+            },
+        },
+    },
+    {
+        id = "salute_face",
+        display_name = Api.GetTranslationText("combat/relic/salute_face/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.armor }),
+        icon = DCEI.Texture("smh_salute"),
+        text_icon = RELIC_ICON.salute_face,
+        rarity = "choice",
+        modify_attributes = {
+            block = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+        },
+    },
+    {
+        id = "fade_flower",
+        display_name = Api.GetTranslationText("combat/relic/faded_flower/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.thorns }),
+        icon = DCEI.Texture("flat_icon_emoji_1f940_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            retaliate = 5,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "retaliate" },
+            },
+        },
+    },
+    {
+        id = "doubleside_breif",
+        display_name = Api.GetTranslationText("combat/relic/doubleside_brief/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/gain_two_generic/description",
+            { x = TAG.armor, y = TAG.thorns }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_underwear_1fa72_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            block = 2,
+            retaliate = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "modify_attributes", "retaliate" },
+            },
+        },
+    },
+    {
+        id = "naked_run",
+        display_name = Api.GetTranslationText("combat/relic/naked_run/name"),
+        icon = DCEI.Texture("flat_icon_emoji_horse_1f40e_ipick"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_negative_generic/description",
+            { x = TAG.dodge_chance, y = TAG.vulnerable }
+        ),
+        rarity = "choice",
+        text_icon = RELIC_ICON.naked_run,
+        modify_attributes = {
+            dodge_chance = 0.05,
+            vulnerable = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    -- {
+    --     id = "sunglass_stone",
+    --     display_name = Api.GetTranslationText("combat/relic/sunglass_stone/name"),
+    --     description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health }),
+    --     icon = DCEI.Texture("smh_stone_sunglass_u1f60e_u1f5ff"),
+    --     rarity = "choice",
+    --     modify_attributes = {
+    --         health_maximum = 200,
+    --     },
+    --     description_replacement_values = {
+    --         {
+    --             address = { "modify_attributes", "health_maximum" },
+    --         },
+    --     },
+    -- },
+    {
+        id = "pen",
+        display_name = Api.GetTranslationText("combat/relic/pen/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.ultimate_damage }),
+        icon = DCEI.Texture("flat_icon_emoji_pen_1f58a_ipick"),
+        rarity = "choice",
+        text_icon = RELIC_ICON.pen,
+        modify_attributes = {
+            ultimate_damage = 0.3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "ultimate_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "single_poo",
+        display_name = Api.GetTranslationText("combat/perk/attack_poo/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.poo }),
+        icon = DCEI.Texture("flat_icon_emoji_pile_of_poo_1f4a9_ipick"),
+        rarity = "choice",
+        attacks = {
+            attack_poo = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_poo" },
+            },
+        },
+    },
+    {
+        id = "old_key",
+        display_name = Api.GetTranslationText("combat/relic/old_key/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack_speed }),
+        icon = DCEI.Texture("flat_icon_emoji_key_1f5dd_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            attack_speed = 0.08,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "good_poo",
+        display_name = Api.GetTranslationText("combat/relic/good_poo/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.vulnerable, y = TAG.armor }
+        ),
+        text_icon = RELIC_ICON.good_poo,
+        icon = DCEI.Texture("smh_good_shit_u1f44d_u1f4a9"),
+        rarity = "choice",
+        modify_attributes = {
+            vulnerable = -6,
+            block = -4,
+        },
+        scaling_values = {
+            -- used for description
+            block = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+            {
+                address = { "scaling_values", "block" },
+            },
+        },
+    },
+    {
+        id = "single_rock",
+        display_name = Api.GetTranslationText("combat/relic/single_rock/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.rock }),
+        icon = DCEI.Texture("flat_icon_emoji_rock_1faa8_ipick"),
+        rarity = "choice",
+        text_icon = RELIC_ICON.single_rock,
+        attacks = {
+            attack_rock = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_rock" },
+            },
+        },
+    },
+    {
+        id = "coded_disk",
+        display_name = Api.GetTranslationText("combat/relic/coded_disc/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.health_regen, y = TAG.energy_regen }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_code_disk_1f4bd_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            health_per_second = 30,
+            energy_per_second = -15,
+        },
+        scaling_values = {
+            energy_per_second = 15,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+            {
+                address = { "scaling_values", "energy_per_second" },
+            },
+        },
+    },
+    {
+        id = "fear_face",
+        display_name = Api.GetTranslationText("combat/relic/fear/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_negative_generic/description",
+            { x = TAG.armor, y = TAG.vulnerable }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_fear_1f631_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            block = 5,
+            vulnerable = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "tear_drop",
+        display_name = Api.GetTranslationText("combat/relic/tear_drop/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.energy_regen }),
+        icon = DCEI.Texture("flat_icon_emoji_droplet_1f4a7_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            energy_per_second = 40,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+        },
+    },
+    {
+        id = "the_finger",
+        display_name = Api.GetTranslationText("combat/relic/mid_finger/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.attack, y = TAG.health_regen }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_finger_1f595"),
+        text_icon = RELIC_ICON.the_finger,
+        rarity = "choice",
+        modify_attributes = {
+            attack = 9,
+            health_per_second = -20,
+        },
+        scaling_values = {
+            -- used for description
+            health_per_second = 20,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "scaling_values", "health_per_second" },
+            },
+        },
+    },
+    {
+        id = "pride_face",
+        display_name = Api.GetTranslationText("combat/relic/pride/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.ultimate_damage, y = TAG.crit_damage }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_pride_1f63c"),
+        rarity = "choice",
+        modify_attributes = {
+            ultimate_damage = 1,
+            crit_damage = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "ultimate_damage" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "crit_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "friendship",
+        display_name = Api.GetTranslationText("combat/relic/friendship/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health_regen }),
+        icon = DCEI.Texture("flat_icon_emoji_hug_1fac2"),
+        rarity = "choice",
+        modify_attributes = {
+            health_per_second = 20,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+        },
+    },
+    {
+        id = "indifference",
+        display_name = Api.GetTranslationText("combat/relic/indifference/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/apply_vulnerable_on_start/description",
+            { x = TAG.startup, y = TAG.vulnerable }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_indifference_1fae4"),
+        rarity = "choice",
+        scaling_values = {
+            vulnerable = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "blue_heart",
+        display_name = Api.GetTranslationText("combat/relic/cool_heart/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.armor }),
+        icon = DCEI.Texture("flat_icon_emoji_blue_heart_1f499"),
+        rarity = "choice",
+        text_icon = RELIC_ICON.blue_heart,
+        modify_attributes = {
+            block = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+        },
+    },
+    {
+        id = "shock_face",
+        display_name = Api.GetTranslationText("combat/relic/shock/name"),
+        description = Api.GetTranslationText("combat/relic/shock/description", { x = TAG.health, y = TAG.startup }),
+        icon = DCEI.Texture("flat_icon_emoji_shock_1f632"),
+        rarity = "choice",
+        text_icon = RELIC_ICON.shock_face,
+        modify_attributes = {
+            health_maximum = 300,
+        },
+        behavior = {
+            description = Api.GetTranslationText("combat/behavior/stun_on_start/description"),
+            buff_bar_icon = DCEI.Texture("flat_icon_emoji_shock_1f632"),
+            actor_event_on_apply = "EventStunOn",
+            actor_event_on_remove = "EventStunOff",
+            interval = 0.5,
+            interval_effect = {
+                stun = true,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "interval" },
+                is_scalable_behavior_description = true,
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "cursed_bomb",
+        display_name = Api.GetTranslationText("combat/relic/curse_bomb/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.bomb }),
+        icon = DCEI.Texture("flat_icon_emoji_bomb_1f4a3_ipick"),
+        rarity = "choice",
+        attacks = {
+            attack_bomb = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_bomb" },
+            },
+        },
+    },
+    {
+        id = "small_rev",
+        display_name = Api.GetTranslationText("combat/relic/small_rev/name"),
+        description = Api.GetTranslationText("combat/small_rev/description", { x = TAG.attack }),
+        icon = DCEI.Texture("flat_icon_emoji_racing_car_1f3ce_fe0f_ipick"),
+        rarity = "choice",
+        behavior = {
+            is_positive = true,
+            description = Api.GetTranslationText("combat/behavior/generic_increase/description", { x = TAG.attack }),
+            buff_bar_icon = DCEI.Texture("flat_icon_emoji_racing_car_1f3ce_fe0f_ipick"),
+            modify_attributes = {
+                attack = 1,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "energy_drain",
+        display_name = Api.GetTranslationText("combat/relic/energy_drain/name"),
+        description = Api.GetTranslationText("combat/relic/energy_drain/description", { x = TAG.attack }),
+        icon = DCEI.Texture("smh_energy_drain"),
+        text_icon = RELIC_ICON.energy_drain,
+        rarity = "choice",
+        behavior = {
+            is_positive = true,
+            description = Api.GetTranslationText("combat/behavior/generic_increase/description", { x = TAG.attack }),
+            buff_bar_icon = DCEI.Texture("smh_energy_drain"),
+            modify_attributes = {
+                attack = 6,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "small_clover",
+        display_name = Api.GetTranslationText("combat/relic/little_luck/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.luck }),
+        icon = DCEI.Texture("flat_icon_emoji_four_leaf_clover_1f340_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            luck = 0.12,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "foot_print",
+        display_name = Api.GetTranslationText("combat/relic/foot_print/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health }),
+        icon = DCEI.Texture("flat_icon_emoji_foot_print_1f463"),
+        rarity = "choice",
+        text_icon = RELIC_ICON.foot_print,
+        modify_attributes = {
+            health_maximum = 180,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "purple_wine",
+        display_name = Api.GetTranslationText("combat/relic/purple_wine/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/gain_two_generic/description",
+            { x = TAG.attack_speed, y = TAG.luck }
+        ),
+        icon = DCEI.Texture("smh_purple_wine_u1f49c_u1f377"),
+        rarity = "choice",
+        modify_attributes = {
+            attack_speed = 0.05,
+            luck = 0.05,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "failure_student",
+        display_name = Api.GetTranslationText("combat/relic/failed_artist/name"),
+        description = Api.GetTranslationText("combat/relic/failed_artist/description", { x = RELIC_ICON.squid }),
+        icon = DCEI.Texture("flat_icon_emoji_student_1f64e-200d-2642-fe0f"),
+        rarity = "choice",
+        non_scaling_values = {
+            wave = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "wave" },
+            },
+        },
+    },
+    {
+        id = "phantom_elephant",
+        display_name = Api.GetTranslationText("combat/relic/elephant/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack }),
+        icon = DCEI.Texture("flat_icon_emoji_elephant_1f418"),
+        rarity = "choice",
+        modify_attributes = {
+            attack = -1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "bacon",
+        display_name = Api.GetTranslationText("combat/relic/bacon/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.health, y = TAG.health_regen }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_bacon_1f953"),
+        rarity = "choice",
+        modify_attributes = {
+            health_maximum = 55,
+            health_per_second = 11,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+        },
+    },
+    {
+        id = "single_shark",
+        display_name = Api.GetTranslationText("combat/relic/single_shark/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.shark }),
+        icon = DCEI.Texture("smh_shark"),
+        rarity = "choice",
+        attacks = {
+            attack_shark = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_shark" },
+            },
+        },
+    },
+    {
+        id = "justice_devil",
+        display_name = Api.GetTranslationText("combat/relic/justice_devil/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/gain_two_generic/description",
+            { x = TAG.crit_chance, y = TAG.crit_damage }
+        ),
+        icon = DCEI.Texture("smh_justice_devil_u1f610_u1f47f"),
+        rarity = "choice",
+        modify_attributes = {
+            crit_chance = 0.02,
+            crit_damage = 0.11,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "crit_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "single_flex",
+        display_name = Api.GetTranslationText("combat/relic/anger/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.flex }),
+        icon = DCEI.Texture("flat_icon_emoji_anger_1f620"),
+        rarity = "choice",
+        attacks = {
+            attack_flex = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_flex" },
+            },
+        },
+    },
+    {
+        id = "delay_damage",
+        display_name = Api.GetTranslationText("combat/relic/waiting/name"),
+        description = Api.GetTranslationText("combat/relic/waiting/description"),
+        icon = DCEI.Texture("flat_icon_emoji_face_in_cloud_ipick"),
+        rarity = "choice",
+        scaling_values = {
+            damage = 600,
+        },
+        non_scaling_values = {
+            interval = 6,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "damage" },
+            },
+            {
+                address = { "non_scaling_values", "interval" },
+            },
+        },
+    },
+    {
+        id = "giant_jet",
+        display_name = Api.GetTranslationText("combat/relic/giant_jet/name"),
+        description = Api.GetTranslationText(
+            "combat/general_gain_on/description",
+            { x = TAG.startup, y = TAG.energy }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_whale_1f433"),
+        rarity = "choice",
+        scaling_values = {
+            start_energy = 200,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "start_energy" },
+            },
+        },
+    },
+    {
+        id = "cockroach",
+        display_name = Api.GetTranslationText("combat/relic/cockroach/name"),
+        description = Api.GetTranslationText("combat/relic/cockroach/description", { x = TAG.attack }),
+        icon = DCEI.Texture("flat_icon_emoji_cockroach_1fab3"),
+        rarity = "choice",
+        scaling_values = {
+            attack = 1,
+        },
+        non_scaling_values = {
+            effect_count = 3,
+        },
+        behavior = {
+            is_positive = true,
+            description = Api.GetTranslationText("combat/behavior/generic_increase/description", { x = TAG.attack }),
+            buff_bar_icon = DCEI.Texture("flat_icon_emoji_cockroach_1fab3"),
+            modify_attributes = {
+                attack = 1,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "attack" },
+            },
+            {
+                address = { "non_scaling_values", "effect_count" },
+            },
+        },
+    },
+    {
+        id = "thumb_up", -- TODO implementing
+        display_name = Api.GetTranslationText("combat/relic/thumb_up/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.ninja_training }),
+        icon = DCEI.Texture("flat_icon_emoji_thumbs_up_1f44d_ipick"),
+        rarity = "choice",
+        non_scaling_values = {
+            value = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "value" },
+            },
+        },
+    },
+    {
+        id = "thumb_down", -- TODO testing
+        display_name = Api.GetTranslationText("combat/relic/thumb_down/name"),
+        description = Api.GetTranslationText("combat/relic/thumb_down/description", { x = TAG.speech_bubble }),
+        icon = DCEI.Texture("flat_icon_emoji_thumb_down_1f44e"),
+        rarity = "choice",
+        modify_attributes = {
+            trash_talk_attack = 10,
+        },
+        non_scaling_values = {
+            trash_talk_attack = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "trash_talk_attack" },
+            },
+        },
+    },
+    {
+        id = "turtle",
+        display_name = Api.GetTranslationText("combat/relic/turtle/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_lose_generic/description",
+            { x = TAG.armor, y = TAG.attack_speed }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_turtle_1f422"),
+        text_icon = RELIC_ICON.turtle,
+        rarity = "choice",
+        modify_attributes = {
+            block = 7,
+            attack_speed = -0.07,
+        },
+        scaling_values = {
+            attack_speed = 0.07,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "scaling_values", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "lion",
+        display_name = Api.GetTranslationText("combat/relic/lion/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack }),
+        icon = DCEI.Texture("flat_icon_emoji_lion_1f981"),
+        rarity = "choice",
+        text_icon = RELIC_ICON.lion,
+        modify_attributes = {
+            attack = 7,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "bottom_line",
+        display_name = Api.GetTranslationText("combat/relic/bottom_line/name"),
+        description = Api.GetTranslationText("combat/relic/siren/description"),
+        icon = DCEI.Texture("flat_icon_emoji_bottom_line_26d4"),
+        rarity = "choice",
+        scaling_values = {
+            increase = 0.11,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "increase" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "super_respect",
+        display_name = Api.GetTranslationText("combat/relic/super_respect/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.attack, y = TAG.heal_enhancement }
+        ),
+        icon = DCEI.Texture("smh_super_respect"),
+        rarity = "choice",
+        modify_attributes = {
+            attack = 3,
+            heal_enhancement = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "heal_enhancement" },
+            },
+        },
+    },
+    {
+        id = "two_hearts",
+        display_name = Api.GetTranslationText("combat/relic/love_each/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_but_gain_negative/description",
+            { x = TAG.health, y = TAG.health_regen, z = TAG.vulnerable }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_two_heart_1f49e"),
+        rarity = "choice",
+        modify_attributes = {
+            health_maximum = 200,
+            health_per_second = 20,
+            vulnerable = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "lonely_face",
+        display_name = Api.GetTranslationText("combat/relic/lonely/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_negative_generic/description",
+            { x = TAG.crit, y = TAG.vulnerable }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_lonely_1f614"),
+        rarity = "choice",
+        modify_attributes = {
+            crit_chance = 0.08,
+            vulnerable = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "playa",
+        display_name = Api.GetTranslationText("combat/relic/playa/name"),
+        description = Api.GetTranslationText("combat/relic/playa/description", { x = TAG.vulnerable }),
+        icon = DCEI.Texture("flat_icon_emoji_merman"),
+        rarity = "choice",
+        non_scaling_values = {
+            interval = 2,
+        },
+        behavior = {
+            description = Api.GetTranslationText(
+                "combat/behavior/generic_increase/description",
+                { x = TAG.vulnerable }
+            ),
+            buff_bar_icon = DCEI.Texture("flat_icon_emoji_merman"),
+            modify_attributes = {
+                vulnerable = 3,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "modify_attributes", "vulnerable" },
+            },
+            {
+                address = { "non_scaling_values", "interval" },
+            },
+        },
+    },
+    {
+        id = "breaking_heart",
+        display_name = Api.GetTranslationText("combat/relic/breaking_heart/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_negative_generic/description",
+            { x = TAG.energy_regen, y = TAG.vulnerable }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_broken_heart_1f494_ipick"),
+        rarity = "choice",
+        modify_attributes = {
+            energy_per_second = 50,
+            vulnerable = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+    },
+    {
+        id = "r_18",
+        display_name = Api.GetTranslationText("combat/relic/prohibit_18/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/prohibit_18/description",
+            { x = TAG.attack, y = TAG.health }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_r_18_1f51e"),
+        rarity = "choice",
+        scaling_values = {
+            attack = 1,
+            health_maximum = 30,
+        },
+        non_scaling_values = {
+            start_wave = 18,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "attack" },
+            },
+            {
+                address = { "scaling_values", "health_maximum" },
+            },
+            {
+                address = { "non_scaling_values", "start_wave" },
+            },
+        },
+    },
+    {
+        id = "pin",
+        display_name = Api.GetTranslationText("combat/relic/pin/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.thorns }),
+        icon = DCEI.Texture("flat_icon_emoji_pin_1f4cc"),
+        rarity = "choice",
+        text_icon = RELIC_ICON.pin,
+        modify_attributes = {
+            retaliate = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "retaliate" },
+            },
+        },
+    },
+    {
+        id = "piggy",
+        display_name = Api.GetTranslationText("combat/relic/piggy/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.health }),
+        icon = DCEI.Texture("flat_icon_emoji_piggy_1f437"),
+        text_icon = RELIC_ICON.piggy,
+        rarity = "choice",
+        modify_attributes = {
+            health_maximum = 222,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "rice_ball",
+        display_name = Api.GetTranslationText("combat/relic/rice_ball/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.health_regen, y = TAG.energy_regen }
+        ),
+        icon = DCEI.Texture("smh_rice_ball"),
+        text_icon = RELIC_ICON.rice_ball,
+        rarity = "epic",
+        modify_attributes = {
+            health_per_second = 22,
+            energy_per_second = 66,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+        },
+    },
+    {
+        id = "sushi",
+        display_name = Api.GetTranslationText("combat/relic/sushi/name"),
+        description = Api.GetTranslationText("combat/relic/sushi/description"),
+        icon = DCEI.Texture("smh_sushi"),
+        text_icon = RELIC_ICON.sushi,
+        rarity = "epic",
+        non_scaling_values = {
+            time = 6,
+            heal = 1000,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "heal" },
+            },
+            {
+                address = { "non_scaling_values", "time" },
+            },
+        },
+    },
+    {
+        id = "roll_of_paper",
+        display_name = Api.GetTranslationText("combat/relic/roll_of_paper/name"),
+        description = Api.GetTranslationText("combat/relic/roll_of_paper/description", { x = ATTACK_ICON.oil }),
+        icon = DCEI.Texture("smh_roll_of_paper"),
+        text_icon = RELIC_ICON.roll_of_paper,
+        rarity = "epic",
+        non_scaling_values = {
+            oil_buff = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "oil_buff" },
+            },
+        },
+    },
+    {
+        id = "baguette_bread",
+        display_name = Api.GetTranslationText("combat/relic/baguette_bread/name"),
+        description = Api.GetTranslationText("combat/relic/baguette_bread/description", { x = ATTACK_ICON.axe }),
+        icon = DCEI.Texture("smh_baguette_bread"),
+        text_icon = RELIC_ICON.baguette_bread,
+        rarity = "epic",
+        modify_attributes = {
+            crush_damage = 20,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crush_damage" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_crush_chain,
+        },
+    },
+    {
+        id = "horse",
+        display_name = Api.GetTranslationText("combat/relic/horse/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = ATTACK_ICON.flex, y = TAG.health }
+        ),
+        icon = DCEI.Texture("smh_horse"),
+        text_icon = RELIC_ICON.horse,
+        rarity = "epic",
+        attacks = {
+            attack_flex = 1,
+        },
+        modify_attributes = {
+            health_maximum = 200,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_flex" },
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_flex_chain,
+        },
+    },
+    {
+        id = "apple",
+        display_name = Api.GetTranslationText("combat/relic/apple/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.armor }),
+        icon = DCEI.Texture("smh_apple"),
+        text_icon = RELIC_ICON.apple,
+        rarity = "epic",
+        modify_attributes = {
+            block = 8,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+        },
+    },
+    {
+        id = "lobster",
+        display_name = Api.GetTranslationText("combat/relic/lobster/name"),
+        description = Api.GetTranslationText("combat/relic/lobster/description", { x = TAG.thorns, y = TAG.attack }),
+        icon = DCEI.Texture("smh_lobster"),
+        text_icon = RELIC_ICON.lobster,
+        max_level = 1,
+        rarity = "epic",
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.gain_retaliate_chain,
+        },
+    },
+    {
+        id = "bread",
+        display_name = Api.GetTranslationText("combat/relic/bread/name"),
+        description = Api.GetTranslationText("combat/perk/bread/description", { x = TAG.armor, y = TAG.energy }),
+        icon = DCEI.Texture("smh_bread"),
+        text_icon = RELIC_ICON.bread,
+        rarity = "rare",
+        non_scaling_values = {
+            threshold = 50,
+        },
+        scaling_values = {
+            energy_gain = 30,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "threshold" },
+            },
+            {
+                address = { "scaling_values", "energy_gain" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.gain_block_chain,
+        },
+    },
+    {
+        id = "garlic",
+        display_name = Api.GetTranslationText("combat/relic/garlic/name"),
+        description = Api.GetTranslationText("combat/perk/garlic/description", { x = TAG.thorns }),
+        icon = DCEI.Texture("smh_garlic"),
+        text_icon = RELIC_ICON.garlic,
+        rarity = "epic",
+        non_scaling_values = {
+            threshold = 60,
+        },
+        scaling_values = {
+            heal = 30,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "threshold" },
+            },
+            {
+                address = { "scaling_values", "heal" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.gain_retaliate_chain,
+        },
+    },
+    {
+        id = "knife",
+        display_name = Api.GetTranslationText("combat/relic/knife/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/knife/description",
+            { x = TAG.crit_chance, y = ATTACK_ICON.ult }
+        ),
+        icon = DCEI.Texture("smh_knife"),
+        max_level = 1,
+        text_icon = RELIC_ICON.knife,
+        rarity = "epic",
+        modify_attributes = {
+            crit_chance = 0.06,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "bald",
+        display_name = Api.GetTranslationText("combat/relic/bald/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/bald_new/description",
+            { x = TAG.dodge_chance, y = ATTACK_ICON.ult }
+        ),
+        icon = DCEI.Texture("smh_bald"),
+        text_icon = RELIC_ICON.bald,
+        rarity = "epic",
+        max_level = 1,
+        modify_attributes = {
+            dodge_chance = 0.04,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "bubble_tea",
+        display_name = Api.GetTranslationText("combat/relic/bubble_tea/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/bubble_tea/description",
+            { x = TAG.health_regen, y = TAG.overclock }
+        ),
+        icon = DCEI.Texture("smh_bubble_tea"),
+        text_icon = RELIC_ICON.bubble_tea,
+        rarity = "rare",
+        behavior = {
+            description = Api.GetTranslationText(
+                "combat/behavior/generic_increase/description",
+                { x = TAG.health_regen }
+            ),
+            buff_bar_icon = DCEI.Texture("smh_bubble_tea"),
+            modify_attributes = {
+                health_per_second = 20,
+            },
+            is_positive = true,
+        },
+        description_replacement_values = {
+            {
+                address = { "behavior", "modify_attributes", "health_per_second" },
+            },
+        },
+    },
+    {
+        id = "linked_paperclips",
+        display_name = Api.GetTranslationText("combat/relic/linked_paperclips/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/linked_paperclips/description",
+            { x = TAG.luck, y = RELIC_ICON.linked_paperclips }
+        ),
+        icon = DCEI.Texture("smh_linked_paperclips"),
+        text_icon = RELIC_ICON.linked_paperclips,
+        rarity = "rare",
+        modify_attributes = {
+            luck = 0.1,
+        },
+        non_scaling_values = {
+            money = 77,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "non_scaling_values", "money" },
+            },
+        },
+    },
+    {
+        id = "lefthand",
+        display_name = Api.GetTranslationText("combat/relic/lefthand/name"),
+        description = Api.GetTranslationText("combat/perk/lefthand/description"),
+        icon = DCEI.Texture("smh_lefthand"),
+        max_level = 1,
+        text_icon = RELIC_ICON.lefthand,
+        rarity = "rare",
+    },
+    {
+        id = "righthand",
+        display_name = Api.GetTranslationText("combat/relic/righthand/name"),
+        description = Api.GetTranslationText("combat/perk/lefthand/description"),
+        icon = DCEI.Texture("smh_righthand"),
+        max_level = 1,
+        text_icon = RELIC_ICON.righthand,
+        rarity = "rare",
+    },
+    -- {
+    --     id = "left_feet",
+    --     display_name = "Left Feet",
+    --     description = Api.GetTranslationText("combat/perk/lefthand/description"),
+    --     icon = DCEI.Texture("left_feet"),
+    --     max_level = 1,
+    --     -- text_icon = RELIC_ICON.lefthand,
+    --     rarity = "rare",
+    --     dependent_perk_chains = {
+    --         PerkChainData.all_perk_chains.shop_chain,
+    --     },
+    -- },
+    -- {
+    --     id = "right_feet",
+    --     display_name = "Right Feet",
+    --     description = Api.GetTranslationText("combat/perk/lefthand/description"),
+    --     icon = DCEI.Texture("right_feet"),
+    --     max_level = 1,
+    --     -- text_icon = RELIC_ICON.righthand,
+    --     rarity = "rare",
+    --     dependent_perk_chains = {
+    --         PerkChainData.all_perk_chains.shop_chain,
+    --     },
+    -- },
+    -- {
+    --     id = "forbidden_head",
+    --     display_name = "Forbiddent Head",
+    --     description = "If you have 'left_hand', 'right_hand', 'left_feet' and 'right_feet' in addition to this relic, you win the game.",
+    --     icon = DCEI.Texture("forbidden_head"),
+    --     max_level = 1,
+    --     -- text_icon = RELIC_ICON.righthand,
+    --     rarity = "epic",
+    --     dependent_perk_chains = {
+    --         PerkChainData.all_perk_chains.shop_chain,
+    --     },
+    -- },
+    -- {
+    --     id = "exodia_the_forbidden_one",
+    --     display_name = "Exodia the Forbidden One",
+    --     description = "Man! What can I say!",
+    --     icon = DCEI.Texture("exodia_the_forbidden_one"),
+    --     max_level = 1,
+    --     -- text_icon = RELIC_ICON.righthand,
+    --     rarity = "legendary",
+    -- },
+    {
+        id = "gloves",
+        display_name = Api.GetTranslationText("combat/relic/gloves/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.thorn_block }),
+        icon = DCEI.Texture("smh_gloves"),
+        text_icon = RELIC_ICON.gloves,
+        rarity = "rare",
+        modify_attributes = {
+            thorn_block = 0.3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "thorn_block" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "coffee",
+        display_name = Api.GetTranslationText("combat/relic/coffee/name"),
+        description = Api.GetTranslationText("combat/relic/coffee/description", { x = TAG.startup }),
+        icon = DCEI.Texture("flat_icon_emoji_hot_beverage_2615_ipick"),
+        text_icon = RELIC_ICON.coffee,
+        rarity = "epic",
+        non_scaling_values = {
+            time = 6,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "time" },
+            },
+        },
+    },
+    {
+        id = "cappuccino",
+        display_name = Api.GetTranslationText("combat/relic/cappuccino/name"),
+        description = Api.GetTranslationText("combat/relic/cappuccino/description", { x = RELIC_ICON.coffee }),
+        icon = DCEI.Texture("smh_cappuccino"),
+        text_icon = RELIC_ICON.coffee,
+        rarity = "legendary",
+        non_scaling_values = {
+            trigger_interval = 6,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "trigger_interval" },
+            },
+        },
+    },
+    {
+        id = "pig",
+        display_name = Api.GetTranslationText("combat/relic/pig/name"),
+        description = Api.GetTranslationText(
+            "combat/perk/launch_on_hit_generic/description",
+            { x = ATTACK_ICON.poo, y = ATTACK_ICON.poo }
+        ),
+        icon = DCEI.Texture("smh_pig"),
+        text_icon = RELIC_ICON.pig,
+        rarity = "epic",
+        non_scaling_values = {
+            chance = 0.15,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_poo_chain,
+        },
+    },
+    {
+        id = "rosette",
+        display_name = Api.GetTranslationText("combat/relic/rosette/name"),
+        description = Api.GetTranslationText("combat/relic/rosette/description", { x = ATTACK_ICON.brain }),
+        icon = DCEI.Texture("smh_rosette"),
+        text_icon = RELIC_ICON.rosette,
+        rarity = "legendary",
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_brain_chain,
+        },
+    },
+    {
+        id = "squid",
+        display_name = Api.GetTranslationText("combat/relic/squid/name"),
+        description = Api.GetTranslationText("combat/perk/quest_generic/description", { x = TAG.income }),
+        icon = DCEI.Texture("smh_squid"),
+        text_icon = RELIC_ICON.squid,
+        rarity = "epic",
+        triggering_event = GameMechanicTags.TRIGGERING_EVENT_TYPE.OnWin,
+        scaling_values = {
+            income = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "income" },
+            },
+        },
+    },
+    {
+        id = "ultimate_greed",
+        display_name = Api.GetTranslationText("combat/relic/ultimate_greed/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/ultimate_greed/description",
+            { x = TAG.overclock, y = TAG.income }
+        ),
+        icon = DCEI.Texture("smh_ultimate_greed"),
+        text_icon = RELIC_ICON.mind_blown,
+        rarity = "legendary",
+        non_scaling_values = {
+            income = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "income" },
+            },
+        },
+    },
+    {
+        id = "mind_blown",
+        display_name = Api.GetTranslationText("combat/relic/mind_blown/name"),
+        description = Api.GetTranslationText("combat/relic/mind_blown/description", { x = ATTACK_ICON.brain }),
+        icon = DCEI.Texture("flat_icon_emoji_exploding_head_1f92f_ipick"),
+        text_icon = RELIC_ICON.mind_blown,
+        rarity = "rare",
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_brain_chain,
+        },
+    },
+    {
+        id = "chopsticks",
+        display_name = Api.GetTranslationText("combat/relic/chopsticks/name"),
+        description = Api.GetTranslationText("combat/relic/chopsticks/description", { x = TAG.vulnerable }),
+        icon = DCEI.Texture("smh_chopsticks"),
+        text_icon = RELIC_ICON.chopsticks,
+        rarity = "epic",
+        modify_attributes = {
+            vulnerable = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.gain_retaliate_chain,
+        },
+    },
+    {
+        id = "rebel",
+        display_name = Api.GetTranslationText("combat/relic/rebel/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/rebel/description",
+            { x = TAG.health, y = TAG.energy_regen }
+        ),
+        icon = DCEI.Texture("rebel"),
+        text_icon = RELIC_ICON.mind_blown,
+        rarity = "legendary",
+        max_level = 1,
+        non_scaling_values = {
+            chance = 0.17,
+        },
+        modify_attributes = {
+            health_maximum = 600,
+            energy_per_second = 40,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "sugar_meter",
+        display_name = Api.GetTranslationText("combat/relic/sugar_meter/name"),
+        description = Api.GetTranslationText("combat/relic/sugar_meter/description", { x = TAG.blood_sugar }),
+        icon = DCEI.Texture("smh_sugar_meter"),
+        text_icon = RELIC_ICON.mind_blown,
+        rarity = "legendary",
+        max_level = 1,
+        non_scaling_values = {
+            common = -1,
+            rare = 1,
+            epic = 2,
+            legendary = 3,
+            divine = 0,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "common" },
+            },
+            {
+                address = { "non_scaling_values", "rare" },
+            },
+            {
+                address = { "non_scaling_values", "epic" },
+            },
+            {
+                address = { "non_scaling_values", "legendary" },
+            },
+        },
+    },
+    {
+        id = "siren",
+        display_name = Api.GetTranslationText("combat/relic/siren/name"),
+        description = Api.GetTranslationText("combat/relic/siren/description"),
+        icon = DCEI.Texture("smh_siren"),
+        text_icon = RELIC_ICON.siren,
+        rarity = "rare",
+        scaling_values = {
+            increase = 0.15,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "increase" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.emergency_block_chain,
+        },
+    },
+    {
+        id = "face_mask",
+        display_name = Api.GetTranslationText("combat/relic/face_mask/name"),
+        description = Api.GetTranslationText("combat/relic/face_mask/description", { x = TAG.emergency }),
+        icon = DCEI.Texture("smh_face_mask"),
+        text_icon = RELIC_ICON.face_mask,
+        rarity = "legendary",
+        scaling_values = {
+            increase = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "increase" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.emergency_block_chain,
+        },
+    },
+    {
+        id = "debt",
+        display_name = Api.GetTranslationText("combat/relic/debt/name"),
+        description = Api.GetTranslationText("combat/relic/debt/description"),
+        icon = DCEI.Texture("smh_debt"),
+        rarity = "legendary",
+        max_level = 1,
+        non_scaling_values = {
+            damage_multiplier = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "damage_multiplier" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_coin_chain,
+        },
+    },
+    {
+        id = "costum",
+        display_name = Api.GetTranslationText("combat/relic/costum/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_three_generic/description",
+            { x = TAG.armor, y = TAG.thorns, z = TAG.thorn_block }
+        ),
+        icon = DCEI.Texture("smh_costum"),
+        rarity = "rare",
+        modify_attributes = {
+            block = 3,
+            retaliate = 3,
+            thorn_block = 0.03,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "modify_attributes", "retaliate" },
+            },
+            {
+                address = { "modify_attributes", "thorn_block" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "guitar",
+        display_name = Api.GetTranslationText("tooltips/combat/keyword/guitar/title"),
+        description = Api.GetTranslationText("combat/relic/musical_relic/description", { x = TAG.health_regen }),
+        icon = DCEI.Texture("flat_icon_emoji_guitar_1f3b8_ipick"),
+        text_icon = RELIC_ICON.guitar,
+        rarity = "rare",
+        max_level = 0,
+        modify_attributes = {
+            health_per_second = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.music_note_chain,
+        },
+    },
+    {
+        id = "music_keyboard",
+        display_name = Api.GetTranslationText("tooltips/combat/keyword/music_keyboard/title"),
+        description = Api.GetTranslationText("combat/relic/musical_relic/description", { x = TAG.health }),
+        icon = DCEI.Texture("flat_icon_emoji_keyboard_1f3b9_ipick"),
+        text_icon = RELIC_ICON.music_keyboard,
+        rarity = "rare",
+        max_level = 0,
+        modify_attributes = {
+            health_maximum = 150,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.music_note_chain,
+        },
+    },
+    {
+        id = "drum",
+        display_name = Api.GetTranslationText("tooltips/combat/keyword/drum/title"),
+        description = Api.GetTranslationText("combat/relic/musical_relic/description", { x = TAG.attack }),
+        icon = DCEI.Texture("flat_icon_emoji_drum_1f941_ipick"),
+        text_icon = RELIC_ICON.drum,
+        rarity = "rare",
+        max_level = 0,
+        modify_attributes = {
+            attack = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.music_note_chain,
+        },
+    },
+    {
+        id = "singer",
+        display_name = Api.GetTranslationText("tooltips/combat/keyword/singer/title"),
+        description = Api.GetTranslationText("combat/relic/musical_relic/description", { x = TAG.crit_chance }),
+        icon = DCEI.Texture("flat_icon_emoji_microphone_1f3a4_ipick"),
+        text_icon = RELIC_ICON.singer,
+        rarity = "rare",
+        max_level = 0,
+        modify_attributes = {
+            crit_chance = 0.03,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.music_note_chain,
+        },
+    },
+
+    {
+        id = "blackhole",
+        display_name = Api.GetTranslationText("tooltips/combat/keyword/blackhole/title"),
+        description = Api.GetTranslationText("combat/relic/blackhole/description"),
+        icon = DCEI.Texture("smh_blackhole"),
+        text_icon = RELIC_ICON.blackhole,
+        rarity = "rare",
+        max_level = 1,
+        non_scaling_values = {
+            time = 6,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "time" },
+            },
+        },
+    },
+    -- {
+    --     id = "raw_steak",
+    --     display_name = "Raw Steak",
+    --     description = ATTACK_ICON.poo .. " deals [+VAR1] damage of " .. TAG.attack,
+    --     icon = DCEI.Texture("flat_icon_emoji_raw_meat_1f969_ipick"),
+    --     rarity = "rare",
+    --     scaling_values = {
+    --         multiplier = 0.2,
+    --     },
+    --     description_replacement_values = {
+    --         {
+    --             address = { "scaling_values", "multiplier" },
+    --             display_type = DisplayType.Percent,
+    --         },
+    --     },
+    --     dependent_perk_chains = {
+    --         PerkChainData.all_perk_chains.attack_poo_chain,
+    --     },
+    -- },
+    {
+        id = "halftime_champagne",
+        display_name = Api.GetTranslationText("combat/relic/halftime_champagne/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/halftime_champagne/description",
+            { x = TAG.ultimate_damage, y = TAG.energy_regen }
+        ),
+        icon = DCEI.Texture("smh_halftime_champagne"),
+        rarity = "epic",
+        modify_attributes = {
+            ultimate_damage = 1.5,
+        },
+        text_icon = RELIC_ICON.halftime_champagne,
+        scaling_values = {
+            -- used for localization: decreased by [60]
+            energy_per_second = 80,
+        },
+        behavior = {
+            description = Api.GetTranslationText(
+                "combat/behavior/generic_decrease/description",
+                { x = TAG.energy_regen }
+            ),
+            buff_bar_icon = DCEI.Texture("smh_halftime_champagne"),
+            modify_attributes = {
+                energy_per_second = -80,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "energy_per_second" },
+            },
+            {
+                address = { "modify_attributes", "ultimate_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "low_health_rush",
+        display_name = Api.GetTranslationText("combat/relic/low_health_rush/name"),
+        description = Api.GetTranslationText("combat/relic/low_health_rush/description", { x = TAG.rush }),
+        icon = DCEI.Texture("flat_icon_emoji_hourglass_231b_ipick"),
+        rarity = "legendary",
+        non_scaling_values = {
+            health_maximum_trigger = 0.2,
+        },
+        max_level = 1,
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "health_maximum_trigger" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.rush_attack_buff_chain,
+        },
+    },
+    {
+        id = "sleepy_tea",
+        display_name = Api.GetTranslationText("combat/relic/sleepy_tea/name"),
+        description = Api.GetTranslationText("combat/relic/sleepy_tea/description", { x = ATTACK_ICON.ult }),
+        icon = DCEI.Texture("flat_icon_emoji_blacktea_ipick"),
+        rarity = "epic",
+        non_scaling_values = {
+            stun_duration = 1.5,
+            duration_decrease = 0.5,
+        },
+        max_level = 1,
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "stun_duration" },
+            },
+            {
+                address = { "non_scaling_values", "duration_decrease" },
+            },
+        },
+    },
+    {
+        id = "start_robot",
+        display_name = Api.GetTranslationText("tooltips/combat/keyword/start_robot/title"),
+        description = Api.GetTranslationText(
+            "combat/relic/start_robot/description",
+            { x = TAG.startup, y = TAG.robot }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_robot_1f916_flamethrower_ipick"),
+        rarity = "epic",
+        max_level = 2,
+        scaling_values = {
+            robot = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "robot" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_screw_chain,
+        },
+    },
+    {
+        id = "mermaid",
+        display_name = Api.GetTranslationText("tooltips/combat/keyword/mermaid/title"),
+        description = Api.GetTranslationText(
+            "combat/relic/mermaid/description",
+            { x = TAG.startup, y = TAG.illusion }
+        ),
+        icon = DCEI.Texture("smh_mermaid"),
+        rarity = "legendary",
+        max_level = 2,
+        scaling_values = {
+            illusion = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "illusion" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.keg_illusions_chain,
+        },
+    },
+    {
+        id = "blind_monkey",
+        display_name = Api.GetTranslationText("combat/relic/blind_monkey/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/blind_monkey/description",
+            { x = ATTACK_ICON.ult, y = TAG.overclock, z = TAG.illusion, a = TAG.ultimate_damage }
+        ),
+        icon = DCEI.Texture("smh_blind_monkey"),
+        rarity = "epic",
+        max_level = 1,
+        non_scaling_values = {
+            ultimate_damage = 500,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "ultimate_damage" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.keg_illusions_chain,
+        },
+    },
+    {
+        id = "magnet",
+        display_name = Api.GetTranslationText("combat/relic/magnet/name"),
+        description = Api.GetTranslationText("combat/relic/magnet/description", { x = TAG.robot, y = TAG.attack }),
+        icon = DCEI.Texture("flat_icon_emoji_magnet_1f9f2_ipick"),
+        rarity = "rare",
+        modify_attributes = {
+            robot_attack_multiplier = 0.5,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "robot_attack_multiplier" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_screw_chain,
+        },
+    },
+    {
+        id = "dvd",
+        display_name = Api.GetTranslationText("combat/relic/dvd/name"),
+        description = Api.GetTranslationText("combat/relic/dvd/description", { x = TAG.robot }),
+        icon = DCEI.Texture("flat_icon_emoji_dvd_1f4c0_ipick"),
+        rarity = "epic",
+        max_level = 1,
+        modify_attributes = {
+            robot_base_attack = 20,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "robot_base_attack" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_screw_chain,
+        },
+    },
+    {
+        id = "blue_print",
+        display_name = Api.GetTranslationText("combat/relic/blue_print/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/blue_print/description",
+            { x = ATTACK_ICON.screw, y = TAG.robot }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_file_box_1f5c3_ipick"),
+        rarity = "epic",
+        max_level = 4,
+        modify_attributes = {
+            robot_build_point = -1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "robot_build_point" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_screw_chain,
+        },
+    },
+    {
+        id = "super_bomb",
+        display_name = Api.GetTranslationText("combat/relic/super_bomb/name"),
+        description = Api.GetTranslationText("combat/relic/super_bomb/description", { x = TAG.robot }),
+        icon = DCEI.Texture("flat_icon_emoji_bomb_1f4a3_ipick"),
+        rarity = "epic",
+        text_icon = RELIC_ICON.super_bomb,
+        modify_attributes = {
+            robot_explosion_damage_multiplier = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "robot_explosion_damage_multiplier" },
+                display_type = DisplayType.Percent,
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_screw_chain,
+        },
+    },
+    {
+        id = "bag_of_screw",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_screw/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.screw }),
+        icon = DCEI.Texture("flat_icon_emoji_toolbox_1f9f0_ipick"),
+        rarity = "epic",
+        attacks = {
+            attack_screw = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_screw" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_screw_chain,
+        },
+    },
+    {
+        id = "bag_of_wheat",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_wheat/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.wheat }),
+        icon = DCEI.Texture("smh_wheat"),
+        rarity = "epic",
+        attacks = {
+            attack_wheat = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_wheat" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_wheat_chain,
+        },
+    },
+    {
+        id = "bag_of_shark",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_shark/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.shark }),
+        icon = DCEI.Texture("smh_shark"),
+        rarity = "epic",
+        attacks = {
+            attack_shark = 4,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_shark" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.shark_chain,
+        },
+    },
+    {
+        id = "bag_of_milk",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_milk/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.milk }),
+        icon = DCEI.Texture("smh_milk"),
+        rarity = "epic",
+        attacks = {
+            attack_milk = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_milk" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.milk_chain,
+        },
+    },
+    {
+        id = "bag_of_tomato",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_tomato/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.tomato }),
+        icon = DCEI.Texture("smh_tomato"),
+        rarity = "epic",
+        attacks = {
+            attack_tomato = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_tomato" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.tomato_chain,
+        },
+    },
+    {
+        id = "bag_of_redtea",
+        display_name = Api.GetTranslationText("combat/relic/bag_of_redtea/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = ATTACK_ICON.red_tea }),
+        icon = DCEI.Texture("smh_red_tea"),
+        rarity = "epic",
+        attacks = {
+            attack_red_tea = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_red_tea" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.red_tea_chain,
+        },
+    },
+    {
+        id = "debt_damage_over_time",
+        display_name = Api.GetTranslationText("combat/relic/debt_damage_over_time/name"),
+        description = Api.GetTranslationText("combat/relic/debt_damage_over_time/description"),
+        max_level = 1,
+        icon = DCEI.Texture("flat_icon_emoji_snail_1f40c_ipick"),
+        rarity = "rare",
+        non_scaling_values = {
+            duration = 7,
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "duration" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_coin_chain,
+        },
+    },
+    {
+        id = "debt_to_attack",
+        display_name = Api.GetTranslationText("combat/relic/debt_to_attack/name"),
+        description = Api.GetTranslationText("combat/relic/debt_to_attack/description", { x = TAG.attack }),
+        icon = DCEI.Texture("flat_icon_emoji_nothing_1f21a_ipick"),
+        rarity = "epic",
+        text_icon = RELIC_ICON.debt_to_attack,
+        scaling_values = {
+            attack = 1,
+        },
+        non_scaling_values = {
+            debt_threshold = 50,
+        },
+        behavior = {
+            is_positive = true,
+            buff_bar_icon = DCEI.Texture("flat_icon_emoji_nothing_1f21a_ipick"),
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "attack" },
+            },
+            {
+                address = { "non_scaling_values", "debt_threshold" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_coin_chain,
+        },
+    },
+    {
+        id = "debt_damage_to_enemy",
+        display_name = Api.GetTranslationText("combat/relic/debt_damage_to_enemy/name"),
+        description = Api.GetTranslationText("combat/relic/debt_damage_to_enemy/description"),
+        icon = DCEI.Texture("flat_icon_emoji_knot_1faa2_ipick"),
+        text_icon = RELIC_ICON.debt_damage_to_enemy,
+        rarity = "epic",
+        scaling_values = {
+            damage_multiplier = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "damage_multiplier" },
+            },
+        },
+        dependent_perk_chains = {
+            PerkChainData.all_perk_chains.attack_coin_chain,
+        },
+    },
+    --#region Combo Relics
+    {
+        id = "catdog",
+        display_name = Api.GetTranslationText("combat/relic/catdog/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.crit_chance, y = TAG.dodge_chance }
+        ),
+        icon = DCEI.Texture("smh_cat_dog_face_1f431"),
+        rarity = "combo",
+        modify_attributes = {
+            crit_chance = 0.08,
+            dodge_chance = 0.08,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "open_hands",
+        display_name = Api.GetTranslationText("combat/relic/open_hands/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/open_hands/description",
+            { x = TAG.startup, y = ATTACK_ICON.ult }
+        ),
+        icon = DCEI.Texture("smh_open_hands"),
+        text_icon = RELIC_ICON.open_hands,
+        rarity = "combo",
+    },
+    {
+        id = "angry_troll",
+        display_name = Api.GetTranslationText("combat/relic/angry_troll/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/angry_troll/description",
+            { x = TAG.health, y = TAG.health_regen, z = TAG.crit_damage }
+        ),
+        icon = DCEI.Texture("smh_angry_troll"),
+        rarity = "combo",
+        modify_attributes = {
+            health_percentage_per_second = 0.025,
+            crit_damage = 0.6,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_percentage_per_second" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "crit_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+
+    {
+        id = "bottled_danger",
+        display_name = Api.GetTranslationText("combat/relic/bottled_danger/name"),
+        description = Api.GetTranslationText("combat/perk/gain_generic/description", { x = TAG.attack }),
+        icon = DCEI.Texture("smh_bottled_danger"),
+        rarity = "combo",
+        modify_attributes = {
+            attack = 35,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "apple_phone",
+        display_name = Api.GetTranslationText("combat/relic/apple_phone/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_three_generic/description",
+            { x = TAG.armor, y = TAG.crit_chance, z = TAG.health }
+        ),
+        icon = DCEI.Texture("smh_apple_phone"),
+        rarity = "combo",
+        modify_attributes = {
+            block = 9,
+            crit_chance = 0.09,
+            health_maximum = 900,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "kelpie",
+        display_name = Api.GetTranslationText("combat/relic/kelpie/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/kelpie/description",
+            { x = ATTACK_ICON.flex, y = TAG.health }
+        ),
+        icon = DCEI.Texture("smh_kelpie"),
+        rarity = "combo",
+        attacks = {
+            attack_flex = 2,
+        },
+        modify_attributes = {
+            health_maximum = 300,
+        },
+        scaling_values = {
+            gold = 60,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_flex" },
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "scaling_values", "gold" },
+            },
+        },
+    },
+    {
+        id = "vegan_oni",
+        display_name = Api.GetTranslationText("combat/relic/vegan_oni/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/vegan_oni/description",
+            { x = TAG.thorns, y = ATTACK_ICON.flex }
+        ),
+        icon = DCEI.Texture("smh_vegan_oni"),
+        rarity = "combo",
+        modify_attributes = {
+            retaliate = 15,
+        },
+        non_scaling_values = {
+            chance = 0.5,
+        },
+        scaling_values = {
+            attack_flex = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "retaliate" },
+            },
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "scaling_values", "attack_flex" },
+            },
+        },
+    },
+    {
+        id = "broccoli_devil",
+        display_name = Api.GetTranslationText("combat/relic/broccoli_devil/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/broccoli_devil/description",
+            { x = TAG.vulnerable, y = TAG.crit_damage }
+        ),
+        icon = DCEI.Texture("smh_broccoli_devil"),
+        rarity = "combo",
+        modify_attributes = {
+            vulnerable = -10,
+            crit_damage = 0.77,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+            {
+                address = { "modify_attributes", "crit_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "super_hot_dog",
+        display_name = Api.GetTranslationText("combat/relic/super_hot_dog/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.attack_speed, y = TAG.crit_chance }
+        ),
+        icon = DCEI.Texture("smh_super_hot_dog"),
+        rarity = "combo",
+        modify_attributes = {
+            attack_speed = 0.35,
+            crit_chance = 0.1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "lucky_cat",
+        display_name = Api.GetTranslationText("combat/relic/lucky_cat/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = TAG.income, y = TAG.dodge_chance }
+        ),
+        icon = DCEI.Texture("smh_lucky_cat"),
+        rarity = "combo",
+        modify_attributes = {
+            income = 30,
+            dodge_chance = 0.1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "income" },
+            },
+            {
+                address = { "modify_attributes", "dodge_chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "walking_octopus",
+        display_name = Api.GetTranslationText("combat/relic/walking_octopus/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/walking_octopus/description",
+            { x = TAG.attack_speed, y = TAG.attack }
+        ),
+        icon = DCEI.Texture("smh_walking_octopus"),
+        text_icon = RELIC_ICON.walking_octopus,
+        rarity = "combo",
+        modify_attributes = {
+            attack_speed = 0.25,
+            attack = -5,
+        },
+        scaling_values = {
+            gold = 100,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "scaling_values", "gold" },
+            },
+        },
+    },
+    {
+        id = "happy_face",
+        display_name = Api.GetTranslationText("combat/relic/happy_face/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/gain_two_generic/description",
+            { x = ATTACK_ICON.ice, y = TAG.health }
+        ),
+        icon = DCEI.Texture("smh_happy_face"),
+        rarity = "combo",
+        attacks = {
+            attack_frost = 2,
+        },
+        modify_attributes = {
+            health_maximum = 800,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_frost" },
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    {
+        id = "onlyfans_fans",
+        display_name = Api.GetTranslationText("combat/relic/onlyfans_fans/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/onlyfans_fans/description",
+            { x = TAG.luck, y = TAG.income }
+        ),
+        icon = DCEI.Texture("smh_onlyfans_fans"),
+        rarity = "combo",
+        modify_attributes = {
+            luck = 0.25,
+            discount = 0.5,
+            income = -25,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "discount" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "income" },
+            },
+        },
+    },
+    {
+        id = "bread_axe",
+        display_name = Api.GetTranslationText("combat/relic/bread_axe/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/bread_axe/description",
+            { x = ATTACK_ICON.axe, y = TAG.energy_regen, z = ATTACK_ICON.axe }
+        ),
+        icon = DCEI.Texture("smh_breadaxe"),
+        rarity = "combo",
+        modify_attributes = {
+            energy_per_second = 40,
+            crush_damage = 25,
+        },
+        non_scaling_values = {
+            chance = 0.25,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crush_damage" },
+            },
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "band",
+        display_name = Api.GetTranslationText("combat/relic/band/name"),
+        description = Api.GetTranslationText(
+            "combat/relic/band/description",
+            { x = TAG.health_regen, y = TAG.crit_chance, z = TAG.attack, a = TAG.health, b = TAG.ultimate_damage }
+        ),
+        icon = DCEI.Texture("flat_icon_emoji_band_ipick"),
+        rarity = "combo",
+        modify_attributes = {
+            health_per_second = 20,
+            crit_chance = 0.06,
+            attack = 6,
+            health_maximum = 200,
+            ultimate_damage = 0.5,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "ultimate_damage" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "bonus_common",
+        display_name = Api.GetTranslationText("combat/perk/bonus_common/name"),
+        description = Api.GetTranslationText("combat/perk/bonus_common/description", {
+            x = ATTACK_ICON.rock,
+            y = TAG.attack_speed,
+        }),
+        icon = DCEI.Texture("smh_trash"),
+        rarity = "combo",
+        scaling_values = {
+            bonus = 1,
+        },
+        attacks = {
+            attack_rock = 2,
+        },
+        modify_attributes = {
+            attack_speed = 0.4,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "bonus" },
+            },
+            {
+                address = { "attacks", "attack_rock" },
+            },
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "window",
+        display_name = Api.GetTranslationText("combat/perk/window/name"),
+        description = Api.GetTranslationText("combat/perk/window/description", {
+            x = ATTACK_ICON.axe,
+            y = TAG.attack,
+        }),
+        icon = DCEI.Texture("smh_window"),
+        text_icon = RELIC_ICON.window,
+        rarity = "combo",
+        attacks = {
+            attack_crush = 2,
+        },
+        modify_attributes = {
+            attack = 12,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_crush" },
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+        },
+    },
+    {
+        id = "windows_xp",
+        display_name = Api.GetTranslationText("combat/perk/windows_xp/name"),
+        description = Api.GetTranslationText("combat/perk/windows_xp/description", {
+            x = ATTACK_ICON.axe,
+            y = TAG.attack,
+            z = TAG.attack_speed,
+        }),
+        icon = DCEI.Texture("smh_windows_xp"),
+        rarity = "combo",
+        non_scaling_values = {
+            ui_style_id = 2,
+        },
+        attacks = {
+            attack_crush = 3,
+        },
+        modify_attributes = {
+            attack = 15,
+            attack_speed = 0.3,
+        },
+        scaling_values = {
+            gold = 150,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "attack_crush" },
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "attack_speed" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "scaling_values", "gold" },
+            },
+        },
+    },
+    {
+        id = "wish",
+        display_name = Api.GetTranslationText("combat/perk/wish/name"),
+        description = Api.GetTranslationText("combat/perk/wish/description", {
+            x = ATTACK_ICON.rock,
+            y = TAG.attack_speed,
+        }),
+        icon = DCEI.Texture("smh_wish"),
+        rarity = "choice",
+        non_scaling_values = {
+            bonus = 1,
+        },
+        description_replacement_values = {},
+    },
+    {
+        id = "curry_poo",
+        display_name = Api.GetTranslationText("combat/perk/curry_poo/name"),
+        description = Api.GetTranslationText("combat/perk/curry_poo/description", { x = TAG.startup, y = TAG.poison }),
+        icon = DCEI.Texture("smh_curry_poo"),
+        rarity = "combo",
+        scaling_values = {
+            poison = 10,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "poison" },
+            },
+        },
+    },
+    {
+        id = "first_pistol",
+        display_name = Api.GetTranslationText("combat/perk/first_pistol/name"),
+        description = Api.GetTranslationText("combat/perk/first_pistol/description", {
+            x = TAG.attack,
+            y = TAG.armor,
+        }),
+        icon = DCEI.Texture("smh_gun"),
+        rarity = "combo",
+        scaling_values = {
+            attack = 1,
+            damage_multiplier = 4,
+        },
+        non_scaling_values = {
+            debt_threshold = 50,
+            chance = 0.5,
+        },
+        modify_attributes = {
+            block = 3,
+        },
+        behavior = {
+            is_positive = true,
+            buff_bar_icon = DCEI.Texture("smh_gun"),
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "attack" },
+            },
+            {
+                address = { "non_scaling_values", "debt_threshold" },
+            },
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "scaling_values", "damage_multiplier" },
+            },
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "calm_wraith",
+        display_name = Api.GetTranslationText("combat/perk/calm_wraith/name"),
+        description = Api.GetTranslationText("combat/perk/calm_wraith/description", {
+            x = TAG.startup,
+            y = TAG.calm,
+            z = TAG.robot_explosion,
+            a = TAG.wraith,
+        }),
+        icon = DCEI.Texture("smh_calm_wraith"),
+        rarity = "combo",
+        scaling_values = {
+            stack = 1,
+        },
+        non_scaling_values = {
+            duration = 3,
+            chance = 0.25,
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "stack" },
+            },
+            {
+                address = { "non_scaling_values", "duration" },
+            },
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "celebration_on_start",
+        display_name = Api.GetTranslationText("combat/perk/celebration_on_start/name"),
+        description = Api.GetTranslationText("combat/perk/celebration_on_start/description", {
+            x = TAG.ultimate_damage,
+            y = TAG.energy_regen,
+            z = TAG.attack,
+            a = TAG.health_regen,
+        }),
+        icon = DCEI.Texture("smh_celebration"),
+        rarity = "combo",
+        modify_attributes = {
+            ultimate_damage = 1.8,
+            attack = 10,
+        },
+        scaling_values = {
+            -- used for localization: decreased by [60]
+            energy_per_second = 80,
+            health_per_second = 20,
+        },
+        behavior = {
+            description = Api.GetTranslationText(
+                "combat/behavior/celebration_on_start/description",
+                { x = TAG.energy_regen, a = TAG.health_regen }
+            ),
+            buff_bar_icon = DCEI.Texture("smh_celebration"),
+            modify_attributes = {
+                energy_per_second = -80,
+                health_per_second = -20,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "energy_per_second" },
+            },
+            {
+                address = { "modify_attributes", "ultimate_damage" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "scaling_values", "health_per_second" },
+            },
+        },
+    },
+    {
+        id = "death_finger",
+        display_name = Api.GetTranslationText("combat/perk/death_finger/name"),
+        description = Api.GetTranslationText("combat/perk/death_finger/description", {
+            x = TAG.attack,
+        }),
+        icon = DCEI.Texture("smh_death_finger"),
+        rarity = "combo",
+        scaling_values = {
+            attack = 10,
+            damage = 1000,
+        },
+        behavior = {
+            is_positive = true,
+            description = Api.GetTranslationText("combat/behavior/generic_increase/description", { x = TAG.attack }),
+            buff_bar_icon = DCEI.Texture("smh_death_finger"),
+            modify_attributes = {
+                attack = 10,
+            },
+        },
+        description_replacement_values = {
+            {
+                address = { "scaling_values", "attack" },
+            },
+            {
+                address = { "scaling_values", "damage" },
+            },
+        },
+    },
+    {
+        id = "fuxi",
+        display_name = Api.GetTranslationText("combat/perk/fuxi/name"),
+        description = Api.GetTranslationText("combat/perk/fuxi/description", {
+            x = TAG.health,
+            y = TAG.robot_explosion_damage,
+        }),
+        icon = DCEI.Texture("smh_taiji"),
+        rarity = "combo",
+        modify_attributes = {
+            health_maximum = 200,
+            robot_explosion_damage_multiplier = 1.5,
+        },
+        non_scaling_values = {
+            chance = 0.125,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "modify_attributes", "robot_explosion_damage_multiplier" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "dragon_slayer",
+        display_name = Api.GetTranslationText("combat/perk/dragon_slayer/name"),
+        description = Api.GetTranslationText("combat/perk/dragon_slayer/description", {
+            x = TAG.crit_chance,
+            y = ATTACK_ICON.rock,
+            z = ATTACK_ICON.ult,
+        }),
+        icon = DCEI.Texture("smh_sword"),
+        rarity = "combo",
+        modify_attributes = {
+            crit_chance = 0.08,
+        },
+        attacks = {
+            attack_rock = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "crit_chance" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "attacks", "attack_rock" },
+            },
+        },
+    },
+    {
+        id = "paradox_warlock",
+        display_name = Api.GetTranslationText("combat/perk/paradox_warlock/name"),
+        description = Api.GetTranslationText("combat/perk/paradox_warlock/description", {
+            x = TAG.health,
+        }),
+        icon = DCEI.Texture("smh_paradox_warlock"),
+        rarity = "combo",
+        modify_attributes = {
+            health_maximum = 777,
+        },
+        non_scaling_values = {
+            trigger_time = 6,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "non_scaling_values", "trigger_time" },
+            },
+        },
+    },
+    {
+        id = "good_fruit",
+        display_name = Api.GetTranslationText("combat/perk/good_fruit/name"),
+        description = Api.GetTranslationText("combat/perk/good_fruit/description", {
+            x = TAG.vulnerable,
+            y = TAG.armor,
+            z = TAG.health,
+        }),
+        icon = DCEI.Texture("smh_good_fruit"),
+        rarity = "combo",
+        modify_attributes = {
+            vulnerable = -6,
+            block = 6,
+            health_maximum = -400,
+        },
+        scaling_values = {
+            extra_emoji = 1,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "vulnerable" },
+            },
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+            {
+                address = { "scaling_values", "extra_emoji" },
+            },
+        },
+    },
+    {
+        id = "ever_chosen",
+        display_name = Api.GetTranslationText("combat/perk/ever_chosen/name"),
+        description = Api.GetTranslationText("combat/perk/ever_chosen/description", {
+            x = TAG.attack,
+            y = TAG.crit_damage,
+            z = TAG.luck,
+            a = ATTACK_ICON.poo,
+        }),
+        icon = DCEI.Texture("smh_ever_chosen"),
+        rarity = "combo",
+        modify_attributes = {
+            attack = 7,
+            crit_damage = 0.5,
+            luck = 0.3,
+        },
+        attacks = {
+            attack_poo = 1,
+        },
+        behavior = {
+            description = Api.GetTranslationText("combat/behavior/ever_chosen/description"),
+            buff_bar_icon = DCEI.Texture("smh_ever_chosen"),
+            duration = 3,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "attack" },
+            },
+            {
+                address = { "modify_attributes", "crit_damage" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "luck" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "attacks", "attack_poo" },
+            },
+            {
+                address = { "behavior", "duration" },
+            },
+        },
+    },
+    {
+        id = "pig_book",
+        display_name = Api.GetTranslationText("combat/perk/pig_book/name"),
+        description = Api.GetTranslationText("combat/perk/pig_book/description", {
+            x = TAG.ultimate_damage,
+            y = ATTACK_ICON.poo,
+            z = ATTACK_ICON.ult,
+        }),
+        icon = DCEI.Texture("smh_pig_book"),
+        rarity = "combo",
+        modify_attributes = {
+            ultimate_damage = 0.4,
+        },
+        non_scaling_values = {
+            chance = 0.15,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "ultimate_damage" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "hungry_glove",
+        display_name = Api.GetTranslationText("combat/perk/hungry_glove/name"),
+        description = Api.GetTranslationText("combat/perk/hungry_glove/description", {
+            x = TAG.thorn_block,
+            y = TAG.health_regen,
+            z = TAG.energy_regen,
+            a = ATTACK_ICON.ice,
+        }),
+        icon = DCEI.Texture("smh_hungry_glove"),
+        rarity = "combo",
+        modify_attributes = {
+            thorn_block = 0.5,
+            health_per_second = 25,
+            energy_per_second = 75,
+        },
+        attacks = {
+            attack_frost = 2,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "thorn_block" },
+                display_type = DisplayType.Percent,
+            },
+            {
+                address = { "modify_attributes", "health_per_second" },
+            },
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+            {
+                address = { "attacks", "attack_frost" },
+            },
+        },
+    },
+    {
+        id = "daqianlu",
+        display_name = Api.GetTranslationText("combat/perk/daqianlu/name"),
+        description = Api.GetTranslationText("combat/perk/daqianlu/description", {
+            x = TAG.health_regen,
+        }),
+        icon = DCEI.Texture("smh_daqianlu"),
+        rarity = "combo",
+        non_scaling_values = {
+            damage_threshold = 1000,
+            health_regen = 10,
+            chance = 0.9,
+        },
+        behavior = {
+            description = Api.GetTranslationText("combat/behavior/daqianlu/description"),
+            buff_bar_icon = DCEI.Texture("smh_dengjie"),
+        },
+        description_replacement_values = {
+            {
+                address = { "non_scaling_values", "damage_threshold" },
+            },
+            {
+                address = { "non_scaling_values", "health_regen" },
+            },
+            {
+                address = { "non_scaling_values", "chance" },
+                display_type = DisplayType.Percent,
+            },
+        },
+    },
+    {
+        id = "old_chicken",
+        display_name = Api.GetTranslationText("combat/perk/old_chicken/name"),
+        description = Api.GetTranslationText("combat/perk/old_chicken/description", {
+            x = TAG.armor,
+            y = TAG.energy_regen,
+        }),
+        icon = DCEI.Texture("smh_old_chicken"),
+        rarity = "combo",
+        modify_attributes = {
+            block = 6,
+            energy_per_second = 66,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "block" },
+            },
+            {
+                address = { "modify_attributes", "energy_per_second" },
+            },
+        },
+    },
+    {
+        id = "shrimp",
+        display_name = Api.GetTranslationText("combat/perk/shrimp/name"),
+        description = Api.GetTranslationText("combat/perk/shrimp/description", {
+            x = TAG.health,
+            y = TAG.startup,
+            z = TAG.thorns,
+            a = TAG.attack,
+        }),
+        icon = DCEI.Texture("smh_shrimp"),
+        rarity = "combo",
+        modify_attributes = {
+            health_maximum = 400,
+        },
+        description_replacement_values = {
+            {
+                address = { "modify_attributes", "health_maximum" },
+            },
+        },
+    },
+    --#endregion
+}
+
+RelicData.relic_data = Util.AssignListToTableByKey(RelicData.RELIC_LIST, "id")
+
+return RelicData

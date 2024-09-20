@@ -1,0 +1,86 @@
+local PerkChainData = require("NarrativeData/GameplayData/PerkChainData")
+local data = {
+    id = "keg",
+    display_name = Api.GetTranslationText("campaign/character_data/keg/name"),
+    short_description = Api.GetTranslationText("campaign/character_data/keg/short_description"),
+    unit = DCEI.Unit("COMBAT Unit Boss Keg"),
+    icon_low_resolution = DCEI.Texture("comic_portrait_boss_keg_152x152_ipick"),
+    icon = DCEI.Texture("comic_portrait_boss_keg_500x500_ipick"),
+    icon_high_resolution = DCEI.Texture("comic_portrait_boss_keg_800x1024_ipick"),
+    icon_high_resolution_size = { width = 500, height = 640 },
+    attack_ids = {
+        "attack_wheat",
+        "attack_wheat",
+        "attack_wheat",
+        "attack_wheat",
+        "attack_wheat",
+    },
+    attributes = {
+        health_maximum = 2400,
+        attack = 30,
+        energy_maximum = 1500,
+    },
+    cosmetic_data = {
+        ultimate_id = "ultimate_beer",
+    },
+    relics = {
+        "mermaid",
+        "blind_monkey",
+        "perk_reroll_token",
+        "perk_reroll_token",
+        "perk_reroll_token",
+    },
+    perk_chains = {
+
+        PerkChainData.all_perk_chains.attack_brain_chain, -- brain chain
+        PerkChainData.all_perk_chains.dodge_chain, -- dodge
+
+        PerkChainData.all_perk_chains.gain_attack_chain, -- attack
+        PerkChainData.all_perk_chains.attack_flex_chain, -- flex
+        PerkChainData.all_perk_chains.health_regen_chain,
+        PerkChainData.all_perk_chains.gain_income_chain, -- greed
+        PerkChainData.all_perk_chains.gain_heal_enhancement_chain, -- blueflex+heal
+        PerkChainData.all_perk_chains.heal_on_rock_chain,
+        PerkChainData.all_perk_chains.bonus_health_chain,
+        PerkChainData.all_perk_chains.emergency_block_chain,
+
+        PerkChainData.all_perk_chains.attack_frost_chain,
+        PerkChainData.all_perk_chains.gain_block_chain,
+
+        PerkChainData.all_perk_chains.attack_speed_chain,
+        PerkChainData.all_perk_chains.gain_retaliate_chain, -- slap
+
+        PerkChainData.all_perk_chains.energy_regen_chain,
+        PerkChainData.all_perk_chains.energy_on_ultimate_chain,
+
+        PerkChainData.all_perk_chains.attack_wheat_chain,
+
+        PerkChainData.all_perk_chains.keg_illusions_chain,
+        PerkChainData.all_perk_chains.brew_materials_chain,
+        PerkChainData.all_perk_chains.divine_chain
+    },
+    blocked_perks = {
+        "gain_retaliate",
+        "crush_on_retaliate",
+        "retaliate_quest",
+        "dodge_on_crit_quest",
+        "flex_on_heal",
+        "damage_heal",
+        "poo_on_frost",
+    },
+    blocked_relics = {
+        "sleepy_tea",
+        "garlic",
+        "lobster",
+        "chopsticks",
+        "cactus",
+    },
+    is_available = true,
+    unlock_require = {
+        character_require = "priest",
+        required_character_wave = 14,
+    },
+    
+}
+
+return data
