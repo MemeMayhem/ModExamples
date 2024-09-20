@@ -5,9 +5,9 @@ local function AddNewMissile(Api)
         id = "attack_star",
         display_name = "Star",
         tip = "Deal <color=green>7</color> " .. Api.GameMechanicTags.TAG.attack .. " damage",
-        icon = DCEI.Texture("custom_star"),
-        missile = DCEI.SimpleUnit("COMBAT Missile Custom Star"),
-        impact = DCEI.SimpleUnit("COMBAT Unit Simple HitFx"),
+        icon = Api.Texture("custom_star"),
+        missile = Api.SimpleUnit("COMBAT Missile Custom Star"),
+        impact = Api.SimpleUnit("COMBAT Unit Simple HitFx"),
         flight_time = 0.75,
         spin_speed = -360,
     })
@@ -17,15 +17,15 @@ local function AddNewMissile(Api)
     end)
 
     Api:SetMissileHitSound("attack_star", {
-        DCEI.Sound("sound_star"),
+        Api.Sound("sound_star"),
     })
 
     Api:RegisterMissile("attack_heart", {
         id = "attack_heart",
         display_name = "Healing Heart",
         tip = "Target self\nHeal <color=green>30</color> health",
-        icon = DCEI.Texture("custom_heart"),
-        missile = DCEI.SimpleUnit("COMBAT Missile Custom Healing Heart"),
+        icon = Api.Texture("custom_heart"),
+        missile = Api.SimpleUnit("COMBAT Missile Custom Healing Heart"),
         target_self = true,
         flight_time = 0.75,
     })
@@ -48,9 +48,9 @@ local function AddNewMissile(Api)
     end)
 
     Api:SetMissileHitSound("attack_heart", {
-        DCEI.Sound("sound_heal_1"),
-        DCEI.Sound("sound_heal_2"),
-        DCEI.Sound("sound_heal_3"),
+        Api.Sound("sound_heal_1"),
+        Api.Sound("sound_heal_2"),
+        Api.Sound("sound_heal_3"),
     })
 
     Api:SetCharacterStartMagazine("mod-missile", {

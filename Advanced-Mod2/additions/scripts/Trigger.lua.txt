@@ -66,7 +66,7 @@ local function AddRelicFlu(Api)
             y = "<color=yellow>80%%</color>",
         }),
         flavor_text = localization_table["relic/super_flu/flavor"],
-        icon = DCEI.Texture("flat_icon_emoji_face_vomiting_1f92e_ipick"),
+        icon = Api.Texture("flat_icon_emoji_face_vomiting_1f92e_ipick"),
         rarity = "epic",
         non_scaling_values = {
             attack_frost = 8,
@@ -97,7 +97,7 @@ local function AddRelicToughGuy(Api)
         display_name = localization_table["relic/tough_guy/display_name"],
         description = localization_table["relic/tough_guy/description"],
         flavor_text = localization_table["relic/tough_guy/flavor"],
-        icon = DCEI.Texture("flat_icon_emoji_axe_1fa93_ipick"),
+        icon = Api.Texture("flat_icon_emoji_axe_1fa93_ipick"),
         rarity = "legendary",
     }
     Api:RegisterRelic(relic.id, relic, function(combat_unit)
@@ -140,7 +140,7 @@ local function AddRelicProtectionMoney(Api)
             x = Api.GameMechanicTags.TAG.coin,
         }),
         flavor_text = localization_table["relic/protection_money/flavor"],
-        icon = DCEI.Texture("flat_icon_emoji_money_with_wings_1f4b8_ipick"),
+        icon = Api.Texture("flat_icon_emoji_money_with_wings_1f4b8_ipick"),
         rarity = "permanent",
         scaling_values = {
             gold = 1,
@@ -270,13 +270,13 @@ local function AddMissile(Api)
         display_name = localization_table["missile/qiang_ge_axe/display_name"],
         tip = localization_table["missile/qiang_ge_axe/tip"],
         flavor_text = localization_table["missile/qiang_ge_axe/flavor_text"],
-        icon = DCEI.Texture("flat_icon_emoji_hammer_and_pick_2692_fe0f_ipick"),
-        missile = DCEI.SimpleUnit("COMBAT Missile Qiang Ge Axe"),
+        icon = Api.Texture("flat_icon_emoji_hammer_and_pick_2692_fe0f_ipick"),
+        missile = Api.SimpleUnit("COMBAT Missile Qiang Ge Axe"),
         damage = function(attack_data, caster)
             return 0
         end,
         sounds = {
-            DCEI.Sound("metalGlint"),
+            Api.Sound("metalGlint"),
         },
     })
 end
@@ -290,11 +290,11 @@ local function AddCharacter(Api)
     }
     character.display_name = localization_table["character/qiang_ge/display_name"]
     character.short_description = localization_table["character/qiang_ge/short_description"]
-    character.icon = DCEI.Texture("qiang_ge")
-    character.icon_low_resolution = DCEI.Texture("qiang_ge")
-    character.icon_high_resolution = DCEI.Texture("qiang_ge")
+    character.icon = Api.Texture("qiang_ge")
+    character.icon_low_resolution = Api.Texture("qiang_ge")
+    character.icon_high_resolution = Api.Texture("qiang_ge")
     character.icon_high_resolution_size = { width = 700, height = 700 }
-    character.unit = DCEI.Unit("COMBAT Unit Qiang Ge")
+    character.unit = Api.Unit("COMBAT Unit Qiang Ge")
     character.attributes = {
         health_maximum = 3000,
     }
@@ -308,7 +308,7 @@ end
 
 MOD_MANAGER:AddMod(function(Api)
     -- You can log out the language to check the language id
-    local language = DCEI.Settings.GetDisplayLanguage()
+    local language = Api.Settings.GetDisplayLanguage()
     localization_table = localization[language] or localization["English"]
 
     Api:EnableLog(false) -- Enable log for debugging, but be careful, it will generate a lot of logs!!

@@ -5,7 +5,7 @@ local function AddNewPerk(Api)
         id = "custom_attribute_rock_quest",
         display_name = "Rock Hits",
         description = "Rock Hits",
-        icon = DCEI.Texture("custom_icon_3_rocks"),
+        icon = Api.Texture("custom_icon_3_rocks"),
         display_type = Api.DisplayType.Integer,
         is_neutral = true, -- if true, font color will always be white
         flavor_text = "The number of times you hit the enemy with a rock.",
@@ -20,7 +20,7 @@ local function AddNewPerk(Api)
         id = "custom_perk_rock_quest",
         display_name = "Rock Explosion",
         description = "Add 1 " .. Api.GameMechanicTags.EMOJI.rock .. " when hitting the enemy with " .. Api.GameMechanicTags.EMOJI.rock .. " " .. rock_quest_max .. " times.",
-        icon = DCEI.Texture("custom_icon_3_rocks"),
+        icon = Api.Texture("custom_icon_3_rocks"),
         perk_type = "missile",
         rarity = "common",
     }, function(combat_unit)

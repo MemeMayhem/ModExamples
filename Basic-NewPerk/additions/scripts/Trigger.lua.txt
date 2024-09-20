@@ -3,7 +3,7 @@ local function AddNewPerk(Api)
         id = "custom_perk_3_rock",
         display_name = "get 3 rocks",
         description = "Give 3 rocks",
-        icon = DCEI.Texture("custom_icon_3_rocks"),
+        icon = Api.Texture("custom_icon_3_rocks"),
         perk_type = "missile",
         rarity = "common",
         attacks = {
@@ -14,12 +14,12 @@ local function AddNewPerk(Api)
         id = "custom_vulnerable_on_rock",
         display_name = "Hard Rock",
         description = "Add vulnerable for 1 sec when rock hits",
-        icon = DCEI.Texture("custom_icon_hard_rock"),
+        icon = Api.Texture("custom_icon_hard_rock"),
         perk_type = "perk",
         rarity = "rare",
         behavior = {
             description = "Vulnerable by rock",
-            buff_bar_icon = DCEI.Texture("custom_icon_hard_rock"),
+            buff_bar_icon = Api.Texture("custom_icon_hard_rock"),
             modify_attributes = {
                 vulnerable = 1,
             },
@@ -39,7 +39,7 @@ local function AddNewPerk(Api)
         id = "custom_perk_healthier",
         display_name = "Healthier",
         description = "+500" .. Api.GameMechanicTags.TAG.health .. " -10" .. Api.GameMechanicTags.TAG.health_regen,
-        icon = DCEI.Texture("flat_icon_emoji_1f9be_ipick"),
+        icon = Api.Texture("flat_icon_emoji_1f9be_ipick"),
         perk_type = "missile",
         rarity = "common",
         modify_attributes = {

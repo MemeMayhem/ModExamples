@@ -84,7 +84,7 @@ end
 
 MOD_MANAGER:AddMod(function(Api)
     -- You can log out the language to check the language id
-    local language = DCEI.Settings.GetDisplayLanguage()
+    local language = Api.Settings.GetDisplayLanguage()
     local localization_table = localization[language] or localization["English"]
 
     Api:RegisterMissile("my_power_rock", {
@@ -92,20 +92,20 @@ MOD_MANAGER:AddMod(function(Api)
         display_name = localization_table["missile/my_power_rock/display_name"],
         tip = localization_table["missile/my_power_rock/description"],
         flavor_text = localization_table["missile/my_power_rock/flavor_text"],
-        icon = DCEI.Texture("my_power_rock"),
-        missile = DCEI.SimpleUnit("COMBAT Missile My Powerful Rock"),
+        icon = Api.Texture("my_power_rock"),
+        missile = Api.SimpleUnit("COMBAT Missile My Powerful Rock"),
         damage = function(attack_data, caster)
             return 100
         end,
         sounds = {
-            DCEI.Sound("my_power_rock_hit"),
+            Api.Sound("my_power_rock_hit"),
         },
     })
     Api:RegisterPerk("my_power_perk", {
         id = "my_power_perk",
         display_name = localization_table["perk/my_power_rock/display_name"],
         description = localization_table["perk/my_power_rock/description"],
-        icon = DCEI.Texture("my_power_rock"),
+        icon = Api.Texture("my_power_rock"),
         perk_type = "missile",
         rarity = "epic",
         attacks = {
@@ -124,7 +124,7 @@ MOD_MANAGER:AddMod(function(Api)
         id = "small_rock_on_power_rock",
         display_name = localization_table["perk/small_rock_on_power_rock/name"],
         description = localization_table["perk/small_rock_on_power_rock/description"],
-        icon = DCEI.Texture("my_power_rock"),
+        icon = Api.Texture("my_power_rock"),
         perk_type = "perk",
         rarity = "common",
     }, function(combat_unit)
@@ -144,7 +144,7 @@ MOD_MANAGER:AddMod(function(Api)
             localization_table["relic/my_power_cookie/description"],
             { x = Api.GameMechanicTags.TAG.attack }
         ),
-        icon = DCEI.Texture("smh_cookie"),
+        icon = Api.Texture("smh_cookie"),
         rarity = "permanent",
         modify_attributes = {
             attack_speed = -0.5,
@@ -173,10 +173,10 @@ MOD_MANAGER:AddMod(function(Api)
         id = "my_character",
         display_name = localization_table["character/my_character/display_name"],
         short_description = localization_table["character/my_character/short_description"],
-        icon = DCEI.Texture("my_character_small"),
-        icon_low_resolution = DCEI.Texture("my_character_small"),
-        icon_high_resolution = DCEI.Texture("my_character_large"),
-        unit = DCEI.Unit("COMBAT Unit First Mod Character"),
+        icon = Api.Texture("my_character_small"),
+        icon_low_resolution = Api.Texture("my_character_small"),
+        icon_high_resolution = Api.Texture("my_character_large"),
+        unit = Api.Unit("COMBAT Unit First Mod Character"),
         relics = {
             "my_power_cookie",
         },
@@ -201,9 +201,9 @@ MOD_MANAGER:AddMod(function(Api)
     Api:RegisterBoss({
         id = "my_boss",
         display_name = localization_table["boss/my_boss/display_name"],
-        unit = DCEI.Unit("COMBAT Unit First Mod Character"),
-        icon = DCEI.Texture("my_character_small"),
-        icon_high_resolution = DCEI.Texture("my_character_large"),
+        unit = Api.Unit("COMBAT Unit First Mod Character"),
+        icon = Api.Texture("my_character_small"),
+        icon_high_resolution = Api.Texture("my_character_large"),
         cosmetic_data = {
             ultimate_id = "ultimate_basketball",
         },
@@ -259,7 +259,7 @@ MOD_MANAGER:AddMod(function(Api)
     Api:RegisterChoice({
         id = "my_choice",
         display_name = localization_table["choice/my_choice/display_name"],
-        image = DCEI.Texture("my_choice_dog"),
+        image = Api.Texture("my_choice_dog"),
         description = localization_table["choice/my_choice/description"],
         options = {
             {

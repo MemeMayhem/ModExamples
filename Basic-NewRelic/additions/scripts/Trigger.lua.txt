@@ -25,7 +25,7 @@ local function AddNewRelic(Api)
             .. "<color=red>VAR2</color>.\nIncrease "
             .. TAG.health
             .. " by <color=green>VAR3</color> when hit.",
-        icon = DCEI.Texture("custom_relic_cookie_soup"),
+        icon = Api.Texture("custom_relic_cookie_soup"),
         rarity = "permanent",
         modify_attributes = {
             health_maximum = 1000,
