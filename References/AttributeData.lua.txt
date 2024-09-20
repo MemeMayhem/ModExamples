@@ -1,0 +1,1007 @@
+-- SCRIPTS
+local DisplayType = require("Common/DisplayType")
+local GameMechanicTags = require("GamePerkSystem/GameMechanicTags")
+local Util = require("Common/Util")
+
+-- CONSTANTS
+local ICON_COIN = "<sprite name=coin_1fa99>"
+local NEWLINE = GameMechanicTags.NEWLINE
+local ATTACK_ICON = GameMechanicTags.ATTACK_ICON
+local TAG = GameMechanicTags.TAG
+local RELIC_ICON = GameMechanicTags.RELIC_ICON
+
+local CATEGORY_LIST = {
+    {
+        id = "primary",
+        display_name = "PRIMARY",
+    },
+    {
+        id = "offensive",
+        display_name = "OFFENSIVE",
+    },
+    {
+        id = "defensive",
+        display_name = "DEFENSIVE",
+    },
+    {
+        id = "utility",
+        display_name = "UTILITY",
+    },
+}
+Util.AssignIndexPropertyToListItems(CATEGORY_LIST)
+local CATEGORY = Util.AssignListToTableByKey(CATEGORY_LIST, "id")
+
+-- display_requirements
+-- always_hide
+-- always_show
+-- is_hero
+-- default_value: when equal to default value, dont show
+-- perk: when having perk, show
+
+-- ATTRIBUTE LIST
+local AttributeData = {
+    category = CATEGORY,
+    category_list = CATEGORY_LIST,
+    -- NOTE: this list determines which attributes show up in player/enemy info
+    list = {
+        -- PRIMARY
+
+        {
+            id = "health_maximum",
+            display_name = Api.GetTranslationText("combat/attributes/max_health/name"),
+            description = Api.GetTranslationText("combat/attributes/max_health/description"),
+            icon = DCEI.Texture("flat_icon_emoji_red_heart_2764_fe0f_ipick"),
+            frame_address = "ui.glue.combat.player_status.health_bar.Label",
+            granularity = 1,
+            display_type = DisplayType.Integer,
+            category = CATEGORY.primary,
+            flavor_text = Api.GetTranslationText("combat/attributes/max_health/flavor"),
+        },
+
+        {
+            id = "energy_per_second",
+            display_name = Api.GetTranslationText("combat/attributes/energy_regen/name"),
+            description = Api.GetTranslationText("combat/attributes/energy_regen/description"),
+            icon = DCEI.Texture("flat_icon_emoji_high_voltage_26a1_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.primary,
+            granularity = 1,
+            flavor_text = Api.GetTranslationText("combat/attributes/energy_regen/flavor"),
+            display_requirements = {
+                default_value = 160, -- don't display this attribute in unit info if it's the default value
+            },
+        },
+        {
+            id = "energy_maximum",
+            display_name = Api.GetTranslationText("combat/attributes/max_energy/name"),
+            description = Api.GetTranslationText("combat/attributes/max_energy/description"),
+            icon = DCEI.Texture("flat_icon_emoji_battery_1f50b_ipick"),
+            frame_address = "ui.glue.combat.player_status.energy_bar.Label",
+            granularity = 1,
+            display_type = DisplayType.Integer,
+            is_negative = true,
+            category = CATEGORY.primary,
+            flavor_text = Api.GetTranslationText("combat/attributes/max_energy/flavor"),
+            display_requirements = {
+                default_value = 1000, -- don't display this attribute in unit info if it's the default value
+            },
+        },
+        {
+            id = "attack",
+            display_name = Api.GetTranslationText("combat/attributes/attack/name"),
+            description = Api.GetTranslationText("combat/attributes/attack/description"),
+            icon = DCEI.Texture("flat_icon_emoji_raised_fist_270a_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.primary,
+            granularity = 1,
+            min_value = 1,
+            flavor_text = Api.GetTranslationText("combat/attributes/attack/flavor"),
+        },
+
+        {
+            id = "blood_sugar",
+            display_name = Api.GetTranslationText("combat/relic/blood_sugar/name"),
+            description = Api.GetTranslationText(
+                "combat/relic/blood_sugar/description",
+                { x = TAG.attack_speed, y = TAG.health_regen, a = TAG.hypoglycemia, b = TAG.hyperglycemia }
+            ),
+            icon = DCEI.Texture("smh_blood_sugar"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            granularity = 1,
+            is_neutral = true,
+            min_value = 0,
+            flavor_text = Api.GetTranslationText("combat/relic/blood_sugar/flavor"),
+            display_requirements = {
+                is_hero = true,
+            },
+        },
+        {
+            id = "crush_damage",
+            display_name = Api.GetTranslationText("combat/attributes/crush_damage/name"),
+            description = Api.GetTranslationText("combat/missiles/attack_crush/tip"),
+            icon = DCEI.Texture("flat_icon_emoji_axe_1fa93_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.primary,
+            granularity = 1,
+            min_value = 1,
+            flavor_text = Api.GetTranslationText("combat/missiles/attack_crush/flavor"),
+            display_requirements = {
+                default_value = 40,
+            },
+        },
+        {
+            id = "flex_quest",
+            display_name = Api.GetTranslationText("combat/perk/flex_quest/name"),
+            description = Api.GetTranslationText("combat/attributes/flex_quest/description", { x = ATTACK_ICON.flex }),
+            icon = DCEI.Texture("flat_icon_emoji_person_lifting_weights_1f3cb_fe0f_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/perk/flex_quest/flavor_text"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "flex_quest",
+                max = 66,
+            },
+        },
+        {
+            id = "attack_speed",
+            display_name = Api.GetTranslationText("combat/attributes/attack_speed/name"),
+            description = Api.GetTranslationText("combat/attributes/attack_speed/description"),
+            icon = DCEI.Texture("flat_icon_emoji_stopwatch_23f1_fe0f_ipick"),
+            display_type = DisplayType.Percent,
+            category = CATEGORY.primary,
+            min_value = 0.01,
+            granularity = 0.01,
+            flavor_text = Api.GetTranslationText("combat/attributes/attack_speed/flavor"),
+            display_requirements = {
+                default_value = 1, -- don't display this attribute in unit info if it's the default value
+            },
+        },
+        {
+            id = "vulnerable",
+            display_name = Api.GetTranslationText("combat/attributes/vulnerable/name"),
+            description = Api.GetTranslationText("combat/attributes/vulnerable/description"),
+            icon = DCEI.Texture("flat_icon_emoji_broken_heart_1f494_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.primary,
+            granularity = 1,
+            min_value = 0,
+            is_negative = true, -- display positive changes in red, negative changes in green
+            flavor_text = Api.GetTranslationText("combat/attributes/vulnerable/flavor"),
+        },
+        -- OFFENSIVE
+        {
+            id = "ultimate_damage",
+            display_name = Api.GetTranslationText("combat/attributes/ultimate_damage/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/ultimate_damage/description",
+                { x = TAG.attack, y = TAG.ultimate_damage }
+            ),
+            icon = DCEI.Texture("flat_icon_emoji_cyclone_1f300_ultimate_ipick"),
+            display_type = DisplayType.Integer,
+            granularity = 1,
+            category = CATEGORY.offensive,
+            flavor_text = Api.GetTranslationText("combat/attributes/ultimate_damage/flavor"),
+        },
+        {
+            id = "crit_chance",
+            display_name = Api.GetTranslationText("combat/attributes/crit_chance/name"),
+            description = Api.GetTranslationText("combat/attributes/crit_chance/description"),
+            icon = DCEI.Texture("flat_icon_emoji_direct_hit_1f3af_ipick"),
+            display_type = DisplayType.PercentWithOneDecimalNumber,
+            min_value = 0,
+            max_value = 1,
+            granularity = 0.01,
+            category = CATEGORY.offensive,
+            flavor_text = Api.GetTranslationText("combat/attributes/crit_chance/flavor"),
+        },
+        {
+            id = "dodge_on_crit_quest",
+            display_name = Api.GetTranslationText("combat/perk/dodge_on_crit_quest/name"),
+            description = Api.GetTranslationText("combat/attributes/flex_quest/description", { x = TAG.crit }),
+            icon = DCEI.Texture("smh_taiji"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/perk/dodge_on_crit_quest/flavor_text"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "dodge_on_crit_quest",
+                max = 33,
+            },
+        },
+        {
+            id = "crit_damage",
+            display_name = Api.GetTranslationText("combat/attributes/crit_damage/name"),
+            description = Api.GetTranslationText("combat/attributes/crit_damage/description"),
+            icon = DCEI.Texture("flat_icon_emoji_anger_symbol_1f4a2_ipick"),
+            display_type = DisplayType.Percent,
+            category = CATEGORY.offensive,
+            granularity = 0.01,
+            flavor_text = Api.GetTranslationText("combat/attributes/crit_damage/flavor"),
+            display_requirements = {
+                default_value = 2,
+            },
+        },
+        {
+            id = "retaliate",
+            display_name = Api.GetTranslationText("combat/attributes/retaliate/name"),
+            description = Api.GetTranslationText("combat/attributes/retaliate/description"),
+            icon = DCEI.Texture("flat_icon_emoji_rose_1f339_ipick"),
+            display_type = DisplayType.Integer,
+            granularity = 1,
+            category = CATEGORY.offensive,
+            flavor_text = Api.GetTranslationText("combat/attributes/retaliate/flavor"),
+        },
+        {
+            id = "dragon_hit",
+            display_name = Api.GetTranslationText("combat/attributes/dragon_hit/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/dragon_hit/description",
+                { x = ATTACK_ICON.dragon }
+            ),
+            icon = DCEI.Texture("smh_double_egg"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.offensive,
+            granularity = 1,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/dragon_hit/flavor"),
+            display_requirements = {
+                default_value = 0,
+                max = 200,
+                is_double = true,
+            },
+        },
+        {
+            id = "dice_critical_hit",
+            -- display_name = Api.GetTranslationText("combat/attributes/crit_damage/name"),
+            -- description = Api.GetTranslationText("combat/attributes/crit_damage/description"),
+            display_name = "幸运一击",
+            description = "Dice的进化进度",
+            icon = DCEI.Texture("flat_icon_emoji_dice6_ipick"),
+            display_type = DisplayType.ModHundred,
+            category = CATEGORY.offensive,
+            granularity = 1,
+            is_neutral = true,
+            -- flavor_text = Api.GetTranslationText("combat/attributes/crit_damage/flavor"),
+            display_requirements = {
+                default_value = 0,
+                max = 100,
+                max_without_format = true,
+            },
+        },
+        {
+            id = "rebel_point",
+            -- display_name = Api.GetTranslationText("combat/attributes/crit_damage/name"),
+            -- description = Api.GetTranslationText("combat/attributes/crit_damage/description"),
+            display_name = "逆反",
+            description = "距离下次逆反的进度",
+            icon = DCEI.Texture("rebel"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.offensive,
+            granularity = 1,
+            is_neutral = true,
+            -- flavor_text = Api.GetTranslationText("combat/attributes/crit_damage/flavor"),
+            display_requirements = {
+                default_value = 0,
+                max = 6,
+            },
+        },
+        -- DEFENSIVE
+        {
+            id = "health_per_second",
+            display_name = Api.GetTranslationText("combat/attributes/health_per_second/name"),
+            description = Api.GetTranslationText("combat/attributes/health_per_second/description"),
+            icon = DCEI.Texture("flat_icon_emoji_adhesive_bandage_1fa79_ipick"),
+            display_type = DisplayType.Integer,
+            granularity = 1,
+            min_value = -9999,
+            category = CATEGORY.defensive,
+            flavor_text = Api.GetTranslationText("combat/attributes/health_per_second/flavor"),
+        },
+        {
+            -- this entry is used to generate flying attribute icons when the related perk is selected
+            -- the actual values are special cased to display combined with health per second
+            id = "health_percentage_per_second",
+            icon = DCEI.Texture("flat_icon_emoji_adhesive_bandage_1fa79_ipick"),
+            display_id = "health_per_second",
+            flavor_text = Api.GetTranslationText("combat/attributes/health_percentage_per_second/flavor"),
+        },
+        {
+            id = "heal_enhancement",
+            display_name = Api.GetTranslationText("combat/attributes/heal_enhancement/name"),
+            description = Api.GetTranslationText("combat/attributes/heal_enhancement/description"),
+            icon = DCEI.Texture("smh_hospital"),
+            display_type = DisplayType.Integer,
+            granularity = 1,
+            category = CATEGORY.defensive,
+            flavor_text = Api.GetTranslationText("combat/attributes/heal_enhancement/flavor"),
+        },
+        {
+            id = "dodge_chance",
+            display_name = Api.GetTranslationText("combat/attributes/dodge_chance/name"),
+            description = Api.GetTranslationText("combat/attributes/dodge_chance/description"),
+            icon = DCEI.Texture("flat_icon_emoji_leaf_fluttering_in_wind_1f343_ipick"),
+            display_type = DisplayType.PercentWithOneDecimalNumber,
+            category = CATEGORY.defensive,
+            granularity = 0.01,
+            min_value = 0,
+            max_value = 0.9,
+            flavor_text = Api.GetTranslationText("combat/attributes/dodge_chance/flavor"),
+        },
+        {
+            id = "block",
+            display_name = Api.GetTranslationText("combat/attributes/block/name"),
+            description = Api.GetTranslationText("combat/attributes/block/description"),
+            icon = DCEI.Texture("flat_icon_emoji_shield_1f6e1_fe0f_ipick"),
+            display_type = DisplayType.Integer,
+            granularity = 1,
+            min_value = 0,
+            category = CATEGORY.defensive,
+            flavor_text = Api.GetTranslationText("combat/attributes/block/flavor"),
+        },
+        {
+            id = "thorn_block",
+            display_name = Api.GetTranslationText("combat/perk/gain_thorn_block/name"),
+            description = Api.GetTranslationText("combat/attributes/thorn_block/description"),
+            icon = DCEI.Texture("smh_thorn_block"),
+            display_type = DisplayType.Percent,
+            granularity = 0.01,
+            category = CATEGORY.defensive,
+            flavor_text = Api.GetTranslationText("combat/attributes/gain_thorn_block/flavor"),
+        },
+        -- UTILITY
+        {
+            id = "luck",
+            display_name = Api.GetTranslationText("combat/attributes/luck/name"),
+            description = Api.GetTranslationText("combat/attributes/luck/description"),
+            icon = DCEI.Texture("flat_icon_emoji_four_leaf_clover_1f340_ipick"),
+            display_type = DisplayType.Percent,
+            granularity = 0.01,
+            category = CATEGORY.utility,
+            flavor_text = Api.GetTranslationText("combat/attributes/luck/flavor"),
+        },
+        {
+            id = "income",
+            display_name = Api.GetTranslationText("combat/attributes/income/name"),
+            description = Api.GetTranslationText("combat/attributes/income/description", { x = ICON_COIN }),
+            icon = DCEI.Texture("flat_icon_emoji_money_bag_1f4b0_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            granularity = 1,
+            flavor_text = Api.GetTranslationText("combat/attributes/income/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 25,
+            },
+        },
+        {
+            id = "emergency_hold_quest",
+            display_name = Api.GetTranslationText("combat/perk/emergency_hold/name"),
+            description = Api.GetTranslationText("combat/attributes/emergency_hold/description"),
+            icon = DCEI.Texture("smh_shell"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/emergency_hold/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "emergency_hold",
+                max = 60,
+            },
+        },
+        {
+            id = "evolution_quest",
+            display_name = Api.GetTranslationText("combat/perk/evolution_quest/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/evolution_quest/description",
+                { x = TAG.eupoglycemia, y = ATTACK_ICON.dragon }
+            ),
+            icon = DCEI.Texture("extra_dragon_hit"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/evolution_quest/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "evolution_quest",
+                max = 50,
+            },
+        },
+        {
+            id = "copy",
+            display_name = Api.GetTranslationText("combat/perk/copy/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/copy/description",
+                { x = TAG.print, y = TAG.copy }
+            ),
+            icon = DCEI.Texture("smh_copy"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/copy/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+            },
+        },
+        {
+            id = "temp_copy",
+            display_name = Api.GetTranslationText("combat/perk/copy/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/copy/description",
+                { x = TAG.print, y = TAG.copy }
+            ),
+            icon = DCEI.Texture("smh_copy"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/copy/flavor"),
+            display_requirements = {
+                always_hide = true,
+                default_value = 0,
+            },
+        },
+        {
+            id = "distance",
+            display_name = Api.GetTranslationText("combat/perk/distance/name"),
+            description = Api.GetTranslationText("combat/attributes/distance/description", { x = TAG.leipu }),
+            icon = DCEI.Texture("smh_distance"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/distance/flavor"),
+
+            display_requirements = {
+                is_hero = true,
+                default_value = 1000,
+            },
+        },
+        {
+            id = "leipu_time",
+            display_name = Api.GetTranslationText("combat/perk/leipu_time/name"),
+            description = Api.GetTranslationText("combat/attributes/leipu_time/description", { x = TAG.leipu }),
+            icon = DCEI.Texture("smh_leipu_time"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/leipu_time/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+            },
+        },
+        {
+            id = "leipu_damage_instance",
+            display_name = Api.GetTranslationText("combat/perk/leipu_damage_instance/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/leipu_damage_instance/description",
+                { x = TAG.leipu }
+            ),
+            icon = DCEI.Texture("smh_leipu_damage_instance"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/leipu_damage_instance/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+            },
+        },
+        {
+            id = "leipu_lifesteal",
+            display_name = Api.GetTranslationText("combat/perk/leipu_lifesteal/name"),
+            description = Api.GetTranslationText("combat/attributes/leipu_lifesteal/description", { x = TAG.leipu }),
+            icon = DCEI.Texture("smh_leipu_lifesteal"),
+            display_type = DisplayType.Percent,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/leipu_lifesteal/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+            },
+        },
+        {
+            id = "recruit_band_quest",
+            display_name = Api.GetTranslationText("combat/perk/recruit_band_quest/name"),
+            description = Api.GetTranslationText("combat/attributes/recruit_band_quest/description"),
+            icon = DCEI.Texture("flat_icon_emoji_band_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/recruit_band_quest/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "recruit_band_quest",
+                max = 120,
+            },
+        },
+        {
+            id = "recruit_ninja_quest",
+            display_name = Api.GetTranslationText("combat/perk/recruit_ninja_quest/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/recruit_ninja_quest/description",
+                { x = ATTACK_ICON.ninja }
+            ),
+            icon = DCEI.Texture("smh_ninja"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            granularity = 1,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/recruit_ninja_quest/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                max = 7,
+            },
+        },
+        {
+            id = "coin_bullet_quest",
+            display_name = Api.GetTranslationText("combat/perk/coin_bullet_quest/name"),
+            description = Api.GetTranslationText("combat/attributes/coin_bullet_quest/description"),
+            icon = DCEI.Texture("flat_icon_emoji_money_wings_1f4b8_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/coin_bullet_quest/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "coin_bullet_quest",
+                max = 20,
+            },
+        },
+        {
+            id = "shark_quest",
+            display_name = Api.GetTranslationText("combat/perk/shark_quest/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/shark_quest/description",
+                { x = ATTACK_ICON.shark }
+            ),
+            icon = DCEI.Texture("smh_shark_quest"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            flavor_text = Api.GetTranslationText("combat/attributes/shark_quest/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "shark_quest",
+                max = 4444,
+            },
+        },
+        {
+            id = "thank_you",
+            display_name = Api.GetTranslationText("combat/perk/thank_you/name"),
+            description = Api.GetTranslationText("combat/attributes/thank_you/description", { x = TAG.speech_bubble }),
+            icon = DCEI.Texture("smh_thank_you"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            flavor_text = Api.GetTranslationText("combat/perk/thank_you/flavor_text"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "thank_you",
+                max = 666,
+            },
+        },
+        {
+            id = "free_rolls",
+            display_name = Api.GetTranslationText("combat/attributes/free_rolls/name"),
+            description = Api.GetTranslationText("combat/attributes/free_rolls/description"),
+            icon = DCEI.Texture("flat_icon_emoji_game_die_1f3b2_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                is_hero = true,
+            },
+        },
+        {
+            id = "show_income",
+            display_name = "wrong",
+            description = "Game is bugged if you see this.",
+            icon = DCEI.Texture("flat_icon_emoji_game_die_1f3b2_ipick"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                always_hide = true,
+            },
+        },
+        {
+            id = "robot_build_point",
+            display_type = DisplayType.Integer,
+            min_value = 1,
+            display_requirements = {
+                always_hide = true,
+            },
+        },
+        {
+            id = "robot_explosion_damage_multiplier",
+            display_name = Api.GetTranslationText("combat/attributes/robot_explosion_damage_multiplier/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/robot_explosion_damage_multiplier/description",
+                { x = TAG.robot_explosion, y = TAG.ultimate_damage, z = TAG.robot_explosion_damage }
+            ),
+            icon = DCEI.Texture("smh_robot_explosion"),
+            display_type = DisplayType.Integer,
+            flavor_text = Api.GetTranslationText("combat/attributes/robot_explosion_damage_multiplier/flavor"),
+            granularity = 0.01,
+            display_requirements = {
+                is_hero = true,
+                missile = "attack_screw",
+            },
+        },
+        {
+            id = "robot_slot",
+            display_name = Api.GetTranslationText("combat/attributes/robot_slot/name"),
+            description = Api.GetTranslationText("combat/attributes/robot_slot/description"),
+            icon = DCEI.Texture("flat_icon_emoji_robot_1f916_ipick"),
+            display_type = DisplayType.Integer,
+            min_value = 0,
+            max_value = 8,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/robot_slot/flavor"),
+            display_requirements = {
+                is_hero = true,
+                missile = "attack_screw",
+            },
+        },
+        {
+            id = "trash_talk_attack",
+            display_name = Api.GetTranslationText("combat/attributes/trash_talk_attack/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/trash_talk_attack/description",
+                { x = TAG.speech_bubble }
+            ),
+            icon = DCEI.Texture("smh_speech_bubble"),
+            display_type = DisplayType.Integer,
+            granularity = 1,
+            min_value = 0,
+            flavor_text = Api.GetTranslationText("combat/attributes/trash_talk_attack/flavor"),
+            display_requirements = {
+                is_hero = true,
+                perk = "greetings",
+            },
+        },
+        {
+            id = "robot_base_attack",
+            display_name = Api.GetTranslationText("combat/attributes/robot_base_attack/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/robot_base_attack/description",
+                { x = TAG.attack }
+            ),
+            icon = DCEI.Texture("smh_robot_attack"),
+            display_type = DisplayType.Integer,
+            granularity = 1,
+            min_value = 1,
+            flavor_text = Api.GetTranslationText("combat/attributes/robot_base_attack/flavor"),
+            display_requirements = {
+                is_hero = true,
+                missile = "attack_screw",
+            },
+        },
+        {
+            id = "robot_attack_multiplier",
+            display_type = DisplayType.Percent,
+            display_requirements = {
+                always_hide = true,
+            },
+            flavor_text = Api.GetTranslationText("combat/attributes/robot_attack_multiplier/flavor"),
+        },
+        {
+            id = "robot_attack_speed",
+            display_name = Api.GetTranslationText("combat/attributes/robot_attack_speed/name"),
+            description = Api.GetTranslationText("combat/attributes/robot_attack_speed/description"),
+            icon = DCEI.Texture("smh_robot_attack_speed"),
+            display_type = DisplayType.Percent,
+            min_value = 0.01,
+            granularity = 0.01,
+            flavor_text = Api.GetTranslationText("combat/attributes/robot_attack_speed/flavor"),
+            display_requirements = {
+                default_value = 1, -- don't display this attribute in unit info if it's the default value
+                is_hero = true,
+            },
+        },
+        {
+            id = "robot_base_attack_on_robot_hit_quest",
+            display_name = Api.GetTranslationText("combat/perk/robot_base_attack_on_robot_hit_quest/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/robot_base_attack_on_robot_hit_quest/description",
+                { x = TAG.robot }
+            ),
+            flavor_text = Api.GetTranslationText("combat/attributes/robot_base_attack_on_robot_hit_quest/flavor"),
+            icon = DCEI.Texture("smh_tesla_stock"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "robot_base_attack_on_robot_hit_quest",
+                max = 50,
+            },
+        },
+        {
+            id = "milk_quest",
+            display_name = Api.GetTranslationText("combat/perk/milk_quest/name"),
+            description = Api.GetTranslationText("combat/attribute/milk_quest/description"),
+            flavor_text = Api.GetTranslationText("combat/attributes/milk_quest/flavor"),
+            icon = DCEI.Texture("milk_quest"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "milk_quest",
+                max = 10,
+            },
+        },
+        {
+            id = "bomb_quest",
+            display_name = Api.GetTranslationText("combat/perk/bomb_quest/name"),
+            description = Api.GetTranslationText("combat/attribute/bomb_quest/description"),
+            flavor_text = Api.GetTranslationText("combat/attributes/bomb_quest/flavor"),
+            icon = DCEI.Texture("smh_bomb_quest"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "bomb_quest",
+                max = 5,
+            },
+        },
+        {
+            id = "illusion_damage",
+            display_name = Api.GetTranslationText("combat/perk/illusion_damage/name"),
+            description = Api.GetTranslationText("combat/perk/illusion_damage/description", { x = TAG.illusion }),
+            icon = DCEI.Texture("smh_illusion_damage"),
+            display_type = DisplayType.Percent,
+            category = CATEGORY.utility,
+            granularity = 0.01,
+            flavor_text = Api.GetTranslationText("combat/perk/illusion_damage/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0.1,
+                missile = "attack_wheat",
+            },
+        },
+        {
+            id = "illusion_attackspeed",
+            display_name = Api.GetTranslationText("combat/perk/illusion_attackspeed/name"),
+            description = Api.GetTranslationText("combat/perk/illusion_attackspeed/description", { x = TAG.illusion }),
+            icon = DCEI.Texture("smh_illusion_benifit"),
+            display_type = DisplayType.Float,
+            category = CATEGORY.utility,
+            granularity = 0.01,
+            flavor_text = Api.GetTranslationText("combat/perk/illusion_attackspeed/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 1.2,
+                missile = "attack_wheat",
+            },
+        },
+        {
+            id = "dark_duel_cooldown",
+            display_name = Api.GetTranslationText("combat/relic/dark_duel_cooldown/name"),
+            description = Api.GetTranslationText("combat/relic/dark_duel_cooldown/description"),
+            icon = DCEI.Texture("smh_dark_duel"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            granularity = 1,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/relic/dark_duel_cooldown/flavor"),
+            display_requirements = {
+                is_hero = true,
+            },
+        },
+        {
+            id = "failure_evolution_progress",
+            display_name = Api.GetTranslationText("combat/relic/failed_artist/name"),
+            description = Api.GetTranslationText(
+                "combat/relic/failure_evolution_progress/description",
+                { x = RELIC_ICON.squid }
+            ),
+            icon = DCEI.Texture("flat_icon_emoji_student_1f64e-200d-2642-fe0f"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            flavor_text = Api.GetTranslationText("combat/relic/failure_evolution_progress/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                relic = "failure_student",
+                max = 4,
+            },
+        },
+        {
+            id = "blank_perk_on_rock_count",
+            display_name = Api.GetTranslationText("combat/attributes/blank_perk_on_rock_count/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/blank_perk_on_hit_count/description",
+                { x = ATTACK_ICON.rock, y = TAG.blank_perk_on_rock }
+            ),
+            icon = DCEI.Texture("smh_empty_rock_perk"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/blank_perk_on_rock_count/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "blank_perk_on_rock",
+                use_attribute_as_max = "blank_perk_on_rock_count_max",
+            },
+        },
+        {
+            id = "blank_perk_on_rock_count_max",
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                is_hero = true,
+                always_hide = true,
+            },
+        },
+        {
+            id = "blank_perk_on_crush_count",
+            display_name = Api.GetTranslationText("combat/attributes/blank_perk_on_crush_count/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/blank_perk_on_hit_count/description",
+                { x = ATTACK_ICON.axe, y = TAG.blank_perk_on_crush }
+            ),
+            icon = DCEI.Texture("smh_empty_crush_perk"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/blank_perk_on_crush_count/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "blank_perk_on_crush",
+                use_attribute_as_max = "blank_perk_on_crush_count_max",
+            },
+        },
+        {
+            id = "blank_perk_on_crush_count_max",
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                is_hero = true,
+                always_hide = true,
+            },
+        },
+        {
+            id = "blank_perk_on_hit_count",
+            display_name = Api.GetTranslationText("combat/attributes/blank_perk_on_hit_count/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/blank_perk_on_hit_count/description",
+                { x = ATTACK_ICON.tomato, y = TAG.blank_perk_on_hit }
+            ),
+            icon = DCEI.Texture("smh_empty_tomato_perk"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/blank_perk_on_hit_count/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "blank_perk_on_hit",
+                use_attribute_as_max = "blank_perk_on_hit_count_max",
+            },
+        },
+        {
+            id = "blank_perk_on_hit_count_max",
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                is_hero = true,
+                always_hide = true,
+            },
+        },
+        {
+            id = "blank_perk_quest",
+            display_name = Api.GetTranslationText("combat/attributes/blank_perk_quest/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/blank_perk_quest/description",
+                { x = ATTACK_ICON.tomato, y = TAG.blank_perk_quest }
+            ),
+            icon = DCEI.Texture("smh_permanent_tomato_card"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/blank_perk_quest/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "blank_perk_quest",
+                use_attribute_as_max = "blank_perk_quest_max",
+            },
+        },
+        {
+            id = "blank_perk_quest_max",
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                is_hero = true,
+                always_hide = true,
+            },
+        },
+        {
+            id = "blank_perk_on_dodge_count",
+            display_name = Api.GetTranslationText("combat/attributes/blank_perk_on_dodge_count/name"),
+            description = Api.GetTranslationText(
+                "combat/attributes/blank_perk_on_dodge_count/description",
+                { x = TAG.dodge_chance, y = TAG.blank_perk_on_dodge }
+            ),
+            icon = DCEI.Texture("smh_dodge_empty_perk"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/attributes/blank_perk_on_dodge_count/flavor"),
+            display_requirements = {
+                is_hero = true,
+                default_value = 0,
+                perk = "blank_perk_on_dodge",
+                use_attribute_as_max = "blank_perk_on_dodge_count_max",
+            },
+        },
+        {
+            id = "blank_perk_on_dodge_count_max",
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                is_hero = true,
+                always_hide = true,
+            },
+        },
+        {
+            id = "king_of_vampire_hp",
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            display_requirements = {
+                is_hero = true,
+                always_hide = true,
+            },
+        },
+
+        {
+            id = "metabolic",
+            display_name = Api.GetTranslationText("combat/relic/metabolic/name"),
+            description = Api.GetTranslationText("combat/relic/metabolic/description", { x = TAG.blood_sugar }),
+            icon = DCEI.Texture("smh_metabolic"),
+            display_type = DisplayType.Integer,
+            category = CATEGORY.utility,
+            granularity = 1,
+            is_neutral = true,
+            flavor_text = Api.GetTranslationText("combat/relic/metabolic/flavor"),
+            display_requirements = {
+                is_hero = true,
+            },
+        },
+    },
+}
+
+local function GetAttributeDepandencyMap()
+    local result = {}
+    for _, v in ipairs(AttributeData.list) do
+        if v.display_requirements and v.display_requirements.use_attribute_as_max then
+            local dependency = v.display_requirements.use_attribute_as_max
+            result[dependency] = result[dependency] or {}
+            table.insert(result[dependency], v.id)
+        end
+    end
+    return result
+end
+
+-- EXPORT
+AttributeData.data = Util.AssignListToTableByKey(AttributeData.list, "id")
+AttributeData.attribute_dependency_map = GetAttributeDepandencyMap()
+return AttributeData
