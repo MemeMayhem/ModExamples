@@ -1,0 +1,23 @@
+MOD_MANAGER:AddMod(function(Api)
+    local character_id = "relic-combo-testor"
+    local character = Api:CopyCharacter("robot", {
+        id = character_id,
+    })
+    Api:RegisterRelicCombos(character_id, {
+        apple = {
+            priority = 1,
+            formula = {
+                poison_apple = 2,
+            }
+        },
+        dog = {
+            priority = 1,
+            formula = {
+                cat = 1,
+                apple = 1,
+            }
+        },
+    })
+    DCEI.LogError("setting starting relics")
+    character.relics = {"poison_apple", "cat"}
+end)
