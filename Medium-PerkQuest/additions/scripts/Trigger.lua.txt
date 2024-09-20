@@ -1,8 +1,25 @@
+local rock_quest_max = 30
+
 local function AddNewPerk(Api)
+    Api:RegisterAttribute({
+        id = "custom_attribute_rock_quest",
+        display_name = "Rock Hits",
+        description = "Rock Hits",
+        icon = DCEI.Texture("custom_icon_3_rocks"),
+        display_type = Api.DisplayType.Integer,
+        is_neutral = true, -- if true, font color will always be white
+        flavor_text = "The number of times you hit the enemy with a rock.",
+        display_requirements = {
+            is_hero = true, -- only show for hero
+            perk = "custom_perk_rock_quest", -- only show if has this perk
+            default_value = 0,
+            max = rock_quest_max -- for visual only, you need to keep current value <= max
+        },
+    })
     Api:RegisterPerk("custom_perk_rock_quest", {
         id = "custom_perk_rock_quest",
         display_name = "Rock Explosion",
-        description = "Add 1 " .. Api.GameMechanicTags.EMOJI.rock .. " when hitting the enemy with " .. Api.GameMechanicTags.EMOJI.rock .. " 10 times.",
+        description = "Add 1 " .. Api.GameMechanicTags.EMOJI.rock .. " when hitting the enemy with " .. Api.GameMechanicTags.EMOJI.rock .. " " .. rock_quest_max .. " times.",
         icon = DCEI.Texture("custom_icon_3_rocks"),
         perk_type = "missile",
         rarity = "common",
@@ -22,12 +39,11 @@ local function AddNewPerk(Api)
                 return
             end
 
-            caster.custom_perk_rock_quest = caster.custom_perk_rock_quest or caster:GetBoundedAttribute(name)
-            caster.custom_perk_rock_quest = caster.custom_perk_rock_quest + 1
+            local old_rock_progress = caster:GetBoundedAttribute("custom_attribute_rock_quest")
+            local new_rock_progress = old_rock_progress + 1
 
-            DCEI.ShowFeedbackMessage("Rock quest progress " .. caster.custom_perk_rock_quest)
-            if caster.custom_perk_rock_quest >= 10 then
-                caster.custom_perk_rock_quest = 0
+            if new_rock_progress >= rock_quest_max then
+                new_rock_progress = 0
 
                 -- Add emojis to the persistent deck.
                 local deck_size = #caster.Attack:GetEmojiDeck()
@@ -40,8 +56,8 @@ local function AddNewPerk(Api)
                 caster:PlayAwardEmojiAnimation("attack_rock", level)
             end
 
-            caster:SetAttribute(name, caster.custom_perk_rock_quest)
-            caster.run_instance:SetSavedPerkDataAttributes(name, caster.custom_perk_rock_quest)
+            caster:ModifyAttribute("custom_attribute_rock_quest", new_rock_progress - old_rock_progress)
+            caster.run_instance:SetSavedPerkDataAttributes("custom_attribute_rock_quest", new_rock_progress)
         end)
     end)
     Api:CopyCharacter("naysayer", {
