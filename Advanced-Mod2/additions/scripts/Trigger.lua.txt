@@ -276,7 +276,7 @@ local function AddMissile(Api)
             return 0
         end,
         sounds = {
-            Api.Sound("metalGlint"),
+            DCEI.Sound("metalGlint"),
         },
     })
 end

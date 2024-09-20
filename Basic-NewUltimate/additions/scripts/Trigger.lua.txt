@@ -20,8 +20,8 @@ local function AddNewUltimate(Api)
         },
     })
 
-    Api:SetUltimateLaunchSound("mod-ultimate", Api.Sound("sfx_ult_launch"))
-    Api:SetUltimateHitSound("mod-ultimate", Api.Sound("sfx_ult_hit"))
+    Api:SetUltimateLaunchSound("mod-ultimate", DCEI.Sound("sfx_ult_launch"))
+    Api:SetUltimateHitSound("mod-ultimate", DCEI.Sound("sfx_ult_hit"))
 end
 
 local function Loader(Api)

@@ -98,7 +98,7 @@ MOD_MANAGER:AddMod(function(Api)
             return 100
         end,
         sounds = {
-            Api.Sound("my_power_rock_hit"),
+            DCEI.Sound("my_power_rock_hit"),
         },
     })
     Api:RegisterPerk("my_power_perk", {

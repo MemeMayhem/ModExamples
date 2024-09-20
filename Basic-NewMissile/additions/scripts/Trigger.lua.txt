@@ -17,7 +17,7 @@ local function AddNewMissile(Api)
     end)
 
     Api:SetMissileHitSound("attack_star", {
-        Api.Sound("sound_star"),
+        DCEI.Sound("sound_star"),
     })
 
     Api:RegisterMissile("attack_heart", {
@@ -48,9 +48,9 @@ local function AddNewMissile(Api)
     end)
 
     Api:SetMissileHitSound("attack_heart", {
-        Api.Sound("sound_heal_1"),
-        Api.Sound("sound_heal_2"),
-        Api.Sound("sound_heal_3"),
+        DCEI.Sound("sound_heal_1"),
+        DCEI.Sound("sound_heal_2"),
+        DCEI.Sound("sound_heal_3"),
     })
 
     Api:SetCharacterStartMagazine("mod-missile", {
