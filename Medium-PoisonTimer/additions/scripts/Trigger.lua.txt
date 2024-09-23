@@ -1,0 +1,107 @@
+local rock_quest_max = 30
+
+local TAG_POISON = "<size=144%><sprite name=sprite_poison></size>"
+local TAG_TOXIC_TOUCH = "<size=144%><sprite name=sprite_toxic_touch></size>"
+
+local function AddNewPerk(Api)
+    Api:RegisterAttribute({
+        id = "custom_poison_attribute_toxic_touch",
+        display_name = "Toxic Substance",
+        description = "Apply " .. TAG_POISON .. " to everyone with a single touch.",
+        icon = DCEI.Texture("icon_toxic_touch"),
+        display_type = Api.DisplayType.Integer,
+        is_neutral = true,
+        flavor_text = "Keep your distance.",
+        display_requirements = {
+            default_value = 0,
+        },
+    })
+    Api:RegisterAttribute({
+        id = "custom_poison_attribute_poisoned",
+        display_name = "Poisoned",
+        description = "Take damage every second by the poisoned amount.",
+        icon = DCEI.Texture("icon_poison"),
+        display_type = Api.DisplayType.Integer,
+        is_negative = true,
+        flavor_text = "You are already dead.",
+        display_requirements = {
+            default_value = 0,
+        },
+    })
+    
+    -- Apply poison to the target every second.
+    local function PoisonTick(target)
+        local poison_level = target:GetBoundedAttribute("custom_poison_attribute_poisoned")
+        target:Damage(poison_level, target, {})
+        Api:RunCombatOnlyTimer(function()
+            PoisonTick(target)
+        end, 1)
+    end
+    local function OnTaxicMissileImpact(level, attack_data, caster, target)
+        local toxic_level = caster:GetBoundedAttribute("custom_poison_attribute_toxic_touch")
+        target:ModifyAttribute("custom_poison_attribute_poisoned", toxic_level)
+-- 
+        -- Start a poison timer if it's not already started for the target.
+        if not target.poison_timer then
+            target.poison_timer = true
+            Api:RunCombatOnlyTimer(function()
+                PoisonTick(target)
+            end, 1)
+        end
+    end
+-- 
+    Api:RegisterPerk("custom_poison_perk_toxic_touch", {
+        id = "custom_poison_perk_toxic_touch",
+        display_name = "Toxic Touch",
+        description = "Add 1 " .. TAG_TOXIC_TOUCH,
+        icon = DCEI.Texture("icon_toxic_touch"),
+        perk_type = "perk",
+        rarity = "common",
+        modify_attributes = {
+            ["custom_poison_attribute_toxic_touch"] = 1,
+        },
+    }, function(combat_unit)
+        combat_unit.Attack:RegisterOnMissileImpactCallback("custom_poison_attribute_toxic_touch", OnTaxicMissileImpact)
+    end)
+    Api:RegisterPerk("custom_poison_perk_radioactive_shower", {
+        id = "custom_poison_perk_radioactive_shower",
+        display_name = "Radioactive Shower",
+        description = "Add 5 " .. TAG_TOXIC_TOUCH,
+        icon = DCEI.Texture("icon_toxic_touch"),
+        perk_type = "perk",
+        rarity = "rare",
+        modify_attributes = {
+            ["custom_poison_attribute_toxic_touch"] = 5,
+        },
+    }, function(combat_unit)
+        combat_unit.Attack:RegisterOnMissileImpactCallback("custom_poison_attribute_toxic_touch", OnTaxicMissileImpact)
+    end)
+
+    Api:CopyCharacter("naysayer", {
+        id = "custom_poison_character",
+        display_name = "Test " .. TAG_POISON .. " and " .. TAG_TOXIC_TOUCH,
+        attack_ids = {
+            "attack_rock",
+            "attack_flex",
+        },
+        attributes = {
+            health_maximum = 2200,
+        },
+        perk_chains = {
+            {
+                "attack_rock",
+                "custom_poison_perk_toxic_touch",
+                "custom_poison_perk_radioactive_shower",
+            },
+            {
+                "bonus_health",
+                "health_regen",
+                "health_regen_percentage",
+            },
+        },
+    })
+end
+
+MOD_MANAGER:AddMod(function(Api)
+    AddNewPerk(Api)
+end)
