@@ -28,7 +28,7 @@ local function AddNewPerk(Api)
             default_value = 0,
         },
     })
-    
+
     -- Apply poison to the target every second.
     local function PoisonTick(target)
         local poison_level = target:GetBoundedAttribute("custom_poison_attribute_poisoned")
@@ -39,8 +39,8 @@ local function AddNewPerk(Api)
     end
     local function OnTaxicMissileImpact(level, attack_data, caster, target)
         local toxic_level = caster:GetBoundedAttribute("custom_poison_attribute_toxic_touch")
-        target:ModifyAttribute("custom_poison_attribute_poisoned", toxic_level)
--- 
+        Api.PerkBehaviorSystem:ApplyPerkBehaviorToSelf(target, "custom_poison_perk_toxic_touch", toxic_level)
+
         -- Start a poison timer if it's not already started for the target.
         if not target.poison_timer then
             target.poison_timer = true
@@ -49,7 +49,6 @@ local function AddNewPerk(Api)
             end, 1)
         end
     end
--- 
     Api:RegisterPerk("custom_poison_perk_toxic_touch", {
         id = "custom_poison_perk_toxic_touch",
         display_name = "Toxic Touch",
@@ -59,6 +58,14 @@ local function AddNewPerk(Api)
         rarity = "common",
         modify_attributes = {
             ["custom_poison_attribute_toxic_touch"] = 1,
+        },
+        behavior = {
+            description = "Poisoned by " .. TAG_TOXIC_TOUCH,
+            buff_bar_icon = DCEI.Texture("icon_poison"),
+            modify_attributes = {
+                ["custom_poison_attribute_poisoned"] = 1,
+            },
+            duration = 3,
         },
     }, function(combat_unit)
         combat_unit.Attack:RegisterOnMissileImpactCallback("custom_poison_attribute_toxic_touch", OnTaxicMissileImpact)
@@ -82,7 +89,10 @@ local function AddNewPerk(Api)
         display_name = "Test " .. TAG_POISON .. " and " .. TAG_TOXIC_TOUCH,
         attack_ids = {
             "attack_rock",
-            "attack_flex",
+            "attack_rock",
+            "attack_rock",
+            "attack_rock",
+            "attack_rock",
         },
         attributes = {
             health_maximum = 2200,
