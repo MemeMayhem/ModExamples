@@ -61,7 +61,7 @@ local function AddNewPerk(Api)
         end)
     end)
     Api:CopyCharacter("naysayer", {
-        id = "mod-perk",
+        id = "mod-perk-quest",
         perk_chains = {
             {
                 "custom_perk_rock_quest",
