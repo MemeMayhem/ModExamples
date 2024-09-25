@@ -1,0 +1,325 @@
+-- SCRIPTS
+local Util = require("Common/Util")
+local GameMechanicTags = require("GamePerkSystem/GameMechanicTags")
+local TAG = GameMechanicTags.TAG
+local ATTACK_ICON = GameMechanicTags.ATTACK_ICON
+-- DATA
+local KeywordTooltipData = {
+    list = {
+        {
+            id = "rush",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/rush/title"),
+            icon = DCEI.Texture("flat_icon_emoji_1f6a4_ipick"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/rush/content"),
+        },
+        {
+            id = "unprintable",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/unprintable/title"),
+            icon = DCEI.Texture("smh_unprintable"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/unprintable/content",
+                { x = TAG.empty_card }
+            ),
+        },
+        {
+            id = "print_only",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/print_only/title"),
+            icon = DCEI.Texture("smh_print_only"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/print_only/content", { x = TAG.empty_card }),
+        },
+        {
+            id = "emergency",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/emergency/title"),
+            icon = DCEI.Texture("smh_siren"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/emergency/content"),
+        },
+        {
+            id = "discovery",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/discovery/title"),
+            icon = DCEI.Texture("smh_medal_three"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/discovery/content"),
+        },
+        {
+            id = "overclock",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/overclock/title"),
+            icon = DCEI.Texture("smh_open_hands"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/overclock/content"),
+        },
+        {
+            id = "on_ultimate_hit",
+            display_name = "危！",
+            icon = DCEI.Texture("smh_on_ultimate_hit"),
+            description = "被大招击中时触发",
+        },
+        {
+            id = "on_hit_up",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/on_hit_up/title"),
+            icon = DCEI.Texture("smh_tomato"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/on_hit_up/content",
+                { x = ATTACK_ICON.tomato }
+            ),
+        },
+        {
+            id = "on_rock_up",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/on_rock_up/title"),
+            icon = DCEI.Texture("flat_icon_emoji_rock_1faa8_ipick"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/on_hit_up/content",
+                { x = ATTACK_ICON.rock }
+            ),
+        },
+        {
+            id = "on_crush_up",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/on_crush_up/title"),
+            icon = DCEI.Texture("flat_icon_emoji_axe_1fa93_ipick"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/on_hit_up/content", { x = ATTACK_ICON.axe }),
+        },
+        {
+            id = "on_dodge_up",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/on_dodge_up/title"),
+            icon = DCEI.Texture("flat_icon_emoji_leaf_fluttering_in_wind_1f343_ipick"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/on_dodge_up/content"),
+        },
+        {
+            id = "illusion",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/illusion/title"),
+            icon = DCEI.Texture("smh_illusion"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/illusion/content"),
+        },
+        {
+            id = "illusion_trigger",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/illusion_trigger/title"),
+            icon = DCEI.Texture("smh_illusion"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/illusion_trigger/content"),
+        },
+        {
+            id = "startup",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/startup/title"),
+            icon = DCEI.Texture("smh_startup"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/startup/content"),
+        },
+        {
+            id = "trash_talk",
+            display_name = Api.GetTranslationText("combat/tag/speech_bubble/name"),
+            icon = DCEI.Texture("smh_speech_bubble"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/trash_talk/content",
+                { x = TAG.speech_bubble }
+            ),
+        },
+        {
+            id = "empty_card",
+            display_name = Api.GetTranslationText("combat/tag/empty_card/name"),
+            icon = DCEI.Texture("blank_perk"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/empty_card/content",
+                { x = TAG.empty_card, y = TAG.empty_card_slot }
+            ),
+        },
+        {
+            id = "empty_card_slot",
+            display_name = Api.GetTranslationText("combat/tag/empty_card_slot/name"),
+            icon = DCEI.Texture("retro_icon_panel_relic_white_ipick"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/empty_card_slot/content",
+                { x = TAG.empty_card, y = TAG.empty_card_slot }
+            ),
+        },
+        {
+            id = "print",
+            display_name = Api.GetTranslationText("combat/tag/print/name"),
+            icon = DCEI.Texture("smh_print"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/print/content", { x = TAG.empty_card }),
+        },
+        {
+            id = "copy",
+            display_name = Api.GetTranslationText("combat/tag/copy/name"),
+            icon = DCEI.Texture("smh_copy"),
+            description = Api.GetTranslationText("combat/tooltip/copy/description", { x = TAG.print }),
+        },
+        {
+            id = "poison",
+            display_name = Api.GetTranslationText("combat/tag/poison/name"),
+            icon = DCEI.Texture("smh_poison_poo"),
+            description = Api.GetTranslationText(
+                "combat/tooltip/poison/description",
+                { x = TAG.current_health, y = TAG.energy }
+            ),
+        },
+        {
+            id = "finish_card",
+            display_name = Api.GetTranslationText("combat/tag/finish_card/name"),
+            icon = DCEI.Texture("smh_finish_card"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/finish_card/content",
+                { x = TAG.empty_card, y = TAG.empty_card_slot }
+            ),
+        },
+        {
+            id = "empty_card_permanent",
+            display_name = Api.GetTranslationText("combat/tag/empty_card_permanent/name"),
+            icon = DCEI.Texture("smh_blank_perk_permanent"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/empty_card_permanent/content",
+                { x = TAG.empty_card }
+            ),
+        },
+        {
+            id = "summon_robot",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/summon_robot/title"),
+            icon = DCEI.Texture("flat_icon_emoji_robot_1f916_flamethrower_ipick"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/summon_robot/content",
+                { x = TAG.ultimate_damage }
+            ),
+        },
+        {
+            id = "robot_explosion",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/robot_explosion/title"),
+            icon = DCEI.Texture("flat_icon_emoji_vfx_ipick_impact_normal_ipick"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/robot_explosion/content",
+                { x = TAG.ultimate_damage }
+            ),
+        },
+        {
+            id = "distance",
+            display_name = Api.GetTranslationText("combat/perk/distance/name"),
+            icon = DCEI.Texture("smh_distance"),
+            description = Api.GetTranslationText("combat/attributes/distance/description", { x = TAG.leipu }),
+        },
+        {
+            id = "leipu",
+            display_name = Api.GetTranslationText("combat/tag/leipu/name"),
+            icon = DCEI.Texture("smh_leipu"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/leipu/content", { x = TAG.attack }),
+        },
+        {
+            id = "evo_point",
+            display_name = Api.GetTranslationText("combat/attributes/dragon_hit/name"),
+            icon = DCEI.Texture("smh_double_egg"),
+            description = Api.GetTranslationText(
+                "combat/attributes/dragon_hit/description",
+                { x = ATTACK_ICON.dragon }
+            ),
+        },
+        {
+            id = "blood_sugar",
+            display_name = Api.GetTranslationText("combat/relic/blood_sugar/name"),
+            icon = DCEI.Texture("smh_blood_sugar"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/blood_sugar/content",
+                { x = TAG.attack_speed, y = TAG.health_regen }
+            ),
+        },
+        {
+            id = "metabolic",
+            display_name = Api.GetTranslationText("combat/relic/metabolic/name"),
+            icon = DCEI.Texture("smh_metabolic"),
+            description = Api.GetTranslationText("combat/relic/metabolic/description", { x = TAG.blood_sugar }),
+        },
+        {
+            id = "hypoglycemia",
+            display_name = Api.GetTranslationText("combat/state/hypoglycemia/name"),
+            icon = DCEI.Texture("smh_drunk"),
+            description = Api.GetTranslationText("combat/tooltip/hypoglycemia/description", { x = TAG.blood_sugar }),
+        },
+        {
+            id = "eupoglycemia",
+            display_name = Api.GetTranslationText("combat/state/eupoglycemia/name"),
+            icon = DCEI.Texture("smh_eupoglycemia"),
+            description = Api.GetTranslationText("combat/tooltip/eupoglycemia/description", { x = TAG.blood_sugar }),
+        },
+        {
+            id = "hyperglycemia",
+            display_name = Api.GetTranslationText("combat/state/hyperglycemia/name"),
+            icon = DCEI.Texture("smh_hyperglycemia"),
+            description = Api.GetTranslationText("combat/tooltip/hyperglycemia/description", { x = TAG.blood_sugar }),
+        },
+        {
+            id = "cake",
+            display_name = Api.GetTranslationText("combat/tag/cake/name"),
+            icon = DCEI.Texture("smh_cake"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/cake/content",
+                { x = TAG.blood_sugar, y = TAG.hyperglycemia }
+            ),
+        },
+        {
+            id = "wraith",
+            display_name = Api.GetTranslationText("combat/tag/wraith/name"),
+            icon = DCEI.Texture("flat_icon_emoji_pouting_face_1f621_ipick"),
+            description = Api.GetTranslationText("combat/tooltip/wraith/description"),
+        },
+        {
+            id = "calm",
+            display_name = Api.GetTranslationText("combat/tag/calm/name"),
+            icon = DCEI.Texture("smh_cryface"),
+            description = Api.GetTranslationText("combat/tooltip/calm/description"),
+        },
+        -- hack for band tooltips
+        {
+            id = "guitar",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/guitar/title"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/musical_relic/content",
+                { x = TAG.health_regen }
+            ),
+            icon = DCEI.Texture("flat_icon_emoji_guitar_1f3b8_ipick"),
+        },
+        {
+            id = "music_keyboard",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/music_keyboard/title"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/musical_relic/content", { x = TAG.health }),
+            icon = DCEI.Texture("flat_icon_emoji_keyboard_1f3b9_ipick"),
+        },
+        {
+            id = "drum",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/drum/title"),
+            description = Api.GetTranslationText("tooltips/combat/keyword/musical_relic/content", { x = TAG.attack }),
+            icon = DCEI.Texture("flat_icon_emoji_drum_1f941_ipick"),
+        },
+        {
+            id = "singer",
+            display_name = Api.GetTranslationText("tooltips/combat/keyword/singer/title"),
+            description = Api.GetTranslationText(
+                "tooltips/combat/keyword/musical_relic/content",
+                { x = TAG.crit_chance }
+            ),
+            icon = DCEI.Texture("flat_icon_emoji_microphone_1f3a4_ipick"),
+        },
+        {
+            id = "face_mask",
+            display_name = Api.GetTranslationText("combat/relic/face_mask/name"),
+            description = Api.GetTranslationText("combat/tooltip/face_mask/description", { x = TAG.emergency }),
+            icon = DCEI.Texture("smh_face_mask"),
+        },
+        {
+            id = "coffee",
+            display_name = Api.GetTranslationText("combat/relic/coffee/name"),
+            description = Api.GetTranslationText("combat/tooltip/coffee/description", { x = TAG.startup }),
+            icon = DCEI.Texture("flat_icon_emoji_hot_beverage_2615_ipick"),
+        },
+        {
+            id = "cockroach",
+            display_name = Api.GetTranslationText("combat/relic/cockroach/name"),
+            description = Api.GetTranslationText("combat/tooltip/cockroach/description", { x = TAG.attack }),
+            icon = DCEI.Texture("flat_icon_emoji_cockroach_1fab3"),
+        },
+        {
+            id = "fast_food",
+            display_name = Api.GetTranslationText("combat/relic/fast_food/name"),
+            description = Api.GetTranslationText(
+                "combat/tooltip/fast_food/description",
+                { x = TAG.health, y = TAG.vulnerable }
+            ),
+            icon = DCEI.Texture("flat_icon_emoji_1f354_ipick"),
+        },
+    },
+}
+
+-- EXPORT
+Util.AssignIndexPropertyToListItems(KeywordTooltipData.list)
+KeywordTooltipData.data = Util.AssignListToTableByKey(KeywordTooltipData.list, "id")
+return KeywordTooltipData
