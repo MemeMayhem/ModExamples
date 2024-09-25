@@ -1,0 +1,2399 @@
+-- SCRIPTS
+local CharacterData = require("NarrativeData/CampaignData/CharacterData")
+local DisplayType = require("Common/DisplayType")
+local GameMechanicTags = require("GamePerkSystem/GameMechanicTags")
+local ImageData = require("NarrativeData/CampaignData/ImageData")
+local Util = require("Common/Util")
+
+-- CONSTANTS
+local ATTACK_ICON = GameMechanicTags.ATTACK_ICON
+local RELIC_ICON = GameMechanicTags.RELIC_ICON
+local TAG = GameMechanicTags.TAG
+local CHARACTER = CharacterData.id_lookup
+local COLOR_TAG = GameMechanicTags.CHOICE_COLOR_REPLACEMENT_TAGS
+local EMOJI = GameMechanicTags.EMOJI
+local IMAGE = ImageData.choice_images
+-- DATA
+local ChoiceData = {}
+
+-- Ids for all choice events that all stages will have
+ChoiceData.public_pool = {
+    "Lizardberg_event_1",
+    "Lizardberg_event_2",
+    "Lizardberg_event_3",
+    "Lump_event_1",
+    "bathwater",
+
+    "Lump_event_4",
+
+    "reading",
+    "test",
+    "rabbit_hole",
+    "trolley_problem_1",
+    "trolley_problem_2",
+
+    "only_fans",
+
+    "the_dress",
+    "brokenscreen",
+
+    "enlargement",
+    "wyr_curry",
+
+    "wyr_powers",
+
+    "debate_slap",
+    "debate_capitol",
+    "waifu",
+
+    "player_awards_interruption",
+    "russian_agent",
+
+    "fearful_disclose",
+    "change_underwear",
+    "clean_toilet",
+    "goto_god",
+
+    -- "weiniang",
+    "what_tonight",
+    "breaking",
+    "meeting_ex",
+    "self_feature",
+}
+
+function ConcatList(list1, list2)
+    local result = {}
+    for _, v in ipairs(list1) do
+        table.insert(result, v)
+    end
+    for _, v in ipairs(list2) do
+        table.insert(result, v)
+    end
+    return result
+end
+
+ChoiceData.character_pools = {
+    sakiko = ConcatList(ChoiceData.public_pool, {
+        -- "sakiko_narrow_road",  move to wave 28
+        "sakiko_reunion",
+        "sakiko_disbanded",
+    }),
+    robot = ConcatList(ChoiceData.public_pool, {
+        "robot_snake",
+        "robot_birds",
+        "robot_future_warrior",
+    }),
+    keg = ConcatList(ChoiceData.public_pool, {
+        "keg_purple_underwear",
+        "keg_running_away",
+        "keg_bag_full",
+    }),
+    hachimi = ConcatList(ChoiceData.public_pool, {
+        "trolley_problem_4",
+        "trolley_problem_5",
+        "trolley_problem_6",
+    }),
+    jonouchi = ConcatList(ChoiceData.public_pool, {
+        "jonouchi_danger",
+        "jonouchi_g",
+    }),
+    priest = ConcatList(ChoiceData.public_pool, {
+        "priest_right",
+        "priest_fangzhang",
+    }),
+}
+
+ChoiceData.list = {
+    {
+        id = "Lizardberg_event_1",
+        display_name = Api.GetTranslationText("campaign/choice/Lizardberg_event_1/name"),
+        image = IMAGE.Lizardberg_event_1.image,
+        description = Api.GetTranslationText("campaign/choice/Lizardberg_event_1/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lizardberg_event_1/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lizardberg_event_1/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lizardberg_event_1/option_1/description",
+                    { x = RELIC_ICON.silent_face }
+                ),
+                gain_relics = {
+                    silent_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lizardberg_event_1/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.salute_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lizardberg_event_1/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lizardberg_event_1/option_2/description",
+                    { x = RELIC_ICON.salute_face }
+                ),
+                gain_relics = {
+                    salute_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "Lizardberg_event_2",
+        display_name = Api.GetTranslationText("campaign/choice/Lizardberg_event_2/name"),
+        image = IMAGE.Lizardberg_event_2.image,
+        description = Api.GetTranslationText("campaign/choice/Lizardberg_event_2/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lizardberg_event_2/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lizardberg_event_2/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lizardberg_event_2/option_1/description",
+                    { x = RELIC_ICON.silent_face }
+                ),
+                gain_relics = {
+                    silent_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lizardberg_event_2/option_2/flavor"),
+                description = COLOR_TAG.negative .. Api.GetTranslationText("campaign/choice/generic/spend_gold"),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/Lizardberg_event_2/option_2/narrative",
+                    { x = COLOR_TAG.negative, y = COLOR_TAG.color_end }
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/Lizardberg_event_2/option_2/description"),
+                values = {
+                    gold = -50,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lizardberg_event_2/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.justice_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lizardberg_event_2/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.justice_face }),
+                gain_relics = {
+                    justice_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "Lizardberg_event_3",
+        display_name = Api.GetTranslationText("campaign/choice/Lizardberg_event_3/name"),
+        image = IMAGE.Lizardberg_event_3.image,
+        description = Api.GetTranslationText("campaign/choice/Lizardberg_event_3/description"),
+        options = {
+            {
+                flavor = EMOJI.thumb_up .. EMOJI.thumb_up,
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.love_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lizardberg_event_3/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lizardberg_event_3/option_1/description",
+                    { x = RELIC_ICON.love_face }
+                ),
+                gain_relics = {
+                    love_face = 1,
+                },
+            },
+            {
+                flavor = EMOJI.poo .. EMOJI.poo,
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lizardberg_event_3/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lizardberg_event_3/option_2/description",
+                    { x = RELIC_ICON.silent_face }
+                ),
+                gain_relics = {
+                    silent_face = 1,
+                },
+            },
+            {
+                flavor = EMOJI.eggplant .. EMOJI.sweat_drop,
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.shock_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lizardberg_event_3/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lizardberg_event_3/option_3/description",
+                    { x = RELIC_ICON.shock_face }
+                ),
+
+                gain_relics = {
+                    shock_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "Lump_event_1",
+        display_name = Api.GetTranslationText("campaign/choice/Lump_event_1/name"),
+        image = IMAGE.Lump_event_1.image,
+        description = Api.GetTranslationText("campaign/choice/Lump_event_1/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lump_event_1/option_1/flavor"),
+                description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText(
+                        "campaign/choice/generic/gain_relic",
+                        { x = RELIC_ICON.linked_paperclips }
+                    ),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lump_event_1/option_1/narrative"),
+                aftermath_description = COLOR_TAG.negative .. Api.GetTranslationText(
+                    "campaign/choice/generic/spend_gold"
+                ) .. " " .. COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lump_event_1/option_1/description",
+                    { x = RELIC_ICON.linked_paperclips }
+                ),
+                values = {
+                    gold = -50,
+                },
+                gain_relics = {
+                    linked_paperclips = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lump_event_1/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lump_event_1/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+                gain_relics = {
+                    ashamed_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lump_event_1/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sales_medal }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lump_event_1/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/Lump_event_1/option_3/description",
+                    { x = RELIC_ICON.sales_medal }
+                ),
+
+                gain_relics = {
+                    sales_medal = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "Lump_event_4",
+        display_name = Api.GetTranslationText("campaign/choice/Lump_event_4/name"),
+        image = IMAGE.Lump_event_4.image,
+        description = Api.GetTranslationText("campaign/choice/Lump_event_4/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lump_event_4/option_1/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic_2",
+                    { x = ATTACK_ICON.flex, y = ATTACK_ICON.flex }
+                ) .. "\n" .. COLOR_TAG.negative .. Api.GetTranslationText(
+                    "campaign/choice/generic/lose_attribute",
+                    { x = TAG.health }
+                ),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lump_event_4/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic_2",
+                    { x = ATTACK_ICON.flex, y = ATTACK_ICON.flex }
+                ) .. "\n" .. COLOR_TAG.negative .. Api.GetTranslationText(
+                    "campaign/choice/generic/lose_attribute",
+                    { x = TAG.health }
+                ),
+                gain_relics = {
+                    bag_of_flex = 1,
+                },
+                modify_attributes = {
+                    health_maximum = -300,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "health_maximum" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/Lump_event_4/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/Lump_event_4/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                gain_relics = {
+                    silent_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "reading",
+        display_name = Api.GetTranslationText("campaign/choice/reading/name"),
+        image = IMAGE.reading.image,
+        description = Api.GetTranslationText("campaign/choice/reading/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/reading/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.nuke }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/reading/option_1/narrative"),
+                aftermath_description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. " "
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.nuke }),
+
+                values = {
+                    gold = -50,
+                },
+                gain_relics = {
+                    nuke = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/reading/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pasta }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/reading/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pasta }),
+                gain_relics = {
+                    pasta = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "test", -- 0 or 1
+        display_name = Api.GetTranslationText("campaign/choice/test/name"),
+        image = IMAGE.test.image,
+        description = Api.GetTranslationText("campaign/choice/test/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/test/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.crit_chance }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/test/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.crit_chance }),
+                modify_attributes = {
+                    crit_chance = 0.04,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "crit_chance" },
+                        display_type = DisplayType.Percent,
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/test/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.dodge_chance }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/test/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.dodge_chance }),
+                modify_attributes = {
+                    dodge_chance = 0.04,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "dodge_chance" },
+                        display_type = DisplayType.Percent,
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/test/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.fast_food }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/test/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.fast_food }),
+                gain_relics = { fast_food = 1 },
+            },
+        },
+    },
+    {
+        id = "rabbit_hole",
+        display_name = Api.GetTranslationText("campaign/choice/rabbit_hole/name"),
+        image = IMAGE.rabbit_hole.image,
+        description = Api.GetTranslationText("campaign/choice/rabbit_hole/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/rabbit_hole/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.attack }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/rabbit_hole/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.attack }),
+                modify_attributes = {
+                    attack = 6,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "attack" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/rabbit_hole/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.health_regen }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/rabbit_hole/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = TAG.health_regen }),
+                modify_attributes = {
+                    health_per_second = 22,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "health_per_second" },
+                    },
+                },
+            },
+        },
+    },
+    {
+        id = "trolley_problem_1",
+        display_name = Api.GetTranslationText("campaign/choice/trolley_problem_1/name"),
+        description = Api.GetTranslationText("campaign/choice/trolley_problem_1/description"),
+        trolley_characters = {
+            left = {
+                CHARACTER.Lizardberg,
+                CHARACTER.Mars,
+                CHARACTER.jezos,
+            },
+            right = {
+                CHARACTER.pop_kat,
+            },
+        },
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_1/option_1/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                is_left_track = false,
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/trolley_problem_1/option_1/narrative",
+                    { x = COLOR_TAG.positive, y = COLOR_TAG.color_end }
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                values = {
+                    gold = 80,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+                sound = "laungh",
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_1/option_2/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.health_per_second_quest }
+                ),
+                is_left_track = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_1/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.health_per_second_quest }
+                ),
+                gain_relics = {
+                    health_per_second_quest = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_1/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.devil_face }),
+                is_both_tracks = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_1/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.devil_face }),
+                requirement = {
+                    relic = "trolley_switch",
+                },
+                gain_relics = {
+                    devil_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "trolley_problem_2",
+        display_name = Api.GetTranslationText("campaign/choice/trolley_problem_1/name"),
+        description = Api.GetTranslationText("campaign/choice/trolley_problem_2/description"),
+        trolley_characters = {
+            left = {
+                CHARACTER.Lizardberg,
+            },
+            right = {
+                CHARACTER.Mars,
+            },
+        },
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_2/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold")
+                    .. COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.facewall_stock }),
+                is_left_track = false,
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/trolley_problem_2/option_1/narrative",
+                    { x = RELIC_ICON.facewall_stock }
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold")
+                    .. COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.facewall_stock }),
+                gain_relics = {
+                    facewall_stock = 1,
+                },
+                values = {
+                    gold = 250,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_2/option_2/flavor"),
+                description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.edison_stock }),
+                is_left_track = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_2/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/trolley_problem_2/option_2/description",
+                    { x = RELIC_ICON.edison_stock }
+                ),
+                gain_relics = {
+                    edison_stock = 1,
+                },
+                values = {
+                    gold = -50,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_2/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.justice_devil }),
+                is_both_tracks = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.justice_devil }),
+                gain_relics = {
+                    justice_devil = 1,
+                },
+                requirement = {
+                    relic = "trolley_switch",
+                },
+            },
+        },
+    },
+    {
+        id = "trolley_problem_4",
+        display_name = Api.GetTranslationText("campaign/choice/trolley_problem_1/name"),
+        description = Api.GetTranslationText("campaign/choice/trolley_problem_2/description"),
+        trolley_characters = {
+            left = {
+                CHARACTER.lost_child,
+            },
+            right = {
+                CHARACTER.lost_adult,
+                CHARACTER.lost_adult,
+            },
+        },
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_4/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.small_clover }),
+                is_left_track = false,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_4/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.small_clover }),
+                gain_relics = {
+                    small_clover = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_4/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.innocent_face }),
+                is_left_track = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_4/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.innocent_face }),
+                gain_relics = {
+                    innocent_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_4/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.indifference }),
+                is_both_tracks = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.indifference }),
+                gain_relics = {
+                    indifference = 1,
+                },
+                requirement = {
+                    relic = "trolley_switch",
+                },
+            },
+        },
+    },
+    {
+        id = "trolley_problem_5",
+        display_name = Api.GetTranslationText("campaign/choice/trolley_problem_1/name"),
+        description = Api.GetTranslationText("campaign/choice/trolley_problem_2/description"),
+        trolley_characters = {
+            left = {
+                CHARACTER.famous_artist,
+            },
+            right = {
+                CHARACTER.art_student,
+                CHARACTER.art_student,
+                CHARACTER.art_student,
+            },
+        },
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.failure_student }),
+                is_left_track = false,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.failure_student }),
+                gain_relics = {
+                    failure_student = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_2/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.phantom_elephant }
+                ),
+                is_left_track = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.phantom_elephant }
+                ),
+                gain_relics = {
+                    phantom_elephant = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.the_finger }),
+                is_both_tracks = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_5/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.the_finger }),
+                gain_relics = {
+                    the_finger = 1,
+                },
+                requirement = {
+                    relic = "trolley_switch",
+                },
+            },
+        },
+    },
+    {
+        id = "trolley_problem_6",
+        display_name = Api.GetTranslationText("campaign/choice/trolley_problem_1/name"),
+        description = Api.GetTranslationText("campaign/choice/trolley_problem_2/description"),
+        trolley_characters = {
+            left = {
+                CHARACTER.ice_cream,
+            },
+            right = {
+                CHARACTER.creator_horse,
+            },
+        },
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_6/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bacon }),
+                is_left_track = false,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_6/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bacon }),
+                gain_relics = {
+                    bacon = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_6/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.single_shark }),
+                is_left_track = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_6/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.single_shark }),
+                gain_relics = {
+                    single_shark = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/trolley_problem_6/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pen }),
+                is_both_tracks = true,
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/trolley_problem_6/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/trolley_problem_6/option_3/description",
+                    { x = RELIC_ICON.pen }
+                ),
+                gain_relics = {
+                    pen = 1,
+                },
+                requirement = {
+                    relic = "trolley_switch",
+                },
+            },
+        },
+    },
+    {
+        id = "only_fans",
+        display_name = Api.GetTranslationText("campaign/choice/only_fans/name"),
+        image = IMAGE.only_fans.image,
+        description = Api.GetTranslationText("campaign/choice/only_fans/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/only_fans/option_1/flavor"),
+                description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. "\n"
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute_2", { x = TAG.energy_regen }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/only_fans/option_1/narrative"),
+                aftermath_description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. "\n"
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute_2", { x = TAG.energy_regen }),
+
+                values = {
+                    gold = -50,
+                },
+                modify_attributes = {
+                    energy_per_second = 80,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                    {
+                        address = { "modify_attributes", "energy_per_second" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/only_fans/option_2/flavor"),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/only_fans/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.salute_face }),
+
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.salute_face }),
+                gain_relics = {
+                    salute_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/only_fans/option_3/flavor"),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/only_fans/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+                gain_relics = {
+                    ashamed_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "the_dress",
+        display_name = Api.GetTranslationText("campaign/choice/the_dress/name"),
+        image = IMAGE.the_dress.image,
+        description = Api.GetTranslationText("campaign/choice/the_dress/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/the_dress/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.blue_fish }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/the_dress/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.blue_fish }
+                ),
+                gain_relics = {
+                    blue_fish = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/the_dress/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.yellow_fish }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/the_dress/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.yellow_fish }),
+                gain_relics = {
+                    gold_fish = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/the_dress/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.purple_fish }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/the_dress/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/the_dress/option_3/description",
+                    { x = RELIC_ICON.purple_fish }
+                ),
+                gain_relics = {
+                    purple_fish = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "bathwater",
+        display_name = Api.GetTranslationText("campaign/choice/bathwater/name"),
+        image = IMAGE.bathwater.image,
+        description = Api.GetTranslationText("campaign/choice/bathwater/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/bathwater/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.love_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/bathwater/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/bathwater/option_1/description",
+                    { x = RELIC_ICON.love_face }
+                ),
+                gain_relics = {
+                    love_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/bathwater/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/bathwater/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/bathwater/option_2/description",
+                    { x = RELIC_ICON.silent_face }
+                ),
+                gain_relics = {
+                    silent_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/bathwater/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.justice_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/bathwater/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.justice_face }),
+                gain_relics = {
+                    justice_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "brokenscreen",
+        display_name = Api.GetTranslationText("campaign/choice/brokenscreen/name"),
+        image = IMAGE.brokenscreen.image,
+        description = Api.GetTranslationText("campaign/choice/brokenscreen/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/brokenscreen/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute", { x = RELIC_ICON.dead_phone }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/brokenscreen/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/brokenscreen/option_1/description",
+                    { x = RELIC_ICON.dead_phone }
+                ),
+
+                gain_relics = {
+                    dead_phone = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "gain_relics", "dead_phone" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/brokenscreen/option_2/flavor"),
+                description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute_2", { x = TAG.crit_chance }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/brokenscreen/option_2/narrative"),
+                aftermath_description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_attribute_2", { x = TAG.crit_chance }),
+                values = {
+                    gold = -10,
+                },
+                modify_attributes = {
+                    crit_chance = 0.06,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                    {
+                        address = { "modify_attributes", "crit_chance" },
+                        display_type = DisplayType.Percent,
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/brokenscreen/option_3/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.uphone }
+                ) .. COLOR_TAG.negative .. Api.GetTranslationText("campaign/choice/generic/spend_gold"),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/brokenscreen/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.uphone }
+                ) .. COLOR_TAG.negative .. Api.GetTranslationText("campaign/choice/generic/spend_gold"),
+                values = {
+                    gold = -75,
+                },
+                gain_relics = {
+                    uphone = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+        },
+    },
+    {
+        id = "enlargement",
+        display_name = Api.GetTranslationText("campaign/choice/enlargement/name"),
+        image = IMAGE.enlargement.image,
+        description = Api.GetTranslationText("campaign/choice/enlargement/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/enlargement/option_1/flavor"),
+                description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.lollipop }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/enlargement/option_1/narrative"),
+                aftermath_description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.lollipop }),
+                values = {
+                    gold = -50,
+                },
+                gain_relics = {
+                    lollipop = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/enlargement/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/enlargement/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+                gain_relics = {
+                    ashamed_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/enlargement/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sales_medal }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/enlargement/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sales_medal }),
+
+                gain_relics = {
+                    sales_medal = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "wyr_curry",
+        display_name = Api.GetTranslationText("campaign/choice/wyr_curry/name"),
+        image = IMAGE.wyr_curry.image,
+        description = Api.GetTranslationText("campaign/choice/wyr_curry/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/wyr_curry/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.salute_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/wyr_curry/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.salute_face }),
+
+                gain_relics = {
+                    salute_face = 1,
+                },
+                sound = "funny_laugh",
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/wyr_curry/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.drooling_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/wyr_curry/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.drooling_face }),
+
+                gain_relics = {
+                    drooling_face = 1,
+                },
+                sound = "funny_laugh",
+            },
+        },
+    },
+    {
+        id = "wyr_powers",
+        display_name = Api.GetTranslationText("campaign/choice/wyr_powers/name"),
+        image = IMAGE.wyr_powers.image,
+        description = Api.GetTranslationText("campaign/choice/wyr_powers/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/wyr_powers/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.heal_on_dodge }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/wyr_powers/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.heal_on_dodge }),
+
+                gain_relics = {
+                    heal_on_dodge = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/wyr_powers/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.devil_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/wyr_powers/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.devil_face }),
+
+                gain_relics = {
+                    devil_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "boss_reconcile",
+        display_name = Api.GetTranslationText("campaign/choice/boss_reconcile/name"),
+        image = IMAGE.boss_reconcile.image,
+        description = Api.GetTranslationText("campaign/choice/boss_reconcile/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/boss_reconcile/option_1/flavor"),
+                description = "",
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/boss_reconcile/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/boss_reconcile/option_1/aftermath_description"
+                ),
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/boss_reconcile/option_2/flavor"),
+                description = "",
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/boss_reconcile/option_2/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/boss_reconcile/option_2/aftermath_description"
+                ),
+                accept_reconcile = true,
+            },
+        },
+    },
+    {
+        id = "debate_slap",
+        display_name = Api.GetTranslationText("campaign/choice/debate_slap/name"),
+        image = IMAGE.debate_slap.image,
+        description = Api.GetTranslationText("campaign/choice/debate_slap/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/debate_slap/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.aggressive }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/debate_slap/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/debate_slap/option_1/description",
+                    { x = RELIC_ICON.aggressive }
+                ),
+
+                gain_relics = {
+                    aggresive_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/debate_slap/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.salute_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/debate_slap/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/debate_slap/option_2/description",
+                    { x = RELIC_ICON.salute_face }
+                ),
+
+                gain_relics = {
+                    salute_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/debate_slap/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.devil_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/debate_slap/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.devil_face }),
+
+                gain_relics = {
+                    devil_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "debate_capitol",
+        display_name = Api.GetTranslationText("campaign/choice/debate_capitol/name"),
+        image = IMAGE.debate_capitol.image,
+        description = Api.GetTranslationText("campaign/choice/debate_capitol/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/debate_capitol/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bored_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/debate_capitol/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bored_face }),
+
+                gain_relics = {
+                    bored_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/debate_capitol/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.funny }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/debate_capitol/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.funny }),
+
+                gain_relics = {
+                    funny_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/debate_capitol/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.aggressive }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/debate_capitol/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/debate_capitol/option_3/description",
+                    { x = RELIC_ICON.aggressive }
+                ),
+
+                gain_relics = {
+                    aggresive_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "waifu",
+        display_name = Api.GetTranslationText("campaign/choice/waifu/name"),
+        image = IMAGE.waifu.image,
+        description = Api.GetTranslationText("campaign/choice/waifu/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/waifu/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/waifu/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.ashamed_face }),
+
+                gain_relics = {
+                    ashamed_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/waifu/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.love_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/waifu/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.love_face }),
+
+                gain_relics = {
+                    love_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/waifu/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/waifu/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+
+                gain_relics = {
+                    silent_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "player_awards_interruption",
+        display_name = Api.GetTranslationText("campaign/choice/player_awards_interruption/name"),
+        image = IMAGE.player_awards_interruption.image,
+        description = Api.GetTranslationText("campaign/choice/player_awards_interruption/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/player_awards_interruption/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.lion }),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/player_awards_interruption/option_1/narrative"
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.lion }),
+
+                gain_relics = {
+                    lion = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/player_awards_interruption/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.aggressive }),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/player_awards_interruption/option_2/narrative"
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.aggressive }),
+
+                gain_relics = {
+                    aggresive_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/player_awards_interruption/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bored_face }),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/player_awards_interruption/option_3/narrative"
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bored_face }),
+
+                gain_relics = {
+                    bored_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "russian_agent",
+        display_name = Api.GetTranslationText("campaign/choice/russian_agent/name"),
+        image = IMAGE.russian_agent.image,
+        description = Api.GetTranslationText("campaign/choice/russian_agent/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/russian_agent/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.drooling_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/russian_agent/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.drooling_face }),
+
+                gain_relics = {
+                    drooling_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/russian_agent/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/russian_agent/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.silent_face }),
+
+                gain_relics = {
+                    silent_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "sponsored_event",
+        display_name = Api.GetTranslationText("campaign/choice/sponsored_event/name"),
+        image = IMAGE.sponsored_event.image,
+        description = Api.GetTranslationText("campaign/choice/sponsored_event/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sponsored_event/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bubble_tea }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sponsored_event/options/narrative"),
+                aftermath_description = Api.GetTranslationText("campaign/choice/sponsored_event/option_1/narrative")
+                    .. "\n"
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bubble_tea }),
+
+                gain_relics = {
+                    bubble_tea = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sponsored_event/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bubble_tea }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sponsored_event/options/narrative"),
+                aftermath_description = Api.GetTranslationText("campaign/choice/sponsored_event/option_2/narrative")
+                    .. "\n"
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bubble_tea }),
+
+                gain_relics = {
+                    bubble_tea = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sponsored_event/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bubble_tea }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sponsored_event/options/narrative"),
+                aftermath_description = Api.GetTranslationText("campaign/choice/sponsored_event/option_3/narrative")
+                    .. "\n"
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bubble_tea }),
+
+                gain_relics = {
+                    bubble_tea = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "fearful_disclose",
+        display_name = Api.GetTranslationText("campaign/choice/fearful_disclose/name"),
+        image = IMAGE.fearful_disclose.image,
+        description = Api.GetTranslationText("campaign/choice/fearful_disclose/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/fearful_disclose/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.coded_disk }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/fearful_disclose/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.coded_disk }
+                ),
+                gain_relics = {
+                    coded_disk = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/fearful_disclose/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.fear_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/fearful_disclose/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.fear_face }),
+                gain_relics = {
+                    fear_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/fearful_disclose/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sales_medal }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/fearful_disclose/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sales_medal }),
+                gain_relics = {
+                    sales_medal = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "change_underwear",
+        display_name = Api.GetTranslationText("campaign/choice/change_underwear/name"),
+        image = IMAGE.change_underwear.image,
+        description = Api.GetTranslationText("campaign/choice/change_underwear/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/change_underwear/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.fade_flower }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/change_underwear/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.fade_flower }
+                ),
+                gain_relics = {
+                    fade_flower = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/change_underwear/option_2/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.doubleside_breif }
+                ),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/change_underwear/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.doubleside_breif }
+                ),
+                gain_relics = {
+                    doubleside_breif = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/change_underwear/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.naked_run }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/change_underwear/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.naked_run }),
+                gain_relics = {
+                    naked_run = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "clean_toilet",
+        display_name = Api.GetTranslationText("campaign/choice/clean_toilet/name"),
+        image = IMAGE.clean_toilet.image,
+        description = Api.GetTranslationText("campaign/choice/clean_toilet/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/clean_toilet/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.good_poo }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/clean_toilet/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.good_poo }
+                ),
+                gain_relics = {
+                    good_poo = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/clean_toilet/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pen }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/clean_toilet/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pen }),
+                gain_relics = {
+                    pen = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/clean_toilet/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cockroach }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/clean_toilet/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cockroach }),
+                gain_relics = {
+                    cockroach = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "goto_god",
+        display_name = Api.GetTranslationText("campaign/choice/goto_god/name"),
+        image = IMAGE.goto_god.image,
+        description = Api.GetTranslationText("campaign/choice/goto_god/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/goto_god/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.old_key }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/goto_god/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.old_key }
+                ),
+                gain_relics = {
+                    old_key = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/goto_god/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.good_poo }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/goto_god/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.good_poo }),
+                gain_relics = {
+                    good_poo = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/goto_god/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.single_rock }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/goto_god/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.single_rock }),
+                gain_relics = {
+                    single_rock = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "weiniang",
+        display_name = Api.GetTranslationText("campaign/choice/weiniang/name"),
+        image = IMAGE.weiniang.image,
+        description = Api.GetTranslationText("campaign/choice/weiniang/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/weiniang/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.lion }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/weiniang/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.lion }
+                ),
+                gain_relics = {
+                    lion = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/weiniang/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bottom_line }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/weiniang/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bottom_line }),
+                gain_relics = {
+                    bottom_line = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/weiniang/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.super_respect }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/weiniang/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.super_respect }),
+                gain_relics = {
+                    super_respect = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "what_tonight",
+        display_name = Api.GetTranslationText("campaign/choice/what_tonight/name"),
+        image = IMAGE.what_tonight.image,
+        description = Api.GetTranslationText("campaign/choice/what_tonight/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/what_tonight/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.two_hearts }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/what_tonight/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.two_hearts }
+                ),
+                gain_relics = {
+                    two_hearts = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/what_tonight/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.naked_run }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/what_tonight/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.naked_run }),
+                gain_relics = {
+                    naked_run = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/what_tonight/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.lonely_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/what_tonight/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.lonely_face }),
+                gain_relics = {
+                    lonely_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "breaking",
+        display_name = Api.GetTranslationText("campaign/choice/breaking/name"),
+        image = IMAGE.breaking.image,
+        description = Api.GetTranslationText("campaign/choice/breaking/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/breaking/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.playa }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/breaking/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.playa }
+                ),
+                gain_relics = {
+                    playa = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/breaking/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.breaking_heart }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/breaking/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.breaking_heart }),
+                gain_relics = {
+                    breaking_heart = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/breaking/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.funny }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/breaking/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.funny }),
+                gain_relics = {
+                    funny_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "meeting_ex",
+        display_name = Api.GetTranslationText("campaign/choice/meeting_ex/name"),
+        image = IMAGE.meeting_ex.image,
+        description = Api.GetTranslationText("campaign/choice/meeting_ex/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/meeting_ex/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.r_18 }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/meeting_ex/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.r_18 }
+                ),
+                gain_relics = {
+                    r_18 = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/meeting_ex/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.fear_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/meeting_ex/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.fear_face }),
+                gain_relics = {
+                    fear_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/meeting_ex/option_3/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/meeting_ex/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                values = {
+                    gold = 80,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+                requirement = {
+                    attributes = {
+                        attack = 30,
+                    },
+                },
+            },
+        },
+    },
+    {
+        id = "self_feature",
+        display_name = Api.GetTranslationText("campaign/choice/self_feature/name"),
+        image = IMAGE.self_feature.image,
+        description = Api.GetTranslationText("campaign/choice/self_feature/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/self_feature/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pin }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/self_feature/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.pin }
+                ),
+                gain_relics = {
+                    pin = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/self_feature/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.piggy }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/self_feature/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.piggy }),
+                gain_relics = {
+                    piggy = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/self_feature/option_3/flavor"),
+                description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.high_heel }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/self_feature/option_3/narrative"),
+                aftermath_description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. " "
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.high_heel }),
+
+                values = {
+                    gold = -50,
+                },
+                gain_relics = {
+                    high_heel = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+        },
+    },
+    {
+        id = "sakiko_narrow_road",
+        display_name = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/name"),
+        image = IMAGE.sakiko_narrow_road.image,
+        description = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.tear_drop }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.tear_drop }
+                ),
+                gain_relics = {
+                    tear_drop = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.the_finger }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.the_finger }),
+                gain_relics = {
+                    the_finger = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pride_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_narrow_road/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.pride_face }),
+                gain_relics = {
+                    pride_face = 1,
+                },
+                requirement = {
+                    relic = "band",
+                },
+            },
+        },
+    },
+    {
+        id = "sakiko_reunion",
+        display_name = Api.GetTranslationText("campaign/choice/sakiko_reunion/name"),
+        image = IMAGE.sakiko_reunion.image,
+        description = Api.GetTranslationText("campaign/choice/sakiko_reunion/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_reunion/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.hug }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_reunion/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.hug }
+                ),
+                gain_relics = {
+                    friendship = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_reunion/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.indifference }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_reunion/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.indifference }),
+                gain_relics = {
+                    indifference = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "sakiko_disbanded",
+        display_name = Api.GetTranslationText("campaign/choice/sakiko_disbanded/name"),
+        image = IMAGE.sakiko_disbanded.image,
+        description = Api.GetTranslationText("campaign/choice/sakiko_disbanded/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_disbanded/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.blue_heart }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_disbanded/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.blue_heart }
+                ),
+                gain_relics = {
+                    blue_heart = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_disbanded/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.shock_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_disbanded/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.shock_face }),
+                gain_relics = {
+                    shock_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/sakiko_disbanded/option_3/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.bag_of_music_note }
+                ),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/sakiko_disbanded/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.bag_of_music_note }
+                ),
+                gain_relics = {
+                    bag_of_music_note = 1,
+                },
+                requirement = {
+                    attributes = {
+                        health_maximum = 3000,
+                    },
+                },
+            },
+        },
+    },
+    {
+        id = "robot_snake",
+        display_name = Api.GetTranslationText("campaign/choice/robot_snake/name"),
+        image = IMAGE.robot_snake.image,
+        description = Api.GetTranslationText("campaign/choice/robot_snake/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/robot_snake/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold")
+                    .. COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cursed_bomb }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/robot_snake/option_1/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold")
+                    .. COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cursed_bomb }),
+                gain_relics = {
+                    cursed_bomb = 1,
+                },
+                values = {
+                    gold = 150,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/robot_snake/option_2/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/robot_snake/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                values = {
+                    gold = 20,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+        },
+    },
+    {
+        id = "robot_birds",
+        display_name = Api.GetTranslationText("campaign/choice/robot_birds/name"),
+        image = IMAGE.robot_birds.image,
+        description = Api.GetTranslationText("campaign/choice/robot_birds/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/robot_birds/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.small_rev }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/robot_birds/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.small_rev }
+                ),
+                gain_relics = {
+                    small_rev = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/robot_birds/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.energy_drain }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/robot_birds/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.energy_drain }),
+                gain_relics = {
+                    energy_drain = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/robot_birds/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bored_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/robot_birds/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.bored_face }),
+                gain_relics = {
+                    bored_face = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "robot_future_warrior",
+        display_name = Api.GetTranslationText("campaign/choice/robot_future_warrior/name"),
+        image = IMAGE.robot_future_warrior.image,
+        description = Api.GetTranslationText("campaign/choice/robot_future_warrior/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/robot_future_warrior/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.small_clover }),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/robot_future_warrior/option_1/narrative"
+                ),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.small_clover }
+                ),
+                gain_relics = {
+                    small_clover = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/robot_future_warrior/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.foot_print }),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/robot_future_warrior/option_2/narrative"
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.foot_print }),
+                gain_relics = {
+                    foot_print = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "keg_purple_underwear",
+        display_name = Api.GetTranslationText("campaign/choice/keg_purple_underwear/name"),
+        image = IMAGE.keg_purple_underwear.image,
+        description = Api.GetTranslationText("campaign/choice/keg_purple_underwear/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/keg_purple_underwear/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.purple_wine }),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/keg_purple_underwear/option_1/narrative"
+                ),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.purple_wine }
+                ),
+                gain_relics = {
+                    purple_wine = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/keg_purple_underwear/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cockroach }),
+                aftermath_narrative = Api.GetTranslationText(
+                    "campaign/choice/keg_purple_underwear/option_2/narrative"
+                ),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cockroach }),
+                gain_relics = {
+                    cockroach = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "keg_running_away",
+        display_name = Api.GetTranslationText("campaign/choice/keg_running_away/name"),
+        image = IMAGE.keg_running_away.image,
+        description = Api.GetTranslationText("campaign/choice/keg_running_away/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/keg_running_away/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.innocent_face }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/keg_running_away/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.innocent_face }
+                ),
+                gain_relics = {
+                    innocent_face = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/keg_running_away/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sales_medal }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/keg_running_away/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sales_medal }),
+                gain_relics = {
+                    sales_medal = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "keg_bag_full",
+        display_name = Api.GetTranslationText("campaign/choice/keg_bag_full/name"),
+        image = IMAGE.keg_bag_full.image,
+        description = Api.GetTranslationText("campaign/choice/keg_bag_full/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/keg_bag_full/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.beans }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/keg_bag_full/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.beans }
+                ),
+                gain_relics = {
+                    beans = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/keg_bag_full/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sandal }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/keg_bag_full/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.sandal }),
+                gain_relics = {
+                    sandal = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/keg_bag_full/option_3/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.attack_speed_quest }
+                ),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/keg_bag_full/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive .. Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.attack_speed_quest }
+                ),
+                gain_relics = {
+                    attack_speed_quest = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "jonouchi_danger",
+        display_name = Api.GetTranslationText("campaign/choice/jonouchi_danger/name"),
+        image = IMAGE.jonouchi_danger.image,
+        description = Api.GetTranslationText("campaign/choice/jonouchi_danger/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/jonouchi_danger/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.justice_devil }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/jonouchi_danger/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.justice_devil }
+                ),
+                gain_relics = {
+                    justice_devil = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/jonouchi_danger/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.single_flex }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/jonouchi_danger/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.single_flex }),
+                gain_relics = {
+                    single_flex = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "jonouchi_g",
+        display_name = Api.GetTranslationText("campaign/choice/jonouchi_g/name"),
+        image = IMAGE.jonouchi_g.image,
+        description = Api.GetTranslationText("campaign/choice/jonouchi_g/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/jonouchi_g/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.delay_damage }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/jonouchi_g/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.delay_damage }
+                ),
+                gain_relics = {
+                    delay_damage = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/jonouchi_g/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.giant_jet }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/jonouchi_g/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.giant_jet }),
+                gain_relics = {
+                    giant_jet = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/jonouchi_g/option_3/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cockroach }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/jonouchi_g/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cockroach }),
+                gain_relics = {
+                    cockroach = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "priest_right",
+        display_name = Api.GetTranslationText("campaign/choice/priest_right/name"),
+        image = IMAGE.priest_right.image,
+        description = Api.GetTranslationText("campaign/choice/priest_right/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/priest_right/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.thumb_up }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/priest_right/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.thumb_up }
+                ),
+                gain_relics = {
+                    thumb_up = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/priest_right/option_2/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.thumb_down }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/priest_right/option_2/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.thumb_down }),
+                gain_relics = {
+                    thumb_down = 1,
+                },
+            },
+        },
+    },
+    {
+        id = "priest_fangzhang",
+        display_name = Api.GetTranslationText("campaign/choice/priest_fangzhang/name"),
+        image = IMAGE.priest_fangzhang.image,
+        description = Api.GetTranslationText("campaign/choice/priest_fangzhang/description"),
+        options = {
+            {
+                flavor = Api.GetTranslationText("campaign/choice/priest_fangzhang/option_1/flavor"),
+                description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.turtle }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/priest_fangzhang/option_1/narrative"),
+                aftermath_description = Api.GetTranslationText(
+                    "campaign/choice/generic/gain_relic",
+                    { x = RELIC_ICON.turtle }
+                ),
+                gain_relics = {
+                    turtle = 1,
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/priest_fangzhang/option_2/flavor"),
+                description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cactus }),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/priest_fangzhang/option_2/narrative"),
+                aftermath_description = COLOR_TAG.negative
+                    .. Api.GetTranslationText("campaign/choice/generic/spend_gold")
+                    .. " "
+                    .. COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_relic", { x = RELIC_ICON.cactus }),
+                values = {
+                    gold = -50,
+                },
+                gain_relics = {
+                    cactus = 1,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+            {
+                flavor = Api.GetTranslationText("campaign/choice/priest_fangzhang/option_3/flavor"),
+                description = COLOR_TAG.positive .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                aftermath_narrative = Api.GetTranslationText("campaign/choice/priest_fangzhang/option_3/narrative"),
+                aftermath_description = COLOR_TAG.positive
+                    .. Api.GetTranslationText("campaign/choice/generic/gain_gold"),
+                values = {
+                    gold = 64,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "values", "gold" },
+                    },
+                },
+            },
+        },
+    },
+}
+ChoiceData.id_lookup = Util.AssignListToTableByKey(ChoiceData.list, "id")
+
+-- EXPORT
+return ChoiceData
