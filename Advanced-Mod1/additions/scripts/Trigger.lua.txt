@@ -5,6 +5,8 @@ local localization = {
         ["missile/my_power_rock/flavor_text"] = "Heavy and powerful",
         ["perk/my_power_rock/display_name"] = "My Powerful Perk",
         ["perk/my_power_rock/description"] = "Gain one My Powerful Rock.\n Deals [VAR1] damage.",
+        ["relic/bag_of_power_rocks/display_name"] = "Bag of Big Rocks",
+        ["relic/bag_of_power_rocks/description"] = "Gain [VAR1] My Powerful Rock\n Get [VAR2]{[x]} whenever get more Powerful Rocks",
         ["perk/small_rock_on_power_rock/name"] = "Rock in Rock",
         ["perk/small_rock_on_power_rock/description"] = "Throws a regular rock when My Powerful Rock hits the target.",
         ["relic/my_power_cookie/display_name"] = "Overpowered Cookie",
@@ -32,6 +34,17 @@ local localization = {
         ["choice/my_choice/options/2/description"] = "<color=#47b05d>[+VAR1] {[x]}</color>, <color=red>[VAR2] {[y]}</color>",
         ["choice/my_choice/options/2/aftermath_narrative"] = "You picked up a rock but the dog bit you before you could throw it.",
         ["choice/my_choice/options/2/aftermath_description"] = "[VAR2] {[y]}. It hurts but at least you have a {[x]} ready.",
+
+        ["choice/my_choice_2/display_name"] = "Dog Again",
+        ["choice/my_choice_2/description"] = "The same dog is running towards you AGAIN!",
+        ["choice/my_choice_2/options/1/flavor"] = "Run away again",
+        ["choice/my_choice_2/options/1/description"] = "<color=red>[VAR1] {[x]}</color>",
+        ["choice/my_choice_2/options/1/aftermath_narrative"] = "You are not lucky this time",
+        ["choice/my_choice_2/options/1/aftermath_description"] = "The dog catched you and bit you a lot. [VAR1] {[x]}",
+        ["choice/my_choice_2/options/2/flavor"] = "Throw the rock at it",
+        ["choice/my_choice_2/options/2/description"] = "<color=red>Lose {[x]}</color>, <color=#47b05d>gain [VAR1] {[y]}</color>",
+        ["choice/my_choice_2/options/2/aftermath_narrative"] = "You finally got the chance to revenge.",
+        ["choice/my_choice_2/options/2/aftermath_description"] = "You threw the rock to the dog and feel good. <color=red>Lose {[x]}</color>, <color=#47b05d>gain [VAR1] {[y]}</color>",
     },
     ["Chinese (Simplified)"] = {
         ["missile/my_power_rock/display_name"] = "我的强力石头",
@@ -39,6 +52,8 @@ local localization = {
         ["missile/my_power_rock/flavor_text"] = "强而有力",
         ["perk/my_power_rock/display_name"] = "强力能力",
         ["perk/my_power_rock/description"] = "获得一块强力石头\n造成[VAR1]点伤害",
+        ["relic/bag_of_power_rocks/display_name"] = "一袋大石头",
+        ["relic/bag_of_power_rocks/description"] = "获得[VAR1]块强力石头\n之后再获得强力石头时获得[VAR2]{[x]}",
         ["perk/small_rock_on_power_rock/name"] = "石 中 石",
         ["perk/small_rock_on_power_rock/description"] = "当我的强力石头击中目标时，投掷一块普通石头",
         ["relic/my_power_cookie/display_name"] = "超能饼干",
@@ -66,6 +81,17 @@ local localization = {
         ["choice/my_choice/options/2/description"] = "<color=#47b05d>[+VAR1]{[x]}</color>，<color=red>[VAR2]{[y]}</color>",
         ["choice/my_choice/options/2/aftermath_narrative"] = "你捡起了一块石头，但狗在你扔之前咬了你。",
         ["choice/my_choice/options/2/aftermath_description"] = "[VAR2]{[y]}。很疼，但你觉得这个{[x]}还挺趁手。",
+
+        ["choice/my_choice_2/display_name"] = "又是狗",
+        ["choice/my_choice_2/description"] = "同一只狗再次向你奔来",
+        ["choice/my_choice_2/options/1/flavor"] = "再次逃跑",
+        ["choice/my_choice_2/options/1/description"] = "<color=red>[VAR1] {[x]}</color>",
+        ["choice/my_choice_2/options/1/aftermath_narrative"] = "这次你没这么幸运了",
+        ["choice/my_choice_2/options/1/aftermath_description"] = "被狗咬了。<color=red>[VAR1]{[x]}</color>",
+        ["choice/my_choice_2/options/2/flavor"] = "把手中的石头扔它",
+        ["choice/my_choice_2/options/2/description"] = "<color=red>失去{[x]}</color>，<color=#47b05d>获得[VAR1]{[y]}</color>",
+        ["choice/my_choice_2/options/2/aftermath_narrative"] = "终于有机会报仇了",
+        ["choice/my_choice_2/options/2/aftermath_description"] = "你把之前捡的那块石头扔了过去，感觉好极了。<color=red>失去{[x]}</color>，<color=#47b05d>获得[VAR1]{[y]}</color>",
     },
 }
 
@@ -169,6 +195,30 @@ MOD_MANAGER:AddMod(function(Api)
             end
         end)
     end)
+    Api:RegisterRelic("bag_of_power_rocks", {
+        id = "bag_of_power_rocks",
+        display_name = localization_table["relic/bag_of_power_rocks/display_name"],
+        description = ReplaceTextMarks(
+            localization_table["relic/bag_of_power_rocks/description"],
+            { x = Api.GameMechanicTags.TAG.attack }
+        ),
+        icon = DCEI.Texture("my_power_rock"),
+        rarity = "epic",
+        attacks = {
+            my_power_rock = 2,
+        },
+        scaling_values = {
+            attack = 5,
+        },
+        description_replacement_values = {
+            {
+                address = { "attacks", "my_power_rock" },
+            },
+            {
+                address = { "scaling_values", "attack" },
+            },
+        },
+    }, function(combat_unit) end, true)
     Api:CopyCharacter("naysayer", {
         id = "my_character",
         display_name = localization_table["character/my_character/display_name"],
@@ -195,6 +245,184 @@ MOD_MANAGER:AddMod(function(Api)
                 "damage_to_health",
                 "flex_on_flex",
             },
+        },
+
+        -- block some relics so it's easier to test our relic is added into the pool
+        blocked_relics = {
+            "smile_face",
+            "bag_of_flex",
+            "bag_of_poo",
+            "bag_of_frost",
+            "bag_of_lifesteal",
+            "bag_of_brain",
+            "bag_of_crush",
+
+            "blue_fish",
+            "purple_fish",
+            "gold_fish",
+
+            "super_drug",
+            "pretzel",
+            "ugly_poo",
+            "credit_card",
+            "poison_apple",
+            "high_heel",
+            "sandal",
+            "cactus",
+            "beans",
+            "fast_food",
+            "broccoli",
+            "pepper",
+            "cat",
+            "dog",
+            "fire_cracker",
+            "flex_on_crit",
+            "attack_speed_quest",
+            "heal_on_dodge",
+            "health_regen_percentage",
+            "health_per_second_quest",
+            "crush_on_heal",
+            "dragon_heart",
+
+            "weary_cat",
+
+            "silent_face",
+            "aggresive_face",
+            "funny_face",
+            "lollipop",
+            "sales_medal",
+            "ashamed_face",
+            "uphone",
+            "justice_face",
+            "innocent_face",
+            "love_face",
+            "devil_face",
+            "pasta",
+            "nuke",
+            "facewall_stock",
+            "edison_stock",
+            "dead_phone",
+            "bored_face",
+            "drooling_face",
+
+            "salute_face",
+            "rice_ball",
+            "baguette_bread",
+            "horse",
+            "apple",
+            "sushi",
+            "lobster",
+            "bread",
+            "knife",
+            "bald",
+            "bubble_tea",
+            "linked_paperclips",
+            "garlic",
+            "lefthand",
+            "righthand",
+
+            "old_key",
+            "good_poo",
+            "single_rock",
+            "tear_drop",
+            "the_finger",
+            "pride_face",
+            "friendship",
+            "indifference",
+            "blue_heart",
+            "shock_face",
+            "cursed_bomb",
+            "small_rev",
+            "energy_drain",
+            "small_clover",
+            "foot_print",
+            "purple_wine",
+            "failure_student",
+            "phantom_elephant",
+            "bacon",
+            "single_shark",
+            "justice_devil",
+            "single_flex",
+            "delay_damage",
+            "giant_jet",
+            "cockroach",
+            "thumb_up",
+            "thumb_down",
+            "turtle",
+            "lion",
+            "two_hearts",
+            "lonely_face",
+            "dizzy_face",
+            "blue_circle",
+            "playa",
+            "breaking_heart",
+            "r_18",
+            "pin",
+            "piggy",
+            "pen",
+            "naked_run",
+            "fade_flower",
+            "doubleside_breif",
+            "coded_disk",
+            "fear_face",
+            "rook",
+            "nutz",
+            "mutate",
+            "wish",
+            "enemy_controller",
+
+            "approaching_storm",
+            "blessing_of_nurgle",
+            "king_of_vampires",
+            "enough",
+            "bring_to_justice",
+
+            "coffee",
+            "pig",
+            "squid",
+            "mind_blown",
+            "chopsticks",
+            "siren",
+            "face_mask",
+
+            "debt",
+
+            "guitar",
+            "music_keyboard",
+            "drum",
+            "singer",
+
+            "bag_of_music_note",
+            "bag_of_coin_bullet",
+
+            "halftime_champagne",
+
+            "bag_of_screw",
+            "start_robot",
+            "magnet",
+            "dvd",
+            "blue_print",
+            "super_bomb",
+
+            "debt_damage_over_time",
+            "debt_to_attack",
+            "debt_damage_to_enemy",
+            "wonder_of_u",
+            "gloves",
+            "blackhole",
+
+            "wraith_on_explosion",
+            "calm_on_start",
+
+            "greedy_pot",
+            "dark_duel",
+            "blue_ribbon",
+
+            "bag_of_wheat",
+            "bag_of_shark",
+            "bag_of_milk",
+            "bag_of_tomato",
+            "bag_of_redtea",
         },
     })
 
@@ -310,9 +538,109 @@ MOD_MANAGER:AddMod(function(Api)
             },
         },
     })
-    Api:SetChoicePool("my_character", {
-        "my_choice",
+    Api:RegisterChoice({
+        id = "my_choice_2",
+        display_name = localization_table["choice/my_choice_2/display_name"],
+        image = DCEI.Texture("my_choice_dog"),
+        description = localization_table["choice/my_choice_2/description"],
+        options = {
+            {
+                flavor = localization_table["choice/my_choice_2/options/1/flavor"],
+                description = ReplaceTextMarks(
+                    localization_table["choice/my_choice_2/options/1/description"],
+                    { x = Api.GameMechanicTags.TAG.health }
+                ),
+                aftermath_narrative = localization_table["choice/my_choice_2/options/1/aftermath_narrative"],
+                aftermath_description = ReplaceTextMarks(
+                    localization_table["choice/my_choice_2/options/1/aftermath_description"],
+                    { x = Api.GameMechanicTags.TAG.health }
+                ),
+                modify_attributes = {
+                    health_maximum = -200,
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "health_maximum" },
+                    },
+                },
+            },
+            {
+                flavor = localization_table["choice/my_choice_2/options/2/flavor"],
+                description = ReplaceTextMarks(
+                    localization_table["choice/my_choice_2/options/2/description"],
+                    { x = Api.GameMechanicTags.ATTACK_ICON.rock, y = Api.GameMechanicTags.TAG.attack }
+                ),
+                aftermath_narrative = localization_table["choice/my_choice_2/options/2/aftermath_narrative"],
+                aftermath_description = ReplaceTextMarks(
+                    localization_table["choice/my_choice_2/options/2/aftermath_description"],
+                    { x = Api.GameMechanicTags.ATTACK_ICON.rock, y = Api.GameMechanicTags.TAG.attack }
+                ),
+                modify_attributes = {
+                    attack = 10,
+                },
+                lose_relics = {
+                    single_rock = 1,
+                },
+                requirement = {
+                    relic = "single_rock",
+                },
+                description_replacement_values = {
+                    {
+                        address = { "modify_attributes", "attack" },
+                    },
+                },
+            },
+        },
     })
+    Api:SetChoicePool("my_character", {
+        "debate_slap",
+        "debate_capitol",
+        "waifu",
+
+        "my_choice_2",
+    })
+
+    -- for this character, wave 3 will only has dog choice event
+    local limited_character = {
+        "my_character",
+    }
+    Api:RegisterWaveSpecialChoices("my_choice", 3, 3, limited_character)
+
+    -- dog choice event 2 will appear in wave between wave 13 and wave 25
+    -- param 25 here can be nil if you don't want to limit the max wave
+    Api:RegisterWaveRequiredChoices("my_choice_2", 13, 25)
+
+    -- you want to use a unique name so it won't conflict with other mods
+    local register_name = "my_mod_character_perk_relic_on_apply_event"
+    Api:RunPerkRelicOnApplyEvent(register_name, function(unit_data, perk_or_relic_data, is_perk)
+        local relic_name = "bag_of_power_rocks"
+        if unit_data:HasRelic(relic_name) then
+            if is_perk then
+                -- example usage of perk data
+                local rarity_data = Api.PerkSystemShared:GetPerkRarityData(perk_or_relic_data.id)
+                Api:Log("perk is applied " .. perk_or_relic_data.id .. " rarity " .. rarity_data.id)
+            else
+                -- example usage of relic data
+                local rarity_data = Api.PerkSystemShared:GetRelicRarityData(perk_or_relic_data.id)
+                Api:Log("relic is applied " .. perk_or_relic_data.id .. " rarity " .. rarity_data.id)
+            end
+
+            -- mod example
+            local id = perk_or_relic_data.id
+            local perk_relic_data = is_perk and Api.PerkSystemShared:GetPerkData(id)
+                or Api.PerkSystemShared:GetRelicData(id)
+            if perk_relic_data.attacks and perk_relic_data.attacks.my_power_rock then
+                local bag_of_pwoer_rocks_level = unit_data:GetRelicLevel(relic_name)
+                local attribute_key = "attack"
+                local add_value =
+                    Api.PerkSystemShared:GetScalingRelicValue(relic_name, attribute_key, bag_of_pwoer_rocks_level)
+                local use_animation = true
+                local skip_buffer = true
+                unit_data:ModifyAttribute(attribute_key, add_value, use_animation, skip_buffer)
+                unit_data.run_instance:ModifySavedPerkDataAttributes(attribute_key, add_value)
+            end
+        end
+    end)
 
     --- Print game data to log file, you can check ids now exists in game ---
 
