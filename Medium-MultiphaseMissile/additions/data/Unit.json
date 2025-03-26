@@ -1,0 +1,16 @@
+{
+    "units": {
+        "COMBAT Missile A":
+        {
+            "baseUnit": "_COMBAT Missile"
+        },
+        "COMBAT Missile B":
+        {
+            "baseUnit": "_COMBAT Missile"
+        },
+        "COMBAT Missile C":
+        {
+            "baseUnit": "_COMBAT Missile"
+        }
+    }
+}

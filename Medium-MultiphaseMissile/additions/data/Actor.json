@@ -1,0 +1,31 @@
+{
+    "actors": {
+        "COMBAT Missile A": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "character_a"
+                },
+                "modelScale": 1.5
+            }
+        },
+        "COMBAT Missile B": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "character_b"
+                },
+                "modelScale": 1.5
+            }
+        },
+        "COMBAT Missile C": {
+            "parent": "_COMBAT Missile Simple",
+            "unitActor": {
+                "resource": {
+                    "name": "character_c"
+                },
+                "modelScale": 1.5
+            }
+        }
+    }
+}

@@ -1,0 +1,68 @@
+local function AddNewMissile(Api)
+    local alphabet_man = Api:CreateCharacter("Alphabet Man", "naysayer")
+
+    Api:RegisterAttribute({
+        id = "custom_hit_tracker",
+        display_name = "Hit Tracker",
+        description = "How many hits delivered by the alphabet",
+        icon = DCEI.Texture("character_a"),
+        display_type = Api.DisplayType.Integer,
+        is_neutral = true,
+        display_requirements = {
+            default_value = 0,
+            max = 20,
+            phase_thresholds = {
+                10,
+                20,
+            },
+        },
+    })
+
+    alphabet_man.attributes["custom_hit_tracker"] = 0
+
+    Api:RegisterMissile("attack_alphabet", {
+        id = "attack_alphabet",
+        display_name = "Letter A",
+        tip = "Deal 20 damage\\nGain 1 Hit\\nEvolve upon 10 Hits",
+        flavor_text = "ABC, Easy as 123",
+        icon = DCEI.Texture("character_a"),
+        missile = DCEI.SimpleUnit("COMBAT Missile A"),
+        phase_attribute = "custom_hit_tracker",
+        phases = {
+            {
+                display_name = "Letter B",
+                tip = "Deal 40 damage\\nGain 1 Hit\\nEvolve upon 20 Hits",
+                flavor = "Or as simple as Do-Re-Mi",
+                icon = DCEI.Texture("character_b"),
+                missile = DCEI.SimpleUnit("COMBAT Missile B"),
+            },
+            {
+                display_name = "Letter C",
+                tip = "Deal 60 damage",
+                flavor = "ABC, 123, baby you and me",
+                icon = DCEI.Texture("character_c"),
+                missile = DCEI.SimpleUnit("COMBAT Missile C"),
+            },
+        },
+    })
+
+    Api:SetMissileImpact("attack_alphabet", function(attack_data, caster_data, target_data)
+        local attribute = "custom_hit_tracker"
+        local amount = 1
+        caster_data:ModifyAttribute(attribute, amount)
+    end)
+
+    Api:SetMissileDamage("attack_alphabet", function(attack_data, caster)
+        local phase = Api:GetMissilePhase(caster, "attack_alphabet")
+        local base_damage = 20
+        local damage = base_damage * (phase + 1)
+        return damage
+    end)
+
+    Api:SetCharacterStartMagazine("Alphabet Man", {
+        "attack_alphabet",
+        "attack_alphabet",
+    })
+end
+
+MOD_MANAGER:AddMod(AddNewMissile)

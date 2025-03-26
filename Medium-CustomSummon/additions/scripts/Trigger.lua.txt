@@ -1,0 +1,109 @@
+local function AddNewSummon(Api)
+    -- Create summoner character to use
+    local mod_character = Api:CreateCharacter("mod-summon", "naysayer")
+
+    -- Update character appearance
+    mod_character.icon = DCEI.Texture("character_a")
+    mod_character.icon_low_resolution = DCEI.Texture("character_a")
+    mod_character.icon_high_resolution = DCEI.Texture("character_a")
+    mod_character.unit = DCEI.Unit("COMBAT Unit Mod Summoner")
+
+    -- We will use a custom missile for our summon to launch
+    Api:RegisterMissile("attack_star", {
+        id = "attack_star",
+        display_name = "Star",
+        tip = "Deals damage",
+        icon = DCEI.Texture("custom_star"),
+        missile = DCEI.SimpleUnit("COMBAT Missile Custom Star"),
+        impact = DCEI.SimpleUnit("COMBAT Unit Simple HitFx"),
+        flight_time = 1,
+        spin_speed = -180,
+    })
+
+    -- We will define an attribute to tell our summon how fast to attack
+    Api:RegisterAttribute({
+        id = "summon_speed",
+        display_name = "Summon Speed",
+        description = "How many fast your summons will attack",
+        icon = DCEI.Texture("character_a"),
+        display_type = Api.DisplayType.Float,
+        is_neutral = true,
+        flavor_text = "This is flavor text for Summon Speed attribute",
+    })
+
+    -- Make sure our character starts with some "summon_speed"
+    mod_character.attributes["summon_speed"] = 1
+
+    -- Next we will create a relic that will summon a our custom summon on battle start
+    -- NOTE: This doesn't have to be a relic, we will use relic for this example as
+    -- it is a simple option to demonstrate summons
+    local relic = {
+        id = "custom_summon",
+        display_name = "Custom Summon",
+        description = "This relic will summon a custom summon on battle start\nSummons deal 3x attack as damage",
+        icon = DCEI.Texture("character_b"),
+        rarity = "legendary",
+        non_scaling_values = {
+            summon_amount = 1,
+        },
+    }
+
+    -- Register our previously defined relic and add an on start combat callback to summon and start summon's attacks
+    Api:RegisterRelic("custom_summon", relic, function(combat_unit)
+        combat_unit:RegisterOnCombatStartCallback(relic.id, function(level, target)
+            -- Get how many summons we need to summon, in this case it's "summon_amount"
+            -- value times the amount of the "custom_summon" relic we have
+            local amount = Api.PerkSystemShared:GetNonScalingRelicValue("custom_summon", "summon_amount")
+            amount = amount * level
+
+            -- Summon all summons
+            for _ = 1, amount do
+                -- NOTE: This can be called elsewhere, but we are using relic for simplicity
+                local summon_data = {
+                    unit_type = DCEI.Unit("COMBAT Unit Mod Summon"), -- Unit to summon
+                    cache_key = "summons_data", -- Where all summon unit's data is stored
+                    index_key = "summons_index", -- Stores index of most recent summon
+                }
+                Api:CreateSummon(combat_unit, summon_data)
+
+                -- NOTE: The data we use for summons ("summon_data" in this example) has these fields
+                ---@class SummonData
+                ---@field unit_type string The unit to be summoned, use DCEI.Unit
+                ---@field cache_key string Where on the caster to cache the unit data
+                ---@field index_key string Where on the caster to store current summon index
+                ---@field position_callback function | nil How to calculate summoned unit's position, defaults to GenerateIllusionPositions
+                ---@field dx number | nil Defaults to 1
+                ---@field dz number | nil Defaults to 0
+                ---@field skin_data SummonData.SkinData | nil Any summoned unit skin data that may replace unit
+                ---@field spawn_effect string | nil What effect to play on spawn, use DCEI.Effect, defaults to "COMBAT Unit Summon Keg Illusion"
+
+                -- Flag as ready to attack
+                local index = combat_unit[summon_data.index_key]
+                combat_unit[summon_data.cache_key][index].ready = true
+            end
+
+            -- Start attacking with summons after short delay (for spawn animation)
+            local spawn_time = 0.8
+            Api:RunTimer(function()
+                local attack = {
+                    attack_id = "attack_star", -- ID for missile to use
+                    damage = combat_unit:GetBoundedAttribute("attack")  * 3, -- 3x attack as damage
+                    attack_speed_key = "summon_speed", -- Attribute that represents attack interval
+                    hit_sound = DCEI.Sound("smh_keg_ultimate_impact"),
+                    cache_key = "summons_data",
+                    index_key = "summons_index",
+                }
+                Api:StartSummonAttacking(combat_unit, attack)
+            end, spawn_time)
+        end)
+    end)
+
+    -- Finally, add our new summon relic to our modded character
+    mod_character.relics = {
+        "custom_summon",
+        "custom_summon",
+        "custom_summon",
+    }
+end
+
+MOD_MANAGER:AddMod(AddNewSummon)
